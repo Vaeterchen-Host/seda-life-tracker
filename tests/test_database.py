@@ -8,6 +8,8 @@ import pytest
 from model.database import Database
 import model.classes
 
+# pylint: skip-file
+
 # AI-generated content start: fixtures for isolated test setup.
 TEST_DB_DIR = Path(__file__).resolve().parents[1] / "test_db"
 
@@ -26,7 +28,7 @@ def db():
 def tobias():
     """Create a fresh user object for each test."""
     return model.classes.User(
-        1, "Tobias", "1995-02-21", 185, "m", "beginner", [], [], [], []
+        "Tobias", "1995-02-21", 185, "m", "beginner", [], [], [], []
     )
 
 
@@ -52,6 +54,7 @@ def test_close_connection(db):
 
 
 # User related tests
+# AI-generated content start.
 def test_user_table_creation(db):
     """This test checks if the users table is created successfully."""
 
@@ -67,23 +70,22 @@ def test_add_a_user(db, tobias):
     """This test try to insert a user in datebase. Partly AI-generated content."""
 
     db.add_user(
-        tobias._name,
-        tobias._birthdate,
-        tobias._height_in_cm,
-        tobias._gender,
-        tobias._fitness_lvl,
+        tobias.name,
+        tobias.birthdate,
+        tobias.height_in_cm,
+        tobias.gender,
+        tobias.fitness_lvl,
     )
-    conn = db.connect()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE user_name = ?", (tobias._name,))
-    row = cursor.fetchone()
+    row = db.get_user(tobias.name)
     assert row is not None, "User could not be added to the database"
-    assert row[1] == tobias._name, "User name does not match"
-    assert row[2] == tobias._birthdate, "Birthdate does not match"
-    assert row[3] == tobias._height_in_cm, "Height does not match"
-    assert row[4] == tobias._gender, "Gender does not match"
-    assert row[5] == tobias._fitness_lvl, "Fitness level does not match"
-    conn.close()
+    assert row[1] == tobias.name, "User name does not match"
+    assert row[2] == tobias.birthdate, "Birthdate does not match"
+    assert row[3] == tobias.height_in_cm, "Height does not match"
+    assert row[4] == tobias.gender, "Gender does not match"
+    assert row[5] == tobias.fitness_lvl, "Fitness level does not match"
+
+
+# AI-generated content end
 
 
 # water log related tests
@@ -105,11 +107,11 @@ def test_get_all_water_logs(db, tobias):
     """This test checks if the get_all_water_logs method retrieves logs correctly."""
 
     db.add_user(
-        tobias._name,
-        tobias._birthdate,
-        tobias._height_in_cm,
-        tobias._gender,
-        tobias._fitness_lvl,
+        tobias.name,
+        tobias.birthdate,
+        tobias.height_in_cm,
+        tobias.gender,
+        tobias.fitness_lvl,
     )
     conn = db.connect()
     db.add_water_log(1, 500, "2026-03-20T10:00:00")
@@ -125,29 +127,25 @@ def test_get_all_water_logs(db, tobias):
 def test_delete_user(db, tobias):
     """Test checks if user can be deleted."""
     db.add_user(
-        tobias._name,
-        tobias._birthdate,
-        tobias._height_in_cm,
-        tobias._gender,
-        tobias._fitness_lvl,
+        tobias.name,
+        tobias.birthdate,
+        tobias.height_in_cm,
+        tobias.gender,
+        tobias.fitness_lvl,
     )
-    db.delete_user(tobias._name)
-    conn = db.connect()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE user_name = ?", (tobias._name,))
-    row = cursor.fetchone()
+    db.delete_user(tobias.name)
+    row = db.get_user(tobias.name)
     assert row is None, "User could not be deleted from the database"
-    conn.close()
 
 
 def test_delete_water_log(db, tobias):
     """Test checks if water log can be deleted."""
     db.add_user(
-        tobias._name,
-        tobias._birthdate,
-        tobias._height_in_cm,
-        tobias._gender,
-        tobias._fitness_lvl,
+        tobias.name,
+        tobias.birthdate,
+        tobias.height_in_cm,
+        tobias.gender,
+        tobias.fitness_lvl,
     )
     db.add_water_log(1, 500, "2026-03-20T10:00:00")
     db.delete_water_log(1)

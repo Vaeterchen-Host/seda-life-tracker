@@ -4,6 +4,20 @@ import sqlite3
 from config import DB_PATH
 
 
+def connector(func):
+    """This is a decorator for connecting and disconnecting to DB."""
+
+    # minor ai-generated fixes
+    def wrapper(self, *args, **kwargs):
+        """This is the wrapper function for the decorator."""
+        conn = self.connect()
+        result = func(self, conn, *args, **kwargs)
+        self.end_connection(conn)
+        return result
+
+    return wrapper
+
+
 class Database:
     """This class defines the Database."""
 
@@ -20,13 +34,17 @@ class Database:
 
     def create_tables(self):
         """This method creates the tables in the database. Further tables can be added here."""
-        self.create_user_table()
-        self.create_water_log_table()
+        self.create_user_table()  # pylint: disable=no-value-for-parameter
+        self.create_water_log_table()  # pylint: disable=no-value-for-parameter
+
+    def end_connection(self, conn):
+        """This method ends the connection to the database."""
+        conn.close()
 
     # Here are the user related methods.
-    def create_user_table(self):
+    @connector
+    def create_user_table(self, conn):
         """This method creates a users table"""
-        conn = self.connect()
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -40,43 +58,38 @@ class Database:
             )"""
         )
         conn.commit()
-        conn.close()
 
-    def add_user(self, name, birthdate, height_in_cm, gender, fitness_lvl):
+    @connector
+    def add_user(self, conn, name, birthdate, height_in_cm, gender, fitness_lvl):
         """This method adds a user to the db."""
-        conn = self.connect()
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO users (user_name, date_of_birth, height,  gender, fitness_lvl) VALUES (?, ?, ?, ?, ?)",
             (name, birthdate, height_in_cm, gender, fitness_lvl),
         )
         conn.commit()
-        conn.close()
 
-    def get_user(self, name) -> list:
+    @connector
+    def get_user(self, conn, name) -> list:
         """This method retrieves a user from database."""
-        conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE user_name = ?", (name,))
         row = cursor.fetchone()
-        conn.close()
         return row
 
-    def delete_user(self, name) -> list:
+    @connector
+    def delete_user(self, conn, name) -> int:
         """This method deletes a user from database."""
-        conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM users WHERE user_name = ?", (name,))
-        row = cursor.fetchone()
         conn.commit()
-        conn.close()
-        return row
+        return cursor.rowcount
 
     # Here are the waterlog related methods.
 
-    def create_water_log_table(self):
+    @connector
+    def create_water_log_table(self, conn):
         """This method creates the water logs table in the database."""
-        conn = self.connect()
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -89,11 +102,10 @@ class Database:
             )"""
         )
         conn.commit()
-        conn.close()
 
-    def add_water_log(self, user_id, amount_in_ml, timestamp):
+    @connector
+    def add_water_log(self, conn, user_id, amount_in_ml, timestamp):
         """This method adds a water logs to the database. Code partly AI-generated."""
-        conn = self.connect()
         cursor = conn.cursor()
         # The '?' is a placeholder.
         cursor.execute(
@@ -101,23 +113,19 @@ class Database:
             (user_id, amount_in_ml, timestamp),
         )
         conn.commit()
-        conn.close()
 
-    def get_all_water_logs(self) -> list:
+    @connector
+    def get_all_water_logs(self, conn) -> list:
         """This method retrieves all water logs from the database."""
-        conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM water_logs")
         rows = cursor.fetchall()
-        conn.close()
         return rows
 
-    def delete_water_log(self, water_log_id) -> list:
+    @connector
+    def delete_water_log(self, conn, water_log_id) -> int:
         """This method deletes a water log from the database."""
-        conn = self.connect()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM water_logs WHERE water_log_id = ?", (water_log_id,))
-        row = cursor.fetchone()
         conn.commit()
-        conn.close()
-        return row
+        return cursor.rowcount
