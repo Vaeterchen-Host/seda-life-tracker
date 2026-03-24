@@ -2,6 +2,13 @@
 
 from datetime import datetime
 
+# ai-generated content start: helper function for validating log lists.
+def _validate_log_list(logs, log_type, label):
+    """Validate that logs is a list containing only the expected log type."""
+    if not isinstance(logs, list) or not all(isinstance(log, log_type) for log in logs):
+        raise ValueError(f"{label} must be a list of {log_type.__name__} objects.")
+    return logs
+
 
 # All classes about food.
 
@@ -116,9 +123,9 @@ class Meal:
 class FoodLog:
     """This class defines the food log."""
 
-    def __init__(self, food, amount_in_gram, timestamp):
+    def __init__(self, id, food, amount_in_gram, timestamp):
         """This is the constructor of FoodLog."""
-        self._id = None
+        self._id = id
         self._food = food
         self._amount_in_gram = amount_in_gram
         self._timestamp = timestamp
@@ -128,6 +135,11 @@ class FoodLog:
     def id(self):
         """This is the getter for id."""
         return self._id
+
+    @id.setter
+    def id(self, new_id):
+        """This is the setter for id."""
+        self._id = new_id
 
     def calculate_nutrient_summary(self):
         """Method for calculating the nutrient summary of the food log."""
@@ -153,9 +165,9 @@ class FoodLog:
 class MealLog:
     """This class defines the meal log."""
 
-    def __init__(self, meal, amount_in_gram, timestamp):
+    def __init__(self, id, meal, amount_in_gram, timestamp):
         """This is the constructor of MealLog."""
-        self._id = None
+        self._id = id
         self._meal = meal
         self._amount_in_gram = amount_in_gram
         self._timestamp = timestamp
@@ -165,6 +177,11 @@ class MealLog:
     def id(self):
         """This is the getter for id."""
         return self._id
+
+    @id.setter
+    def id(self, new_id):
+        """This is the setter for id."""
+        self._id = new_id
 
     def calculate_nutrient_summary(self):
         """Method for calculating the nutrient summary of the meal log."""
@@ -186,17 +203,22 @@ class MealLog:
 class WaterLog:
     """This class defines the water log."""
 
-    def __init__(self, amount_in_ml, timestamp):
+    def __init__(self, id, amount_in_ml, timestamp):
         """This is the constructor of WaterLog."""
-        self._id = None
-        self._amount_in_ml = amount_in_ml
-        self._timestamp = timestamp
+        self._id = id
+        self.amount_in_ml = amount_in_ml  # refactored by ai
+        self.timestamp = timestamp  # refactored by ai
 
     # Here are the water log related methods.
     @property
     def id(self):
         """This is the getter for id."""
         return self._id
+    
+    @id.setter
+    def id(self, new_id):
+        """This is the setter for id."""
+        self._id = new_id
 
     @property
     def amount_in_ml(self):
@@ -226,16 +248,21 @@ class WaterLog:
 class WeightLog:
     """This class defines weightlog."""
 
-    def __init__(self, weight_in_kg, timestamp):
+    def __init__(self, id, weight_in_kg, timestamp):
         """This is the constructor of weightlog."""
-        self._id = None
-        self._weight_in_kg = weight_in_kg
-        self._timestamp = timestamp
+        self._id = id
+        self.weight_in_kg = weight_in_kg  # refactored by ai
+        self.timestamp = timestamp  # refactored by ai
 
     @property
     def id(self):
         """This is the getter for id."""
         return self._id
+
+    @id.setter
+    def id(self, new_id):
+        """This is the setter for id."""
+        self._id = new_id
 
     @property
     def weight_in_kg(self):
@@ -279,21 +306,26 @@ class User:
     ):
         """This is the constructor of User."""
         self._id = user_id
-        self._name = name
-        self._birthdate = birthdate
-        self._height_in_cm = height_in_cm
-        self._gender = gender
-        self._fitness_lvl = fitness_lvl
-        self._water = water
-        self._weight = weight
-        self._food = food
-        self._meal = meal
+        self.name = name  # refactored by ai
+        self.birthdate = birthdate  # refactored by ai
+        self.height_in_cm = height_in_cm  # refactored by ai
+        self.gender = gender  # refactored by ai
+        self.fitness_lvl = fitness_lvl  # refactored by ai
+        self.water_logs = water  # refactored by ai
+        self.weight_logs = weight  # refactored by ai
+        self.food_logs = food  # refactored by ai
+        self._meal = _validate_log_list(meal, MealLog, "Meal logs")  # refactored by ai
 
     # Here are the biometrical data related methods.
     @property
     def id(self):
         """This is the getter for id"""
         return self._id
+    
+    @id.setter
+    def id(self, new_id):
+        """This is the setter for id."""
+        self._id = new_id
 
     @property
     def name(self):
@@ -355,6 +387,41 @@ class User:
             )
         self._fitness_lvl = new_fitness_lvl
 
+    @property
+    def water_logs(self):
+        """This is the getter for water logs."""
+        return self._water
+    
+    @water_logs.setter
+    def water_logs(self, new_water_logs):
+        """This is the setter for water logs. Partly AI-generated."""
+        self._water = _validate_log_list(new_water_logs, WaterLog, "Water logs")  # refactored by ai
+
+    @property
+    def weight_logs(self):
+        """This is the getter for weight logs."""
+        return self._weight
+    
+    @weight_logs.setter
+    def weight_logs(self, new_weight_logs):
+        """This is the setter for weight logs. Partly AI-generated."""
+        self._weight = _validate_log_list(new_weight_logs, WeightLog, "Weight logs")  # refactored by ai
+
+    @property
+    def food_logs(self):
+        """This is the getter for food logs."""
+        return self._food
+    
+    @food_logs.setter
+    def food_logs(self, new_food_logs):
+        """This is the setter for food logs. Partly AI-generated."""
+        self._food = _validate_log_list(new_food_logs, FoodLog, "Food logs")  # refactored by ai
+
+    @property
+    def meal_logs(self):
+        """This is the getter for meal logs."""
+        return self._meal
+
     def update_biometrical_data(
         self, birthdate=None, height_in_cm=None, gender=None, fitness_lvl=None
     ):
@@ -369,15 +436,15 @@ class User:
             self.fitness_lvl = fitness_lvl
 
     # Here are the weight log related methods.
-    def add_weight_log(self, weight_in_kg, timestamp=None):
+    def add_weight_log(self, id, weight_in_kg, timestamp=None):
         """Method for adding a weightlog."""
         if timestamp is None:
             timestamp = datetime.now().isoformat()
-        new_weight_log = WeightLog(weight_in_kg, timestamp)
+        new_weight_log = WeightLog(id, weight_in_kg, timestamp)
         self._weight.append(new_weight_log)
 
     def delete_weight_log(self, weight_log_id):
-        """Method for deleting a weightlog. Code partly AI-generated."""
+        """Method for deleting a weightlog. AI-generated."""
         remaining_weight_logs = []
 
         for weight_log in self._weight:
@@ -385,6 +452,7 @@ class User:
                 remaining_weight_logs.append(weight_log)
 
         self._weight = remaining_weight_logs
+
 
     def calculate_bmi(self):
         """Method for calculating the BMI."""
@@ -396,15 +464,15 @@ class User:
         return bmi
 
     # Here are the water log related methods.
-    def add_water_log(self, amount_in_ml, timestamp=None):
+    def add_water_log(self, id, amount_in_ml, timestamp=None):
         """Method for adding a waterlog."""
         if timestamp is None:
             timestamp = datetime.now().isoformat()
-        new_water_log = WaterLog(amount_in_ml, timestamp)
+        new_water_log = WaterLog(id, amount_in_ml, timestamp)
         self._water.append(new_water_log)
 
     def delete_water_log(self, water_log_id):
-        """Method for deleting a waterlog. Code partly AI-generated."""
+        """Method for deleting a waterlog. AI-generated."""
         remaining_water_logs = []
 
         for water_log in self._water:
@@ -414,15 +482,15 @@ class User:
         self._water = remaining_water_logs
 
     # Here are the food log related methods.
-    def add_food_log(self, food, amount_in_gram, timestamp=None):
+    def add_food_log(self, id, food, amount_in_gram, timestamp=None):
         """Method for adding a foodlog."""
         if timestamp is None:
             timestamp = datetime.now().isoformat()
-        new_food_log = FoodLog(food, amount_in_gram, timestamp)
+        new_food_log = FoodLog(id, food, amount_in_gram, timestamp)
         self._food.append(new_food_log)
 
     def delete_food_log(self, food_log_id):
-        """Method for deleting a foodlog. Code partly AI-generated."""
+        """Method for deleting a foodlog. AI-generated."""
         remaining_food_logs = []
 
         for food_log in self._food:
@@ -432,15 +500,15 @@ class User:
         self._food = remaining_food_logs
 
     # Here are the meal log related methods.
-    def add_meal_log(self, meal, amount_in_gram, timestamp=None):
+    def add_meal_log(self, id, meal, amount_in_gram, timestamp=None):
         """Method for adding a meallog."""
         if timestamp is None:
             timestamp = datetime.now().isoformat()
-        new_meal_log = MealLog(meal, amount_in_gram, timestamp)
+        new_meal_log = MealLog(id, meal, amount_in_gram, timestamp)
         self._meal.append(new_meal_log)
 
     def delete_meal_log(self, meal_log_id):
-        """Method for deleting a meallog. Code partly AI-generated."""
+        """Method for deleting a meallog. AI-generated."""
         remaining_meal_logs = []
 
         for meal_log in self._meal:
