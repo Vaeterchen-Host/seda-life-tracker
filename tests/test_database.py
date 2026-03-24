@@ -123,6 +123,9 @@ def test_get_all_water_logs(db, tobias):
     conn.close()
 
 
+# weight log related tests (tbd)
+
+
 # delete tests
 def test_delete_user(db, tobias):
     """Test checks if user can be deleted."""

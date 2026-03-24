@@ -129,5 +129,3 @@ class Database:
         cursor.execute("DELETE FROM water_logs WHERE water_log_id = ?", (water_log_id,))
         conn.commit()
         return cursor.rowcount
-
-    # Here are the weightlog related methods.
