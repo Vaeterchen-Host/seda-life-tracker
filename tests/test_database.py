@@ -28,7 +28,7 @@ def db():
 def tobias():
     """Create a fresh user object for each test."""
     return model.classes.User(
-        "Tobias", "1995-02-21", 185, "m", "beginner", [], [], [], []
+        "Test", "2000-02-22", 185, "m", "beginner", [], [], [], []
     )
 
 
