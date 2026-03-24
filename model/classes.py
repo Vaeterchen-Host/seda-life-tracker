@@ -124,6 +124,11 @@ class FoodLog:
         self._timestamp = timestamp
 
     # Here are the food log related methods.
+    @property
+    def id(self):
+        """This is the getter for id."""
+        return self._id
+
     def calculate_nutrient_summary(self):
         """Method for calculating the nutrient summary of the food log."""
         factor = self._amount_in_gram / 100
@@ -156,6 +161,11 @@ class MealLog:
         self._timestamp = timestamp
 
     # Here are the meal log related methods.
+    @property
+    def id(self):
+        """This is the getter for id."""
+        return self._id
+
     def calculate_nutrient_summary(self):
         """Method for calculating the nutrient summary of the meal log."""
         meal_summary = self._meal.calculate_nutrient_summary()
@@ -183,6 +193,11 @@ class WaterLog:
         self._timestamp = timestamp
 
     # Here are the water log related methods.
+    @property
+    def id(self):
+        """This is the getter for id."""
+        return self._id
+
     @property
     def amount_in_ml(self):
         """This is the getter for amount_in_ml."""
@@ -218,6 +233,11 @@ class WeightLog:
         self._timestamp = timestamp
 
     @property
+    def id(self):
+        """This is the getter for id."""
+        return self._id
+
+    @property
     def weight_in_kg(self):
         """This is the getter for weight_in_kg."""
         return self._weight_in_kg
@@ -246,6 +266,7 @@ class User:
 
     def __init__(
         self,
+        id,
         name,
         birthdate,
         height_in_cm,
@@ -269,6 +290,11 @@ class User:
         self._meal = meal
 
     # Here are the biometrical data related methods.
+    @property
+    def id(self):
+        """This is the getter for id"""
+        return self._id
+
     @property
     def name(self):
         """This is the getter for name."""
@@ -351,8 +377,14 @@ class User:
         self._weight.append(new_weight_log)
 
     def delete_weight_log(self, weight_log_id):
-        """Method for deleting a weightlog."""
-        self._weight = [log for log in self._weight if log._id != weight_log_id]
+        """Method for deleting a weightlog. Code partly AI-generated."""
+        remaining_weight_logs = []
+
+        for weight_log in self._weight:
+            if weight_log.id != weight_log_id:
+                remaining_weight_logs.append(weight_log)
+
+        self._weight = remaining_weight_logs
 
     def calculate_bmi(self):
         """Method for calculating the BMI."""
@@ -372,8 +404,14 @@ class User:
         self._water.append(new_water_log)
 
     def delete_water_log(self, water_log_id):
-        """Method for deleting a waterlog."""
-        self._water = [log for log in self._water if log._id != water_log_id]
+        """Method for deleting a waterlog. Code partly AI-generated."""
+        remaining_water_logs = []
+
+        for water_log in self._water:
+            if water_log.id != water_log_id:
+                remaining_water_logs.append(water_log)
+
+        self._water = remaining_water_logs
 
     # Here are the food log related methods.
     def add_food_log(self, food, amount_in_gram, timestamp=None):
@@ -384,8 +422,14 @@ class User:
         self._food.append(new_food_log)
 
     def delete_food_log(self, food_log_id):
-        """Method for deleting a foodlog."""
-        self._food = [log for log in self._food if log._id != food_log_id]
+        """Method for deleting a foodlog. Code partly AI-generated."""
+        remaining_food_logs = []
+
+        for food_log in self._food:
+            if food_log.id != food_log_id:
+                remaining_food_logs.append(food_log)
+
+        self._food = remaining_food_logs
 
     # Here are the meal log related methods.
     def add_meal_log(self, meal, amount_in_gram, timestamp=None):
@@ -396,5 +440,11 @@ class User:
         self._meal.append(new_meal_log)
 
     def delete_meal_log(self, meal_log_id):
-        """Method for deleting a meallog."""
-        self._meal = [log for log in self._meal if log._id != meal_log_id]
+        """Method for deleting a meallog. Code partly AI-generated."""
+        remaining_meal_logs = []
+
+        for meal_log in self._meal:
+            if meal_log.id != meal_log_id:
+                remaining_meal_logs.append(meal_log)
+
+        self._meal = remaining_meal_logs
