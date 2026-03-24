@@ -47,10 +47,10 @@ class Food:
 class MealItem:
     """This class defines the meal item."""
 
-    def __init__(self, food: Food, amount_in_gramm):
+    def __init__(self, food: Food, amount_in_gram):
         """This is the constructor of MealItem."""
         self.food = food
-        self.amount_in_gramm = amount_in_gramm
+        self.amount_in_gram = amount_in_gram
 
 
 class Meal:
@@ -81,7 +81,7 @@ class Meal:
         }
 
         for item in self._items:
-            factor = item.amount_in_gramm / 100
+            factor = item.amount_in_gram / 100
             nutrients = item.food.nutrients_per_100g
             total["calorie"] += nutrients.calorie * factor
             total["fat"] += nutrients.fat * factor
@@ -116,17 +116,17 @@ class Meal:
 class FoodLog:
     """This class defines the food log."""
 
-    def __init__(self, food, amount_in_gramm, timestamp):
+    def __init__(self, food, amount_in_gram, timestamp):
         """This is the constructor of FoodLog."""
         self._id = None
         self._food = food
-        self._amount_in_gramm = amount_in_gramm
+        self._amount_in_gram = amount_in_gram
         self._timestamp = timestamp
 
     # Here are the food log related methods.
     def calculate_nutrient_summary(self):
         """Method for calculating the nutrient summary of the food log."""
-        factor = self._amount_in_gramm / 100
+        factor = self._amount_in_gram / 100
         nutrients = self._food.nutrients_per_100g
         return NutrientSummary(
             nutrients.calorie * factor,
@@ -148,18 +148,18 @@ class FoodLog:
 class MealLog:
     """This class defines the meal log."""
 
-    def __init__(self, meal, amount_in_gramm, timestamp):
+    def __init__(self, meal, amount_in_gram, timestamp):
         """This is the constructor of MealLog."""
         self._id = None
         self._meal = meal
-        self._amount_in_gramm = amount_in_gramm
+        self._amount_in_gram = amount_in_gram
         self._timestamp = timestamp
 
     # Here are the meal log related methods.
     def calculate_nutrient_summary(self):
         """Method for calculating the nutrient summary of the meal log."""
         meal_summary = self._meal.calculate_nutrient_summary()
-        factor = self._amount_in_gramm / 100
+        factor = self._amount_in_gram / 100
         return NutrientSummary(
             meal_summary.calorie * factor,
             meal_summary.fat * factor,
@@ -376,11 +376,11 @@ class User:
         self._water = [log for log in self._water if log._id != water_log_id]
 
     # Here are the food log related methods.
-    def add_food_log(self, food, amount_in_gramm, timestamp=None):
+    def add_food_log(self, food, amount_in_gram, timestamp=None):
         """Method for adding a foodlog."""
         if timestamp is None:
             timestamp = datetime.now().isoformat()
-        new_food_log = FoodLog(food, amount_in_gramm, timestamp)
+        new_food_log = FoodLog(food, amount_in_gram, timestamp)
         self._food.append(new_food_log)
 
     def delete_food_log(self, food_log_id):
@@ -388,11 +388,11 @@ class User:
         self._food = [log for log in self._food if log._id != food_log_id]
 
     # Here are the meal log related methods.
-    def add_meal_log(self, meal, amount_in_gramm, timestamp=None):
+    def add_meal_log(self, meal, amount_in_gram, timestamp=None):
         """Method for adding a meallog."""
         if timestamp is None:
             timestamp = datetime.now().isoformat()
-        new_meal_log = MealLog(meal, amount_in_gramm, timestamp)
+        new_meal_log = MealLog(meal, amount_in_gram, timestamp)
         self._meal.append(new_meal_log)
 
     def delete_meal_log(self, meal_log_id):
