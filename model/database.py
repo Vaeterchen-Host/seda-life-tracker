@@ -129,3 +129,48 @@ class Database:
         cursor.execute("DELETE FROM water_logs WHERE water_log_id = ?", (water_log_id,))
         conn.commit()
         return cursor.rowcount
+
+    # Here are the weightlog related methods. (BINE)
+    @connector
+    def create_weight_log_table(self, conn):
+        """This method creates the weight logs table in the database."""
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS weight_logs (
+                       weight_log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                       user_id INTEGER NOT NULL,
+                       weight_in_kg DECIMAL NOT NULL,
+                       timestamp TEXT NOT NULL,
+                       FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            )"""
+        )
+        conn.commit()
+
+    @connector
+    def add_weight_log(self, conn, user_id, weight_in_kg, timestamp):
+        """This method adds a weight logs to the database. Code partly AI-generated."""
+        cursor = conn.cursor()
+        # The '?' is a placeholder.
+        cursor.execute(
+            "INSERT INTO weight_logs (user_id, weight_in_kg, timestamp) VALUES (?, ?, ?)",
+            (user_id, weight_in_kg, timestamp),
+        )
+        conn.commit()
+
+
+    @connector
+    def get_all_weight_logs(self, conn) -> list:
+        """This method retrieves all weight logs from the database."""
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM weight_logs")
+        rows = cursor.fetchall()
+        return rows
+    
+    @connector
+    def delete_weight_log(self, conn, weight_log_id) -> int:
+        """This method deletes a weight log from the database."""
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM weight_logs WHERE weight_log_id = ?", (weight_log_id,))
+        conn.commit()
+        return cursor.rowcount
