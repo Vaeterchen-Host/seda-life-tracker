@@ -22,15 +22,15 @@ class NutrientSummary:
         sodium,
     ):
         """This is the constructor of NutrientSummary."""
-        self._calorie = calorie
-        self._fat = fat
-        self._saturated_fat = saturated_fat
-        self._carbohydrate = carbohydrate
-        self._fibre = fibre
-        self._sugar = sugar
-        self._protein = protein
-        self._salt = salt
-        self._sodium = sodium
+        self.calorie = calorie
+        self.fat = fat
+        self.saturated_fat = saturated_fat
+        self.carbohydrate = carbohydrate
+        self.fibre = fibre
+        self.sugar = sugar
+        self.protein = protein
+        self.salt = salt
+        self.sodium = sodium
 
 
 class Food:
@@ -41,7 +41,7 @@ class Food:
         self._id = food_id
         self._name = name
         self._type = food_type
-        self._nutrients_per_100g = nutrients_per_100g
+        self.nutrients_per_100g = nutrients_per_100g
 
 
 class MealItem:
@@ -49,8 +49,8 @@ class MealItem:
 
     def __init__(self, food: Food, amount_in_gramm):
         """This is the constructor of MealItem."""
-        self._food = food
-        self._amount_in_gramm = amount_in_gramm
+        self.food = food
+        self.amount_in_gramm = amount_in_gramm
 
 
 class Meal:
@@ -81,17 +81,17 @@ class Meal:
         }
 
         for item in self._items:
-            factor = item._amount_in_gramm / 100
-            nutrients = item._food._nutrients_per_100g
-            total["calorie"] += nutrients._calorie * factor
-            total["fat"] += nutrients._fat * factor
-            total["saturated_fat"] += nutrients._saturated_fat * factor
-            total["carbohydrate"] += nutrients._carbohydrate * factor
-            total["fibre"] += nutrients._fibre * factor
-            total["sugar"] += nutrients._sugar * factor
-            total["protein"] += nutrients._protein * factor
-            total["salt"] += nutrients._salt * factor
-            total["sodium"] += nutrients._sodium * factor
+            factor = item.amount_in_gramm / 100
+            nutrients = item.food.nutrients_per_100g
+            total["calorie"] += nutrients.calorie * factor
+            total["fat"] += nutrients.fat * factor
+            total["saturated_fat"] += nutrients.saturated_fat * factor
+            total["carbohydrate"] += nutrients.carbohydrate * factor
+            total["fibre"] += nutrients.fibre * factor
+            total["sugar"] += nutrients.sugar * factor
+            total["protein"] += nutrients.protein * factor
+            total["salt"] += nutrients.salt * factor
+            total["sodium"] += nutrients.sodium * factor
 
         return NutrientSummary(
             total["calorie"],
@@ -127,17 +127,17 @@ class FoodLog:
     def calculate_nutrient_summary(self):
         """Method for calculating the nutrient summary of the food log."""
         factor = self._amount_in_gramm / 100
-        nutrients = self._food._nutrients_per_100g
+        nutrients = self._food.nutrients_per_100g
         return NutrientSummary(
-            nutrients._calorie * factor,
-            nutrients._fat * factor,
-            nutrients._saturated_fat * factor,
-            nutrients._carbohydrate * factor,
-            nutrients._fibre * factor,
-            nutrients._sugar * factor,
-            nutrients._protein * factor,
-            nutrients._salt * factor,
-            nutrients._sodium * factor,
+            nutrients.calorie * factor,
+            nutrients.fat * factor,
+            nutrients.saturated_fat * factor,
+            nutrients.carbohydrate * factor,
+            nutrients.fibre * factor,
+            nutrients.sugar * factor,
+            nutrients.protein * factor,
+            nutrients.salt * factor,
+            nutrients.sodium * factor,
         )
 
     def create_daytime_object(self):
@@ -161,15 +161,15 @@ class MealLog:
         meal_summary = self._meal.calculate_nutrient_summary()
         factor = self._amount_in_gramm / 100
         return NutrientSummary(
-            meal_summary._calorie * factor,
-            meal_summary._fat * factor,
-            meal_summary._saturated_fat * factor,
-            meal_summary._carbohydrate * factor,
-            meal_summary._fibre * factor,
-            meal_summary._sugar * factor,
-            meal_summary._protein * factor,
-            meal_summary._salt * factor,
-            meal_summary._sodium * factor,
+            meal_summary.calorie * factor,
+            meal_summary.fat * factor,
+            meal_summary.saturated_fat * factor,
+            meal_summary.carbohydrate * factor,
+            meal_summary.fibre * factor,
+            meal_summary.sugar * factor,
+            meal_summary.protein * factor,
+            meal_summary.salt * factor,
+            meal_summary.sodium * factor,
         )
 
 
@@ -205,6 +205,8 @@ class WaterLog:
         """This is the setter for timestamp."""
         self._timestamp = new_timestamp
 
+    # Here are the weight log related methods
+
 
 class WeightLog:
     """This class defines weightlog."""
@@ -215,7 +217,6 @@ class WeightLog:
         self._weight_in_kg = weight_in_kg
         self._timestamp = timestamp
 
-    # Here are the weight log related methods.
     @property
     def weight_in_kg(self):
         """This is the getter for weight_in_kg."""
