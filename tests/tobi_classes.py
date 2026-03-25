@@ -215,7 +215,6 @@ class WaterLog:
         self._id = id
         self.amount_in_ml = amount_in_ml  # refactored by ai
         self.timestamp = timestamp  # refactored by ai
-        self.db = Database()
 
     # Here are the water log related methods.
     @property
