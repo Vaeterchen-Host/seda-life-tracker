@@ -1,6 +1,13 @@
 """This file defines classes"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from datetime import datetime
+from model.database import Database
+
+
 
 # ai-generated content start: helper function for validating log lists.
 def _validate_log_list(logs, log_type, label):
@@ -208,6 +215,7 @@ class WaterLog:
         self._id = id
         self.amount_in_ml = amount_in_ml  # refactored by ai
         self.timestamp = timestamp  # refactored by ai
+        self.db = Database()
 
     # Here are the water log related methods.
     @property

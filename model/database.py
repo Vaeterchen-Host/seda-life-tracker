@@ -37,7 +37,6 @@ class Database:
         self.create_user_table()  # pylint: disable=no-value-for-parameter
         self.create_water_log_table()  # pylint: disable=no-value-for-parameter
         self.create_weight_log_table()  # pylint: disable=no-value-for-parameter
-        self.create_weight_log_table()  # pylint: disable=no-value-for-parameter
     
     def end_connection(self, conn):
         """This method ends the connection to the database."""
