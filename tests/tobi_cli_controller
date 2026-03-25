@@ -50,49 +50,78 @@ else:
             Gender: {user[4]}
             Fitness level: {user[5]}
         """)
-class_user = classes.User(
-    user[0],
-    user[1],
-    user[2],
-    user[3],
-    user[4],
-    user[5],
-    [],
-    [],
-    [],
-    []
-)
-print(user)
-# Show user information from class
-ui.cli_view.show_user_info(class_user)
-sys.exit(0)
+#Create an array of WaterLog instances for the user
+def create_water_log_instances_for_user():
+    water_logs = []
+    for log in db.get_all_water_logs(): # pylint: disable=no-value-for-parameter
+        water_log_instance = WaterLog(log[0], log[1], log[2]) # Assuming log[0] is id, log[1] is amount_in_ml, log[2] is timestamp
+        water_logs.append(water_log_instance)
+    return water_logs
+
+
+
+# Create User class instance from database data
+def create_user_instance_from_db():
+    water_logs = create_water_log_instances_for_user()
+    class_user = classes.User(
+        user[0], # id
+        user[1], # name
+        user[2], # birthdate
+        user[3], # height_in_cm
+        user[4], # gender
+        user[5], # fitness_lvl
+        water_logs, # water_logs
+        [], # weight_logs
+        [], # sleep_logs
+        [] # activity_logs
+    )
+    return class_user
+
+class_user = create_user_instance_from_db()
+
+def refresh_user_data_from_db():
+    """This function refreshes the user data from DB."""
+    global class_user # global is needed to modify the class_user variable defined outside of this function
+    class_user = create_user_instance_from_db()
+
+
+# add waterlog functionalities
+def add_water_log():
+    """This function adds a water log to the user."""
+    amount_in_ml, timestamp = ui.cli_view.create_water_log__parameters_by_input()
+    class_user.add_water_log(amount_in_ml,timestamp) # pylint: disable=E1111
+    water_log_for_db = class_user._water[-1] # Get the last added water log
+    db.add_water_log(class_user.id, water_log_for_db.amount_in_ml, water_log_for_db.timestamp) # pylint: disable=no-value-for-parameter, disable=line-too-long
+    refresh_user_data_from_db()
+    class_user.show_water_logs() # pylint: disable=E1111, disable=E1101
+
+def show_water_logs():
+    """This function shows all water logs of the user."""
+    class_user.show_water_logs() # pylint: disable=E1111, disable=E1101
+
+def delete_water_log():
+    """This function deletes a waterlog from the user_class and the DB."""
+    water_log_id = int(input("Enter the ID of the water log you want to delete: "))
+    class_user.delete_water_log(water_log_id) # pylint: disable=E1111
+    db.delete_water_log(water_log_id) # pylint: disable=no-value-for-parameter
+
+# --------- Main menu loop - --------
+
 while True:
     choice = ui.cli_view.prompt_main_menu()
     if choice == "1":
-        for user in users: # ID should be removed at the end
-            ui.cli_view.show_message(f"""
-            User Information:
-            ID: {user[0]}
-            Name: {user[1]}
-            Birthdate: {user[2]}
-            Height: {user[3]} cm
-            Gender: {user[4]}
-            Fitness level: {user[5]}
-        """)
+        # Show user information from class
+        ui.cli_view.show_user_info_from_class(class_user)
     elif choice == "2":
         # Add a water log
-        amount_in_ml, timestamp = ui.cli_view.create_water_log_by_input()
-        water_log_1 = user.add_water_log(amount_in_ml, timestamp)
-        db.add_water_log(user[0], water_log_1.amount_in_ml, water_log_1.timestamp) # pylint: disable=no-value-for-parameter, disable=line-too-long
+        add_water_log()
     elif choice == "3":
         # Show water logs
-        user.show_water_logs()
-        water_logs = db.get_all_water_logs() # pylint: disable=no-value-for-parameter
-        ui.cli_view.show_water_logs(water_logs)
+        show_water_logs()
         pass
     elif choice == "4":
-        # Add a weight log
-        pass
+        # Delete a water log
+        delete_water_log()
     elif choice == "5":
         # Show weight logs
         pass

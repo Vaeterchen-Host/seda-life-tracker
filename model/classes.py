@@ -228,6 +228,7 @@ class WaterLog:
     @amount_in_ml.setter
     def amount_in_ml(self, new_amount):
         """This is the setter for amount_in_ml."""
+        int(new_amount)
         if new_amount <= 0 or new_amount >= 2000:
             raise ValueError("Amount must be greater than 0 ml.")
         self._amount_in_ml = new_amount
@@ -464,12 +465,20 @@ class User:
         return bmi
 
     # Here are the water log related methods.
-    def add_water_log(self, water_log_id, amount_in_ml, timestamp=None):
+    def add_water_log(self,  amount_in_ml, timestamp=None):
         """Method for adding a waterlog."""
         if timestamp is None:
             timestamp = datetime.now().isoformat()
-        new_water_log = WaterLog(water_log_id, amount_in_ml, timestamp)
+        new_water_log = WaterLog(None, amount_in_ml, timestamp)
         self._water.append(new_water_log)
+
+    def show_water_logs(self):
+        """Method for showing all waterlogs. Partly AI-generated."""
+        if not self._water:
+            print("No water logs found.")
+            return
+        for log in self._water:
+            print(f"ID: {log.id}, Amount: {log.amount_in_ml} ml, Timestamp: {log.timestamp}")
 
     def delete_water_log(self, water_log_id):
         """Method for deleting a waterlog. AI-generated."""

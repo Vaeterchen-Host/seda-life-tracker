@@ -22,7 +22,7 @@ def create_user_by_input():
     fitness_lvl = input("Enter your fitness level (beginner/intermediate/advanced): ")
     return User(None, name, birthdate, height_in_cm, gender, fitness_lvl, [], [], [], [])
 
-def show_user_info(user):
+def show_user_info_from_class(user):
     """Show the user's information."""
     print("User Information:")
     print(f"Name: {user.name}")
@@ -33,21 +33,22 @@ def show_user_info(user):
 
 # Water log related functions
 
-def create_water_log_by_input():
-    """Create a new water log by asking for input."""
+def create_water_log__parameters_by_input():
+    """Create new water log parameters by asking for input."""
     amount_in_ml = int(input("Enter the amount of water in ml: "))
     timestamp = input("Enter the timestamp (YYYY-MM-DDTHH:MM) or nothing: ")
     if not timestamp:
         timestamp = None
     return amount_in_ml, timestamp
 
-def show_water_logs(water_logs):
+def show_water_logs_from_db(water_logs):
     """Show all water logs."""
     if not water_logs:
         print("No water logs found.")
         return
     for log in water_logs:
         print(f"ID: {log.id}, Amount: {log.amount_in_ml} ml, Timestamp: {log.timestamp}")
+
 
 # Weight log related functions
 
