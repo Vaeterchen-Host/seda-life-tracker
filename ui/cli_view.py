@@ -35,8 +35,25 @@ def show_user_info_from_class(user):
 
 def create_water_log__parameters_by_input():
     """Create new water log parameters by asking for input."""
-    amount_in_ml = int(input("Enter the amount of water in ml: "))
-    timestamp = input("Enter the timestamp (YYYY-MM-DDTHH:MM) or nothing: ")
+    while True:
+        try:
+            amount_in_ml = int(input("Enter the amount of water in ml: "))
+            break
+        except ValueError:
+            print("Invalid input. Please enter a valid amount between 0 and 2000 ml.")
+    while True:
+        try:
+            if amount_in_ml < 0 or amount_in_ml > 2000:
+                raise ValueError("Amount must be between 0 and 2000 ml.")
+            break
+        except ValueError as e:
+            print(e)
+    while True:
+        try:
+            timestamp = input("Enter the timestamp (YYYY-MM-DDTHH:MM) or nothing for current time: ")
+            break
+        except ValueError as e:
+            print(f"Invalid input: {e}")
     if not timestamp:
         timestamp = None
     return amount_in_ml, timestamp

@@ -1,19 +1,12 @@
 """This module contains the cli controller functions for SEDA."""
-
 import sys
 from pathlib import Path
-from time import sleep
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+import ui.cli_view # pylint: disable=import-error
+from model.classes import User, WaterLog, WeightLog # pylint: disable=import-error
+from model.database import Database # pylint: disable=import-error
 
-from model import classes
-from model.classes import User, WaterLog, WeightLog
-from model.database import Database
-import ui.cli_view
-
-
-
-
-
+# Note: Prof wants to kill the array instead of a class instance.
 
 db = Database()
 
@@ -52,18 +45,28 @@ else:
         """)
 #Create an array of WaterLog instances for the user
 def create_water_log_instances_for_user():
+    """Create an array of WaterLog instances for the user."""
     water_logs = []
     for log in db.get_all_water_logs(): # pylint: disable=no-value-for-parameter
-        water_log_instance = WaterLog(log[0], log[1], log[2]) # Assuming log[0] is id, log[1] is amount_in_ml, log[2] is timestamp
+        water_log_instance = WaterLog(log[0], log[2], log[3]) # Assuming log[0] is id, log[1] is amount_in_ml, log[2] is timestamp
         water_logs.append(water_log_instance)
     return water_logs
 
-
+# Create an array of WeightLog instances for the user
+def create_weight_log_instances_for_user():
+    """Create an array of WeightLog instances for the user."""
+    weight_logs = []
+    for log in db.get_all_weight_logs(): # pylint: disable=no-value-for-parameter
+        weight_log_instance = WeightLog(log[0], log[2], log[3]) # Assuming log[0] is id, log[1] is weight_in_kg, log[2] is timestamp
+        weight_logs.append(weight_log_instance)
+    return weight_logs
 
 # Create User class instance from database data
 def create_user_instance_from_db():
+    """Create a User class instance from database data."""
     water_logs = create_water_log_instances_for_user()
-    class_user = classes.User(
+    weight_logs = create_weight_log_instances_for_user()
+    class_user = User(
         user[0], # id
         user[1], # name
         user[2], # birthdate
@@ -71,7 +74,7 @@ def create_user_instance_from_db():
         user[4], # gender
         user[5], # fitness_lvl
         water_logs, # water_logs
-        [], # weight_logs
+        weight_logs, # weight_logs
         [], # sleep_logs
         [] # activity_logs
     )
@@ -93,6 +96,7 @@ def add_water_log():
     water_log_for_db = class_user._water[-1] # Get the last added water log
     db.add_water_log(class_user.id, water_log_for_db.amount_in_ml, water_log_for_db.timestamp) # pylint: disable=no-value-for-parameter, disable=line-too-long
     refresh_user_data_from_db()
+    ui.cli_view.show_message("\nWater log added successfully!\n")
     class_user.show_water_logs() # pylint: disable=E1111, disable=E1101
 
 def show_water_logs():
@@ -101,10 +105,13 @@ def show_water_logs():
 
 def delete_water_log():
     """This function deletes a waterlog from the user_class and the DB."""
+    class_user.show_water_logs() # pylint: disable=E1111, disable=E1101
     water_log_id = int(input("Enter the ID of the water log you want to delete: "))
     class_user.delete_water_log(water_log_id) # pylint: disable=E1111
     db.delete_water_log(water_log_id) # pylint: disable=no-value-for-parameter
-
+    refresh_user_data_from_db()
+    ui.cli_view.show_message("\nWater log deleted successfully!\n")
+    class_user.show_water_logs() # pylint: disable=E1111, disable=E
 # --------- Main menu loop - --------
 
 while True:
@@ -123,12 +130,11 @@ while True:
         # Delete a water log
         delete_water_log()
     elif choice == "5":
-        # Show weight logs
+        # Add a weight log
         pass
     elif choice == "6":
-        # Exit the program
-        ui.cli_view.show_message("Exiting SEDA. Goodbye!")
-        break
+        # Show weight logs
+        pass
     elif choice == "7":
         # Delete a weight log
         pass
