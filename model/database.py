@@ -36,7 +36,9 @@ class Database:
         """This method creates the tables in the database. Further tables can be added here."""
         self.create_user_table()  # pylint: disable=no-value-for-parameter
         self.create_water_log_table()  # pylint: disable=no-value-for-parameter
-
+        self.create_weight_log_table()  # pylint: disable=no-value-for-parameter
+        self.create_weight_log_table()  # pylint: disable=no-value-for-parameter
+    
     def end_connection(self, conn):
         """This method ends the connection to the database."""
         conn.close()
@@ -76,6 +78,14 @@ class Database:
         cursor.execute("SELECT * FROM users WHERE user_name = ?", (name,))
         row = cursor.fetchone()
         return row
+
+    @connector
+    def get_all_users(self, conn) -> list:
+        """This method retrieves all users from the database."""
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users")
+        rows = cursor.fetchall()
+        return rows
 
     @connector
     def delete_user(self, conn, name) -> int:
