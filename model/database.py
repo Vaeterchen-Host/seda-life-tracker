@@ -93,6 +93,20 @@ class Database:
         cursor.execute("DELETE FROM users WHERE user_name = ?", (name,))
         conn.commit()
         return cursor.rowcount
+    
+    @connector
+    def update_user(self, conn, user_id, name, birthdate, height_in_cm, gender, fitness_lvl):
+        """This method updates a user's information in the database. Partly AI-generated."""
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE users
+            SET user_name = ?, date_of_birth = ?, height = ?, gender = ?, fitness_lvl = ?
+            WHERE user_id = ?
+            """,
+            (name, birthdate, height_in_cm, gender, fitness_lvl, user_id)
+        )
+        conn.commit()
 
     # Here are the waterlog related methods.
 

@@ -437,15 +437,15 @@ class User:
             self.fitness_lvl = fitness_lvl
 
     # Here are the weight log related methods.
-    def add_weight_log(self, weight_log_id, weight_in_kg, timestamp=None):
+    def add_weight_log(self, weight_in_kg, timestamp=None):
         """Method for adding a weightlog."""
         if timestamp is None:
             timestamp = datetime.now().isoformat()
-        new_weight_log = WeightLog(weight_log_id, weight_in_kg, timestamp)
+        new_weight_log = WeightLog(None, weight_in_kg, timestamp)
         self._weight.append(new_weight_log)
 
     def delete_weight_log(self, weight_log_id):
-        """Method for deleting a weightlog. AI-generated."""
+        """Method for deleting a weightlog within the class instance. AI-generated."""
         remaining_weight_logs = []
 
         for weight_log in self._weight:
@@ -454,6 +454,13 @@ class User:
 
         self._weight = remaining_weight_logs
 
+    def show_weight_logs(self):
+        """Method for showing all weightlogs. Partly AI-generated."""
+        if not self._weight:
+            print("No weight logs found.")
+            return
+        for log in self._weight:
+            print(f"ID: {log.id}, Weight: {log.weight_in_kg} kg, Timestamp: {log.timestamp}")
 
     def calculate_bmi(self):
         """Method for calculating the BMI."""
