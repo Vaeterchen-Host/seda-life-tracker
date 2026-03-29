@@ -9,11 +9,13 @@ from pathlib import Path
 import datetime
 import flet as ft
 
+
 # Search path for model imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from model.classes import User, WaterLog, WeightLog
 from model.database import Database
+from config import DEVS, VERSION
 
 
 def main(page: ft.Page):
@@ -64,9 +66,7 @@ def main(page: ft.Page):
     welcome_text = ft.Text(
         "Welcome to your fitness app!", size=40, weight="bold", color="blue"
     )
-    version_text = ft.Text(
-        "Version 0.1.| By Tobias Mignat & Sabine Steverding", size=10, color="grey500"
-    )
+    version_text = ft.Text(f"Version {VERSION} | By {DEVS}", size=10, color="grey500")
 
     # Profile / Dashboard elements
     bmi_display = ft.Text("BMI: --", size=25, weight="bold", color="blue")
@@ -138,7 +138,7 @@ def main(page: ft.Page):
         try:
             amount = int(water_input.value)
             # Let the class validate (raises ValueError if > 2000)
-            test_log = WaterLog(0, amount, "2024-01-01 12:00")
+            # test_log = WaterLog(0, amount, "2024-01-01 12:00")
 
             ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
             db.add_water_log(current_user.id, amount, ts)
@@ -177,7 +177,7 @@ def main(page: ft.Page):
             ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
 
             # Force validation by class
-            test_log = WeightLog(0, w, ts)
+            # test_log = WeightLog(0, w, ts)
 
             db.add_weight_log(current_user.id, w, ts)
             weight_input.value = ""
