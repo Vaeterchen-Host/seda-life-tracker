@@ -1,0 +1,12 @@
+# pylint: disable=all
+import flet as ft
+
+def main(page: ft.Page):
+    page.add(
+        ft.Text("Why Flet?", size=22, weight="bold"),
+        ft.Text("• Pure Python – no HTML/CSS/JS", size=16),
+        ft.Text("• Real-time updates – no full-page reloads", size=16),
+        ft.Text("• One codebase – web, desktop, mobile", size=16)
+    )
+
+ft.app(target=main)
