@@ -7,7 +7,6 @@ import datetime
 import flet as ft
 
 # Suchpfad für Model-Imports
-# Suchpfad für Model-Imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from model.classes import User, WaterLog, WeightLog
@@ -15,7 +14,6 @@ from model.database import Database
 
 
 def main(page: ft.Page):
-    page.title = "seda - Personal Fitness Assistant"
     page.title = "seda - Personal Fitness Assistant"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.padding = 20
@@ -93,17 +91,6 @@ def main(page: ft.Page):
     # Gewicht Elemente
     weight_input = ft.TextField(label="Gewicht in kg", width=150)
     weight_list = ft.ListView(spacing=5, height=300, divider_thickness=1)
-
-    # --- DATEN-LOGIK FUNKTIONEN ---
-
-    def update_bmi_view():
-        """Aktualisiert die BMI Anzeige auf dem Dashboard."""
-        bmi = current_user.calculate_bmi()
-        if isinstance(bmi, (int, float)):
-            bmi_display.value = f"Aktueller BMI: {bmi:.2f}"
-        else:
-            bmi_display.value = "BMI: --"
-        page.update()
 
     # --- DATEN-LOGIK FUNKTIONEN ---
 
@@ -336,8 +323,6 @@ def main(page: ft.Page):
         page.update()
 
     confirm_dialog = ft.AlertDialog(
-        title=ft.Text("Löschen bestätigen"),
-        content=ft.Text("Diesen Eintrag wirklich löschen?"),
         title=ft.Text("Löschen bestätigen"),
         content=ft.Text("Diesen Eintrag wirklich löschen?"),
         actions=[
