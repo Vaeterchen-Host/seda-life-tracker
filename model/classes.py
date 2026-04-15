@@ -305,10 +305,12 @@ class ActivityLog:
 
     @property
     def id(self):
+        """This is the getter for activity log."""
         return self._id
 
     @id.setter
     def id(self, new_id):
+        """This is the setter vor activity log."""
         self._id = new_id
 
 
@@ -342,7 +344,6 @@ class User:
         self.food_logs = food  # refactored by ai
         self.meal_logs = meal  # refactored by ai
         self.activity_logs = activity  # refactored by ai
-
 
     # Here are the biometrical data related methods.
     @property
@@ -472,7 +473,6 @@ class User:
         self._activity = _validate_log_list(
             new_activity_logs, ActivityLog, "Activity logs"
         )  # refactored by ai
-
 
     def update_biometrical_data(
         self, birthdate=None, height_in_cm=None, gender=None, fitness_lvl=None
@@ -605,7 +605,7 @@ class User:
             timestamp = datetime.now().isoformat()
         new_activity_log = ActivityLog(None, activity_name, calories_burned, timestamp)
         self._activity.append(new_activity_log)
-        
+
     def delete_activity_log(self, activity_log_id):
         """Method for deleting an activity log. AI-generated."""
-        self._activity = [log for log in self._activity if log.id != activity_log_id] 
+        self._activity = [log for log in self._activity if log.id != activity_log_id]
