@@ -1,15 +1,21 @@
 """This module contains the handler for the food API."""
 
-from socket import timeout
 import sys
+from socket import timeout
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+# pylint: disable=C0413, E1120, C0301
+
 import requests
+from keys import OFF_API_USER
 
 # For final use, we should use the production API.
 # Production: https://world.openfoodfacts.org
 # For testing, we can use the staging API.
 # Staging: https://world.openfoodfacts.net
 
-# vaeterchen_host@proton.me as contact for API key
+print(OFF_API_USER)
 # read does not require API key, but write does.
 
 EXAMPLE_URL = "https://world.openfoodfacts.net/api/v0/product/737628064502.json"

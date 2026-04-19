@@ -14,3 +14,6 @@ env/
 
 # Local example code
 Beispiele/
+
+# Secrets
+keys.py
