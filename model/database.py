@@ -27,7 +27,13 @@ def connector(func):
 
 
 # added class for Food-DB, which is static. It will coexist with the(main-)DB and the OFF API calls.
-# The DB must be read-only, so we only need methods for fetching data.
+# The DB must be read-only(!), so we only need methods for fetching data.
+
+FOOD_DB_TEST_QUERY = """
+PRAGMA table_info(foods);
+"""
+
+
 class FoodDatabase:
     """This class defines the Food_Database."""
 
@@ -68,13 +74,8 @@ class FoodDatabase:
 
 # for dev and testing purposes.
 if __name__ == "__main__":
-    QUERY = """
-    SELECT name_de, name_en, kcal, protein, fat
-    FROM foods where name_de like '%Apfel%'
-    LIMIT 5;
-    """
     food_db = FoodDatabase()
-    results = food_db.custom_sql_query(QUERY)
+    results = food_db.custom_sql_query(FOOD_DB_TEST_QUERY)
     for row in results:
         print(row)
 
