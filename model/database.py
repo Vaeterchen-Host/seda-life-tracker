@@ -51,17 +51,17 @@ class FoodDatabase:
         conn.close()
 
     @connector
-    def get_one_food_by_name(self, conn, food_name):
+    def get_one_food_by_name_en(self, conn, food_name):
         """This method retrieves a food item from the database by its name."""
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM foods WHERE name = ?", (food_name,))
+        cursor.execute("SELECT * FROM foods WHERE name_en = ?", (food_name,))
         return cursor.fetchone()
 
     @connector
-    def get_query_food_by_name(self, conn, food_name):
+    def get_query_food_by_name_en(self, conn, food_name):
         """This method retrieves a list of food items from the database that match the query name."""
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM foods WHERE name LIKE ?", (f"%{food_name}%",))
+        cursor.execute("SELECT * FROM foods WHERE name_en LIKE ?", (f"%{food_name}%",))
         return cursor.fetchall()
 
     @connector
@@ -101,7 +101,7 @@ class Database:
         self.create_water_log_table()  # pylint: disable=no-value-for-parameter
         self.create_weight_log_table()  # pylint: disable=no-value-for-parameter
         self.create_activity_log_table()  # pylint: disable=no-value-for-parameter
-        # self.create_food_table()  # pylint: disable=no-value-for-parameter
+        # No local foods table is created anymore. ai-refactored, due to food-db
         self.create_food_log_table()  # pylint: disable=no-value-for-parameter
         self.create_meal_table()  # pylint: disable=no-value-for-parameter
         self.create_meal_item_table()  # pylint: disable=no-value-for-parameter
@@ -331,8 +331,7 @@ class Database:
                 food_id INTEGER NOT NULL,
                 amount_in_gram REAL NOT NULL,
                 timestamp TEXT NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
-                FOREIGN KEY (food_id) REFERENCES foods (food_id) ON DELETE CASCADE
+                FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
             )
             """
         )
@@ -355,17 +354,28 @@ class Database:
     def get_user_food_logs(self, conn, user_id):
         """Retrieves all food log entries for a specific user with food names."""
         cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT fl.food_log_id, fl.food_id, f.name, fl.amount_in_gram, fl.timestamp
-            FROM food_logs fl
-            JOIN foods f ON fl.food_id = f.food_id
-            WHERE fl.user_id = ?
-            ORDER BY fl.timestamp DESC
-            """,
-            (user_id,),
-        )
-        return cursor.fetchall()
+        # Read food labels from the external BLS food database. ai-refactored, due to food-db
+        cursor.execute("ATTACH DATABASE ? AS food_db", (str(FOOD_DB_PATH),))
+        try:
+            cursor.execute(
+                """
+                SELECT
+                    fl.food_log_id,
+                    fl.food_id,
+                    COALESCE(f.name_de, f.name_en) AS name,
+                    fl.amount_in_gram,
+                    fl.timestamp
+                FROM food_logs fl
+                LEFT JOIN food_db.foods f ON fl.food_id = f.food_id
+                WHERE fl.user_id = ?
+                ORDER BY fl.timestamp DESC
+                """,
+                (user_id,),
+            )
+            rows = cursor.fetchall()
+        finally:
+            cursor.execute("DETACH DATABASE food_db")
+        return rows
 
     @connector
     def delete_food_log(self, conn, food_log_id):
@@ -427,8 +437,7 @@ class Database:
                 meal_id INTEGER NOT NULL,
                 food_id INTEGER NOT NULL,
                 amount_in_gram REAL NOT NULL,
-                FOREIGN KEY (meal_id) REFERENCES meals (meal_id) ON DELETE CASCADE,
-                FOREIGN KEY (food_id) REFERENCES foods (food_id) ON DELETE CASCADE
+                FOREIGN KEY (meal_id) REFERENCES meals (meal_id) ON DELETE CASCADE
             )
             """
         )
@@ -451,19 +460,35 @@ class Database:
     def get_meal_items(self, conn, meal_id):
         """Retrieves all ingredients for a specific meal including food details."""
         cursor = conn.cursor()
-        # Joining with foods to get nutrient data and name for the MealItem objects
-        cursor.execute(
-            """
-            SELECT mi.meal_item_id, mi.food_id, f.name, mi.amount_in_gram, f.calorie, 
-                   f.fat, f.saturated_fat, f.carbohydrate, f.fibre, f.sugar, 
-                   f.protein, f.salt, f.sodium
-            FROM meal_items mi
-            JOIN foods f ON mi.food_id = f.food_id
-            WHERE mi.meal_id = ?
-            """,
-            (meal_id,),
-        )
-        return cursor.fetchall()
+        # Join meal items against the external BLS food database. ai-refactored, due to food-db
+        cursor.execute("ATTACH DATABASE ? AS food_db", (str(FOOD_DB_PATH),))
+        try:
+            cursor.execute(
+                """
+                SELECT
+                    mi.meal_item_id,
+                    mi.food_id,
+                    COALESCE(f.name_de, f.name_en) AS name,
+                    mi.amount_in_gram,
+                    f.kcal AS calorie,
+                    f.fat,
+                    f.saturated_fat,
+                    f.carbohydrate,
+                    f.fibre,
+                    f.sugar,
+                    f.protein,
+                    f.salt,
+                    f.sodium
+                FROM meal_items mi
+                LEFT JOIN food_db.foods f ON mi.food_id = f.food_id
+                WHERE mi.meal_id = ?
+                """,
+                (meal_id,),
+            )
+            rows = cursor.fetchall()
+        finally:
+            cursor.execute("DETACH DATABASE food_db")
+        return rows
 
     # Here are the meal log related methods.
     @connector

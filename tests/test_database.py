@@ -4,12 +4,14 @@
 
 """Tests for the SEDA database layer."""
 
+import sqlite3
 import uuid
 from pathlib import Path
 
 import pytest
 
-from model.database import Database
+from config import FOOD_DB_PATH
+from model.database import Database, FoodDatabase
 from model.classes import User
 
 # pylint: skip-file
@@ -32,6 +34,47 @@ def db():
 def tobias():
     """Create a fresh user object for each test."""
     return User(None, "Test", "2000-02-22", 185, "m", "beginner", [], [], [], [], [])
+
+
+@pytest.fixture
+def sample_food_row():
+    """Return a stable sample row from the external food DB. AI-generated."""
+    conn = sqlite3.connect(FOOD_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT *
+        FROM foods
+        ORDER BY food_id ASC
+        LIMIT 1
+        """
+    )
+    row = cursor.fetchone()
+    conn.close()
+    assert row is not None, "External food DB should contain at least one food row."
+    return row
+
+
+@pytest.fixture
+def sample_food_with_name_en():
+    """Return a food row that has an English name for name-based lookup tests. AI-generated."""
+    conn = sqlite3.connect(FOOD_DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT *
+        FROM foods
+        WHERE name_en IS NOT NULL AND TRIM(name_en) != ''
+        ORDER BY food_id ASC
+        LIMIT 1
+        """
+    )
+    row = cursor.fetchone()
+    conn.close()
+    assert row is not None, "External food DB should contain at least one row with name_en."
+    return row
 
 
 # AI-generated content end
@@ -257,65 +300,51 @@ def test_delete_activity_log(db, tobias):
     assert len(logs_after) == 0, "Activity log table should be empty after deletion"
 
 
-# food master data related tests
-def test_food_table_creation(db):
-    """This test checks if the food master data table is created successfully."""
+# food database related tests
+def test_food_table_is_not_created_in_main_database(db):
+    """This test checks that foods are no longer stored in the main database. AI-refactored."""
     conn = db.connect()
     cursor = conn.cursor()
     cursor.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='foods'"
     )
     table_exists = cursor.fetchone() is not None
-    assert table_exists, "Foods table could not be created"
+    assert not table_exists, "Main database should not create a local foods table"
     conn.close()
 
-def test_add_and_get_food(db):
-    """This test checks if a food item can be added and retrieved with all nutrients."""
-    # We simulate the nutritional values as a dictionary (to match the `add_food` method)
-    apple_nutrients = {
-        'calorie': 52,
-        'fat': 0.2,
-        'saturated_fat': 0.0,
-        'carbohydrate': 14.0,
-        'fibre': 2.4,
-        'sugar': 10.0,
-        'protein': 0.3,
-        'salt': 0.0,
-        'sodium': 0.0
-    }
-    
-    # 1. adding Food
-    db.add_food("Apple", "food", apple_nutrients)
-    
-    # 2. view all
-    all_foods = db.get_all_foods()
-    assert len(all_foods) == 1
-    
-    # 3. checking all (Index: 0=id, 1=name, 2=food_type, 3=calorie, ...)
-    apple_row = all_foods[0]
-    assert apple_row[1] == "Apple"
-    assert apple_row[2] == "food"
-    assert apple_row[3] == 52       # calorie
-    assert apple_row[9] == 0.3      # protein
+def test_food_database_connection():
+    """This test checks if the external food database can be opened. AI-generated."""
+    food_db = FoodDatabase()
+    conn = food_db.connect()
+    assert conn is not None, "Connection to the external food DB could not be established."
+    food_db.end_connection(conn)
 
 
-def test_delete_food(db):
-    """This test checks if a food item can be deleted from master data."""
-    # Placeholder nutritional values for the test
-    nutrients = {k: 0 for k in ['calorie', 'fat', 'saturated_fat', 'carbohydrate', 
-                                'fibre', 'sugar', 'protein', 'salt', 'sodium']}
-    
-    db.add_food("Testfood", "food", nutrients)
-    foods_before = db.get_all_foods()
-    food_id = foods_before[0][0]
-    
-    # deleting
-    deleted_count = db.delete_food(food_id)
-    assert deleted_count == 1
-    
-    # verifying
-    foods_after = db.get_all_foods()
-    assert len(foods_after) == 0
+def test_food_database_query_by_exact_english_name(sample_food_with_name_en):
+    """This test checks exact English-name lookup in the external food DB. AI-generated."""
+    food_db = FoodDatabase()
+    row = food_db.get_one_food_by_name_en(sample_food_with_name_en["name_en"])
+    assert row is not None, "Exact English-name lookup should return a row"
+    assert row[0] == sample_food_with_name_en["food_id"], "Food ID does not match expected row"
+
+
+def test_food_database_query_by_partial_english_name(sample_food_with_name_en):
+    """This test checks partial English-name lookup in the external food DB. AI-generated."""
+    food_db = FoodDatabase()
+    query_term = sample_food_with_name_en["name_en"][:3]
+    rows = food_db.get_query_food_by_name_en(query_term)
+    assert rows, "Partial English-name lookup should return at least one row"
+    assert any(row[0] == sample_food_with_name_en["food_id"] for row in rows)
+
+
+def test_food_database_custom_sql_query_returns_food_columns():
+    """This test checks if the external food DB schema can be queried. AI-generated."""
+    food_db = FoodDatabase()
+    rows = food_db.custom_sql_query("PRAGMA table_info(foods);")
+    column_names = [row[1] for row in rows]
+    assert "food_id" in column_names, "Expected food_id column in external foods table"
+    assert "bls_code" in column_names, "Expected bls_code column in external foods table"
+    assert "name_de" in column_names, "Expected name_de column in external foods table"
 
 # food log related tests
 def test_food_log_table_creation(db):
@@ -329,50 +358,65 @@ def test_food_log_table_creation(db):
     assert table_exists, "Food logs table could not be created"
     conn.close()
 
-def test_add_and_get_food_log(db, tobias):
-    """Checks if a user can log a food item and retrieve it with the food name."""
-    # 1. Setup: Create user and food master data
+def test_food_log_table_has_only_user_foreign_key(db):
+    """This test checks the reduced FK shape of food_logs. AI-generated."""
+    conn = db.connect()
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA foreign_key_list(food_logs)")
+    foreign_keys = cursor.fetchall()
+    conn.close()
+    assert len(foreign_keys) == 1, "food_logs should only keep the user foreign key"
+    assert foreign_keys[0][2] == "users", "food_logs should reference only users"
+
+
+def test_add_and_get_food_log(db, tobias, sample_food_row):
+    """Checks if a user can log a food item and retrieve it with the external food name. Partly AI-refactored."""
+    # 1. Setup: Create user and use external food master data
     db.add_user(
         tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
     )
-    
-    nutrients = {k: 0 for k in ['calorie', 'fat', 'saturated_fat', 'carbohydrate', 
-                                'fibre', 'sugar', 'protein', 'salt', 'sodium']}
-    db.add_food("Banana", "fruit", nutrients)
-    
-    # Using ID 1 as it is a fresh test database
+
     user_id = 1
-    food_id = 1
-    
+    food_id = sample_food_row["food_id"]
+
     # 2. Add log entry
     db.add_food_log(user_id, food_id, 150.0, "2026-04-19T12:00:00")
-    
+
     # 3. Retrieve and validate
     logs = db.get_user_food_logs(user_id)
     assert len(logs) == 1, "There should be exactly one food log entry"
-    
-    # Check JOIN logic (Index 2 is the name from the foods table)
-    assert logs[0][2] == "Banana", "Food name from JOIN does not match"
+
+    expected_name = sample_food_row["name_de"] or sample_food_row["name_en"]
+    assert logs[0][1] == food_id, "Food ID from log does not match external food ID"
+    assert logs[0][2] == expected_name, "Food name from external food DB does not match"
     assert logs[0][3] == 150.0, "Amount in gram does not match"
     assert logs[0][4] == "2026-04-19T12:00:00", "Timestamp does not match"
 
-def test_delete_food_log(db, tobias):
-    """Checks if a food log entry can be deleted."""
+def test_get_user_food_logs_returns_none_name_for_missing_food_reference(db, tobias):
+    """This test checks behavior for orphaned external food references. AI-generated."""
+    db.add_user(
+        tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
+    )
+    db.add_food_log(1, 999999999, 90.0, "2026-04-19T07:30:00")
+    logs = db.get_user_food_logs(1)
+    assert len(logs) == 1, "There should be one food log entry"
+    assert logs[0][2] is None, "Missing external foods should yield a null joined name"
+
+
+def test_delete_food_log(db, tobias, sample_food_row):
+    """Checks if a food log entry can be deleted. Partly AI-refactored."""
     # Setup
     db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
-    nutrients = {k: 0 for k in ['calorie', 'fat', 'saturated_fat', 'carbohydrate', 'fibre', 'sugar', 'protein', 'salt', 'sodium']}
-    db.add_food("Apple", "fruit", nutrients)
-    
-    db.add_food_log(1, 1, 100.0, "2026-04-19T13:00:00")
-    
+    db.add_food_log(1, sample_food_row["food_id"], 100.0, "2026-04-19T13:00:00")
+
     # Get log ID
     logs_before = db.get_user_food_logs(1)
     log_id = logs_before[0][0]
-    
+
     # Delete
     deleted_count = db.delete_food_log(log_id)
     assert deleted_count == 1
-    
+
     # Verify deletion
     logs_after = db.get_user_food_logs(1)
     assert len(logs_after) == 0
@@ -422,21 +466,42 @@ def test_meal_item_table_creation(db):
     conn.close()
 
 
-def test_add_and_get_meal_item(db):
-    """This test checks if a food can be linked to a meal as an item."""
-    # Setup: Food and Meal
-    nutrients = {k: 0 for k in ['calorie', 'fat', 'saturated_fat', 'carbohydrate', 
-                                'fibre', 'sugar', 'protein', 'salt', 'sodium']}
-    db.add_food("Oats", "grain", nutrients)
+def test_meal_item_table_has_only_meal_foreign_key(db):
+    """This test checks the reduced FK shape of meal_items. AI-generated."""
+    conn = db.connect()
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA foreign_key_list(meal_items)")
+    foreign_keys = cursor.fetchall()
+    conn.close()
+    assert len(foreign_keys) == 1, "meal_items should only keep the meal foreign key"
+    assert foreign_keys[0][2] == "meals", "meal_items should reference only meals"
+
+
+def test_add_and_get_meal_item(db, sample_food_row):
+    """This test checks if a food from the external DB can be linked to a meal. Partly AI-refactored."""
     db.add_meal("Porridge")
-    
+
     # Add Item
-    db.add_meal_item(1, 1, 50.0)
-    
+    db.add_meal_item(1, sample_food_row["food_id"], 50.0)
+
     items = db.get_meal_items(1)
     assert len(items) == 1, "There should be one item in the meal"
-    assert items[0][2] == "Oats", "Food name in meal item does not match"
+    expected_name = sample_food_row["name_de"] or sample_food_row["name_en"]
+    assert items[0][1] == sample_food_row["food_id"], "Food ID in meal item does not match"
+    assert items[0][2] == expected_name, "Food name in meal item does not match"
     assert items[0][3] == 50.0, "Amount in gram does not match"
+    assert items[0][4] == sample_food_row["kcal"], "Calories should come from the external food DB"
+    assert items[0][5] == sample_food_row["fat"], "Fat should come from the external food DB"
+
+
+def test_get_meal_items_returns_none_values_for_missing_food_reference(db):
+    """This test checks behavior for orphaned external food references in meal items. AI-generated."""
+    db.add_meal("Fallback Meal")
+    db.add_meal_item(1, 999999999, 25.0)
+    items = db.get_meal_items(1)
+    assert len(items) == 1, "There should be one meal item"
+    assert items[0][2] is None, "Missing external foods should yield a null joined name"
+    assert items[0][4] is None, "Missing external foods should yield null nutrient values"
 
 
 # meal log related tests

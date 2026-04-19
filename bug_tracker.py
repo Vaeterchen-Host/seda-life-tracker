@@ -105,12 +105,28 @@ BUGS = [
         "area": "ui/cli_view.py / model/controller.py",
         "notes": "If the GPL text is shown in the CLI, it should be paginated, for example in blocks of 25 to 30 lines with Enter to continue, instead of printing one very long block.",
     },
-        {
+    {
         "id": "BUG-013",
         "title": "Unit of measurement for food and beverages",
         "status": "open",
         "priority": "medium",
         "area": "classes.py",
         "notes": "for logical reasons, we should define the measurement of 'amount_in_gram' to 'amount_in_gram_or_mililiters', as we are also going to track beverages such as coca cola etc. ",
+    },
+    {
+        "id": "BUG-014",
+        "title": "Temporary food database demo function should be removed or replaced",
+        "status": "open",
+        "priority": "low",
+        "area": "ui/cli_view.py",
+        "notes": "The temporary demonstration-only function should not remain in the final version and needs to be deleted or replaced later.",
+    },
+    {
+        "id": "BUG-015",
+        "title": "MealLog model and meal_logs table use different data shapes",
+        "status": "open",
+        "priority": "medium",
+        "area": "model/classes.py / model/database.py",
+        "notes": "MealLog currently expects amount_in_gram, but the meal_logs table and add_meal_log() only store user_id, meal_id and timestamp. This needs to be aligned before meal log handling is extended further.",
     },
 ]

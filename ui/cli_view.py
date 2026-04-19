@@ -4,14 +4,23 @@
 
 """CLI view functions for SEDA."""
 
+
 import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+# pylint: disable=C0413, E1120, C0301
 from datetime import datetime
 from config import DEVS, LICENSE_PATH
 from model.classes import User
+from model.database import FoodDatabase
 from utils.paginator import paginator
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+# Type example german food query.
+# Just for testing. Must be deleted.
+FOOD = "Rinderfilet"
 
 
 def show_message(message):
@@ -104,7 +113,7 @@ def create_user_by_input():
             "Fitness level must be 'beginner', 'intermediate', or 'advanced'. Please enter a valid fitness level."
         )
     return User(
-        None, name, birthdate, height_in_cm, gender, fitness_lvl, [], [], [], []
+        None, name, birthdate, height_in_cm, gender, fitness_lvl, [], [], [], [], []
     )
 
 
@@ -298,3 +307,87 @@ def prompt_weight_log_menu():
                                 """
     )
     return input("Enter your choice (1-5): ")
+
+
+# Food-DB related functions
+def example_query(food_name="Hafer"):
+    """Example function. For testing and demonstration purposes.
+    It queries the food database for a given food name.
+    It must be deleted or replaced in the final version
+    This function is ai-generated."""
+    db = FoodDatabase()
+
+    query = f"""
+    SELECT *
+    FROM foods
+    WHERE name_de LIKE '%{food_name}%'
+    LIMIT 1;
+    """
+
+    result = db.custom_sql_query(query)
+
+    if not result:
+        print("Nothing found. Maybe your food is too exotic.")
+        return
+
+    row = result[0]
+
+    # fetch column names
+    conn = db.connect()
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(foods);")
+    columns = [col[1] for col in cursor.fetchall()]
+    conn.close()
+
+    data = dict(zip(columns, row))
+
+    # --- Output ---
+    print("\n" + "=" * 60)
+    print(f"English: {data['name_en']}")
+    print(f"German: {data['name_de']}")
+    print(f"food_id: {data['food_id']}")
+    print(f"BLS Code: {data['bls_code']}")
+    print("=" * 60)
+
+    # --- Macronutrients (per 100g) ---
+    print("\n--- Macronutrients (per 100g) ---")
+    print(f"Calories:              {data['kcal']} kcal")
+    print(f"Protein:               {data['protein']} g")
+    print(f"Fat:                   {data['fat']} g")
+    print(f"  Saturated:           {data['saturated_fat']} g")
+    print(f"  Monounsaturated:     {data['monounsaturated_fat']} g")
+    print(f"  Polyunsaturated:     {data['polyunsaturated_fat']} g")
+    print(f"Carbohydrates:         {data['carbohydrate']} g")
+    print(f"  Sugar:               {data['sugar']} g")
+    print(f"Fibre:                 {data['fibre']} g")
+
+    # --- Minerals ---
+    print("\n--- Minerals ---")
+    print(f"Salt:                  {data['salt']} g")
+    print(f"Sodium:                {data['sodium']} mg")
+    print(f"Potassium:             {data['potassium']} mg")
+    print(f"Calcium:               {data['calcium']} mg")
+    print(f"Magnesium:             {data['magnesium']} mg")
+    print(f"Iron:                  {data['iron']} mg")
+    print(f"Zinc:                  {data['zinc']} mg")
+    print(f"Iodine:                {data['iodine']} µg")
+
+    # --- Vitamins ---
+    print("\n--- Vitamins ---")
+    print(f"Vitamin A:             {data['vitamin_a']} µg")
+    print(f"Vitamin D:             {data['vitamin_d']} µg")
+    print(f"Vitamin E:             {data['vitamin_e']} mg")
+    print(f"Vitamin K:             {data['vitamin_k']} µg")
+    print(f"Vitamin B1:            {data['vitamin_b1']} mg")
+    print(f"Vitamin B2:            {data['vitamin_b2']} mg")
+    print(f"Niacin:                {data['niacin']} mg")
+    print(f"Vitamin B6:            {data['vitamin_b6']} µg")
+    print(f"Folate:                {data['folate']} µg")
+    print(f"Vitamin B12:           {data['vitamin_b12']} µg")
+    print(f"Vitamin C:             {data['vitamin_c']} mg")
+
+    print("\n" + "=" * 60 + "\n")
+
+
+if __name__ == "__main__":
+    example_query(FOOD)
