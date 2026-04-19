@@ -125,8 +125,54 @@ def test_get_all_water_logs(db, tobias):
     conn.close()
 
 
-# weight log related tests (tbd)
+# weight log related tests
+def test_weight_log_table_creation(db):
+    """This test checks if the weight logs table is created successfully."""
+    conn = db.connect()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='weight_logs'"
+    )
+    table_exists = cursor.fetchone() is not None
+    assert table_exists, "Weight logs table could not be created"
+    conn.close()
 
+
+def test_add_and_get_weight_log(db, tobias):
+    """This test checks if weight entries can be added and retrieved correctly."""
+    # 1. Setup: Create user
+    db.add_user(
+        tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
+    )
+    
+    # 2. Add weight log (User ID 1)
+    db.add_weight_log(1, 85.5, "2026-04-19T09:00:00")
+    
+    # 3. Retrieve and validate
+    logs = db.get_all_weight_logs()
+    assert len(logs) == 1, "There should be exactly one weight log entry"
+    assert logs[0][1] == 1, "User ID does not match"
+    assert logs[0][2] == 85.5, "Weight value does not match"
+    assert logs[0][3] == "2026-04-19T09:00:00", "Timestamp does not match"
+
+
+def test_delete_weight_log(db, tobias):
+    """This test checks if a weight log entry can be deleted."""
+    # Setup
+    db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
+    db.add_weight_log(1, 90.0, "2026-04-18T08:00:00")
+    
+    # Get the ID of the entry
+    logs_before = db.get_all_weight_logs()
+    weight_log_id = logs_before[0][0]
+    
+    # Delete
+    deleted_count = db.delete_weight_log(weight_log_id)
+    assert deleted_count == 1, "One row should have been deleted"
+    
+    # Verify
+    logs_after = db.get_all_weight_logs()
+    assert len(logs_after) == 0, "Weight log table should be empty after deletion"
 
 # delete tests
 def test_delete_user(db, tobias):
@@ -270,3 +316,165 @@ def test_delete_food(db):
     # verifying
     foods_after = db.get_all_foods()
     assert len(foods_after) == 0
+
+# food log related tests
+def test_food_log_table_creation(db):
+    """This test checks if the food logs table is created successfully."""
+    conn = db.connect()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='food_logs'"
+    )
+    table_exists = cursor.fetchone() is not None
+    assert table_exists, "Food logs table could not be created"
+    conn.close()
+
+def test_add_and_get_food_log(db, tobias):
+    """Checks if a user can log a food item and retrieve it with the food name."""
+    # 1. Setup: Create user and food master data
+    db.add_user(
+        tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
+    )
+    
+    nutrients = {k: 0 for k in ['calorie', 'fat', 'saturated_fat', 'carbohydrate', 
+                                'fibre', 'sugar', 'protein', 'salt', 'sodium']}
+    db.add_food("Banana", "fruit", nutrients)
+    
+    # Using ID 1 as it is a fresh test database
+    user_id = 1
+    food_id = 1
+    
+    # 2. Add log entry
+    db.add_food_log(user_id, food_id, 150.0, "2026-04-19T12:00:00")
+    
+    # 3. Retrieve and validate
+    logs = db.get_user_food_logs(user_id)
+    assert len(logs) == 1, "There should be exactly one food log entry"
+    
+    # Check JOIN logic (Index 2 is the name from the foods table)
+    assert logs[0][2] == "Banana", "Food name from JOIN does not match"
+    assert logs[0][3] == 150.0, "Amount in gram does not match"
+    assert logs[0][4] == "2026-04-19T12:00:00", "Timestamp does not match"
+
+def test_delete_food_log(db, tobias):
+    """Checks if a food log entry can be deleted."""
+    # Setup
+    db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
+    nutrients = {k: 0 for k in ['calorie', 'fat', 'saturated_fat', 'carbohydrate', 'fibre', 'sugar', 'protein', 'salt', 'sodium']}
+    db.add_food("Apple", "fruit", nutrients)
+    
+    db.add_food_log(1, 1, 100.0, "2026-04-19T13:00:00")
+    
+    # Get log ID
+    logs_before = db.get_user_food_logs(1)
+    log_id = logs_before[0][0]
+    
+    # Delete
+    deleted_count = db.delete_food_log(log_id)
+    assert deleted_count == 1
+    
+    # Verify deletion
+    logs_after = db.get_user_food_logs(1)
+    assert len(logs_after) == 0
+
+# meal related tests
+def test_meal_table_creation(db):
+    """This test checks if the meals table is created successfully."""
+    conn = db.connect()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='meals'"
+    )
+    table_exists = cursor.fetchone() is not None
+    assert table_exists, "Meals table could not be created"
+    conn.close()
+
+
+def test_add_and_get_meal(db):
+    """This test checks if a meal template can be added and retrieved."""
+    meal_id = db.add_meal("Protein Breakfast")
+    assert meal_id == 1, "First meal ID should be 1"
+    
+    all_meals = db.get_all_meals()
+    assert len(all_meals) == 1, "There should be one meal in the database"
+    assert all_meals[0][1] == "Protein Breakfast", "Meal name does not match"
+
+
+def test_delete_meal(db):
+    """This test checks if a meal template can be deleted."""
+    db.add_meal("Lunch")
+    db.delete_meal(1)
+    
+    all_meals = db.get_all_meals()
+    assert len(all_meals) == 0, "Meal table should be empty after deletion"
+
+
+# meal item related tests
+def test_meal_item_table_creation(db):
+    """This test checks if the meal items table is created successfully."""
+    conn = db.connect()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='meal_items'"
+    )
+    table_exists = cursor.fetchone() is not None
+    assert table_exists, "Meal items table could not be created"
+    conn.close()
+
+
+def test_add_and_get_meal_item(db):
+    """This test checks if a food can be linked to a meal as an item."""
+    # Setup: Food and Meal
+    nutrients = {k: 0 for k in ['calorie', 'fat', 'saturated_fat', 'carbohydrate', 
+                                'fibre', 'sugar', 'protein', 'salt', 'sodium']}
+    db.add_food("Oats", "grain", nutrients)
+    db.add_meal("Porridge")
+    
+    # Add Item
+    db.add_meal_item(1, 1, 50.0)
+    
+    items = db.get_meal_items(1)
+    assert len(items) == 1, "There should be one item in the meal"
+    assert items[0][2] == "Oats", "Food name in meal item does not match"
+    assert items[0][3] == 50.0, "Amount in gram does not match"
+
+
+# meal log related tests
+def test_meal_log_table_creation(db):
+    """This test checks if the meal logs table is created successfully."""
+    conn = db.connect()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='meal_logs'"
+    )
+    table_exists = cursor.fetchone() is not None
+    assert table_exists, "Meal logs table could not be created"
+    conn.close()
+
+
+def test_add_and_get_meal_log(db, tobias):
+    """This test checks if a consumed meal can be logged and retrieved."""
+    # Setup
+    db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
+    db.add_meal("Standard Shake")
+    
+    # Log Meal
+    db.add_meal_log(1, 1, "2026-04-19T08:00:00")
+    
+    logs = db.get_user_meal_logs(1)
+    assert len(logs) == 1, "There should be one meal log entry"
+    assert logs[0][2] == "Standard Shake", "Logged meal name does not match"
+    assert logs[0][3] == "2026-04-19T08:00:00", "Timestamp does not match"
+
+
+def test_delete_meal_log(db, tobias):
+    """This test checks if a meal log entry can be deleted."""
+    db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
+    db.add_meal("Snack")
+    db.add_meal_log(1, 1, "2026-04-19T20:00:00")
+    
+    # Delete
+    db.delete_meal_log(1)
+    
+    logs = db.get_user_meal_logs(1)
+    assert len(logs) == 0, "Meal logs should be empty after deletion"
