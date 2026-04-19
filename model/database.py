@@ -27,6 +27,7 @@ def connector(func):
 
 
 # added class for Food-DB, which is static. It will coexist with the(main-)DB and the OFF API calls.
+# The DB must be read-only, so we only need methods for fetching data.
 class FoodDatabase:
     """This class defines the Food_Database."""
 
