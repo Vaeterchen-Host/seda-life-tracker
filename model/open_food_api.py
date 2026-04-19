@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 Tobias Mignat & Sabine Steverding
+# See LICENSE.md for the full license text.
 """This module contains the handler for the food API."""
 
 import sys
