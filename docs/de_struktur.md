@@ -1,199 +1,143 @@
-# Projektstruktur
+# Projektstruktur (ai-generiert)
 
-> Diese Datei beschreibt den aktuellen Stand des Repositories möglichst nah am Ist-Zustand. Sie ist bewusst eine Bestandsaufnahme und keine Aussage darüber, was davon bereits fachlich sauber, fertig oder fehlerfrei ist.
-
-## Hinweis zur Autorschaft
-
-- Bestehende Projektdateien und die Grundstruktur des Repositories sind nicht KI-generiert.
-- Diese überarbeitete Strukturbeschreibung wurde mit KI-Unterstützung angepasst.
-- Die Einordnung, welche Bereiche aktiv, experimentell oder Übergangsstand sind, basiert auf dem aktuellen Dateistand im Repository.
+> Diese Datei beschreibt den aktuellen Aufbau des Workspaces und soll als einfache Orientierung für das Projekt dienen.
 
 ## Kurzüberblick
 
-SEDA ist aktuell ein Python-Projekt mit zwei aktiven Bedienwegen:
+SEDA ist aktuell ein Python-Projekt mit drei Hauptbereichen:
 
-- CLI über `main.py` und `model/controller.py`
-- GUI mit Flet über `ui/ui.py`
+- Fachlogik in `model/`
+- Benutzeroberflächen in `ui/`
+- Daten in `data/`
+- Tests in `tests/`
+- Dokumentation in `docs/`
 
-Daneben gibt es mehrere Entwicklungs- und Übergangsbereiche:
+Zusätzlich gibt es Hilfsdateien, ältere Experimente und einige Legacy- oder Utility-Dateien, die nicht direkt zum Kernablauf gehören.
 
-- eine Hauptdatenbank in `data/database.db`
-- eine separate Lebensmitteldatenbank in `data/bls_foods.sqlite`
-- Prototypen und Zwischenstände in `utils/`
-- alte UI-Stände in `legacy/`
-- Lern- und Beispielcode in `Beispiele/`
-- Rohdaten und Importskript für BLS in `BLS_4_0_2025_DE/`
-
-## Aktive Projektbereiche
+## Ordner im Projekt
 
 ### `model/`
-
-Hier liegt die Fach- und Datenlogik.
+Hier liegt die eigentliche Anwendungslogik.
 
 Wichtige Dateien:
-
-- `classes.py`: zentrale Domänenklassen wie `User`, `WaterLog`, `WeightLog`, `Food`, `Meal`, `MealItem`, `FoodLog` und weitere Log-/Hilfsklassen; Datei enthält teils markierte KI-generierte Passagen, ist aber insgesamt aktive Projektlogik
-- `database.py`: SQLite-Zugriff für die Hauptdatenbank und zusätzlich eine `FoodDatabase` für die separate BLS-Lebensmitteldatenbank; enthält kommentierte Hinweise auf KI-gestützte Teilanpassungen, ist aber nicht rein KI-generiert
-- `controller.py`: aktueller CLI-Steuerfluss zwischen `ui.cli_view`, den Klassen und der Datenbank; wirkt überwiegend manuell gewachsen
-- `open_food_api.py`: experimenteller Zugriff auf Open Food Facts; aktuell eher Entwicklungsstand als integrierter Kernbestandteil
+- `classes.py`: zentrale Klassen wie `User`, `WaterLog`, `WeightLog`, `Food`, `Meal`
+- `database.py`: SQLite-Zugriff, Tabellenaufbau und Datenbankmethoden
+- `controller.py`: CLI-Steuerung und Verbindung zwischen Eingaben, Logik und Datenbank
 
 ### `ui/`
-
-Hier liegt die Benutzeroberfläche.
+Dieser Ordner enthält alles rund um die Benutzeroberfläche.
 
 Wichtige Dateien:
+- `ui.py`: grafische Oberfläche mit Flet
+- `cli_view.py`: Ein- und Ausgaben für die Kommandozeile
+- `tutorial/`: kleine Flet-Beispiele und Lernschritte
 
-- `ui.py`: aktive Flet-GUI; in der Datei selbst als KI-generierter Ausgangscode mit manuellen Anpassungen beschrieben
-- `cli_view.py`: Ein-/Ausgabe- und Prompt-Helfer für die Kommandozeile; enthält einzelne als KI-generiert markierte Abschnitte, ist aber nicht vollständig KI-generiert
-- `theme_utils.py`: kleine Theme-Hilfsfunktionen für Flet; eher kleiner Hilfscode ohne klare Herkunftsmarkierung
-
-Hinweis:
-Die GUI und die CLI greifen beide direkt auf Teile aus `model/` zu. Eine komplett getrennte Schichtenstruktur ist im aktuellen Stand noch nicht konsequent durchgezogen.
 
 ### `data/`
+Hier liegen Projektdateien mit echten Nutzdaten.
 
-Hier liegen die Datenbanken:
-
-- `database.db`: Hauptdatenbank des Projekts; keine KI-generierte Datei, sondern Laufzeit-/Entwicklungsdaten
-- `bls_foods.sqlite`: separate SQLite-Datenbank mit Lebensmitteldaten; erzeugte Datendatei, nicht KI-generiert
+Aktuell:
+- `database.db`: die SQLite-Datenbank des Projekts
 
 ### `tests/`
+Hier liegen automatisierte Tests.
 
-Hier liegen die automatisierten Tests für den aktiven Code.
+Aktuell:
+- `test_classes.py`: Tests für Klassen aus `model/classes.py`
+- `test_cli_view.py`: Tests für CLI-View-Funktionen
+- `test_database.py`: Tests für Datenbankfunktionen
+- `test.db`: zusätzliche Testdatenbank
 
-Aktuell enthalten:
+### `test_db/`
+Dieser Ordner ist für isolierte Testdatenbanken vorgesehen.
 
-- `test_classes.py`: Tests für Domänenklassen; Datei enthält explizit markierte KI-generierte Testanteile
-- `test_cli_view.py`: Tests für CLI-Ein-/Ausgabe-Verhalten; einzelne Stellen sind als KI-generiert gekennzeichnet
-- `test_database.py`: Tests für Datenbankfunktionen; enthält mehrere explizit als KI-generiert markierte Abschnitte
-- `test.db`: leere oder lokal genutzte Testdatenbankdatei; nicht KI-generiert
+Er wird in `tests/test_database.py` als Zielpfad verwendet und kann lokal oder während Tests entstehen, auch wenn er nicht dauerhaft im Repository liegen muss.
 
 ### `docs/`
-
 Hier liegt die Projektdokumentation.
 
-Aktuell enthalten:
-
-- `de_struktur.md`: diese deutsche Strukturübersicht; in der aktuellen überarbeiteten Form KI-unterstützt
-- `en_structur.md`: englische Strukturübersicht; in der aktuellen überarbeiteten Form KI-unterstützt
-- mehrere exportierte Diagramme als PNG; nicht als KI-generiert markiert
-- `Anforderungsanalyse Tabelle.ods`: Analyse-/Planungsdokument; keine KI-Markierung erkennbar
-
-## Weitere Ordner mit Entwicklungs- oder Übergangscharakter
-
-### `legacy/`
-
-Alte oder verworfene UI-Stände, die nicht der aktuelle Haupteinstieg sind.
-
 Aktuell:
-
-- `ui_german.py`: ältere deutschsprachige GUI-Version; in der Datei selbst als KI-generierter Code mit Anpassungen beschrieben
-- `ui_discardable.py`: experimenteller UI-Stand; in den Kommentaren als Test-/Beispielcode und teilweise KI-generiert beschrieben
+- `de_struktur.md`: deutsche Beschreibung der Projektstruktur
+- `en_structur.md`: englische Version der Strukturübersicht
+- mehrere exportierte Diagramme als `.png`
+- `Anforderungsanalyse Tabelle.ods`: begleitende Analyse-Dokumentation
 
 ### `utils/`
+Hier liegen Hilfsdateien, Einzeltests oder ältere Zusatzskripte.
 
-Sammelbereich für Hilfsfunktionen, Prototypen und persönliche Zwischenstände.
+Beispiele:
+- `tobi_classes.py`
+- `bine_cli_main.py`
+- `test_bine.py`
+
+Dieser Ordner wirkt im Moment wie ein Sammelbereich für Zwischenstände oder ergänzende Werkzeuge.
+
+### `legacy/`
+Hier liegt älterer Code, der nicht mehr zum Hauptpfad gehört, aber noch aufbewahrt wird.
 
 Aktuell:
+- `ui_german.py`
 
-- `paginator.py`: aktiver kleiner Helfer für paginierte CLI-Ausgabe; Docstring nennt teilweise KI-generierten Inhalt
-- `bine_cli_main.py`: alternativer CLI-Prototyp; überwiegend manueller Zwischenstand mit einzelnen Kommentaren zum Status
-- `tobi_cli_controller`: älterer CLI-Prototyp; kein klarer KI-Hinweis in der Datei
-- `tobi_classes.py`: ältere oder parallele Klassenversion; enthält wie `model/classes.py` markierte KI-generierte Hilfsanteile
-- `test_bine.py`: zusätzliche, eher prototypische Tests; enthält markierte KI-generierte Fixture-/Testanteile
-
-Wichtig:
-`utils/` ist derzeit kein rein technischer Utility-Ordner, sondern auch ein Ablageort für Entwicklungsstände.
-
-### `Beispiele/`
-
-Lern- und Beispielcode, der nicht direkt zum eigentlichen Produktpfad gehört.
-
-Darin liegen u. a.:
-
-- allgemeine Python-Übungsdateien
-- `flet_tutorial/` mit Flet-Beispielen
-
-Zur Autorschaft gibt es dort keine einheitliche Kennzeichnung; der Ordner wirkt insgesamt wie Lern- und Experimentiermaterial.
-
-### `BLS_4_0_2025_DE/`
-
-Arbeitsbereich rund um die BLS-Lebensmitteldaten.
-
-Aktuell enthalten:
-
-- Originaldateien wie Excel/PDF zur BLS-Datenbasis; nicht KI-generiert
-- `import_bls_to_sqlite.py` zum Aufbau der SQLite-Lebensmitteldatenbank
-- ein separates `venv/` in diesem Unterordner
-
-## Wichtige Dateien im Projektwurzelverzeichnis
+## Wichtige Dateien im Hauptordner
 
 ### `main.py`
+Das ist der Einstiegspunkt des Programms.
 
-Aktueller Einstiegspunkt des Projekts.
+Aktuell:
+- fragt ab, ob die GUI oder die CLI gestartet werden soll
+- zeigt optional die Lizenz an
+- startet bei `y` die Flet-Oberfläche
+- startet bei `n` den CLI-Controller
 
-Verhalten im Ist-Zustand:
-
-- zeigt zuerst eine Begrüßung
-- fragt danach nach CLI, GUI oder Lizenzanzeige
-- startet bei `g` die Flet-GUI
-- startet bei `c` den CLI-Controller
-- zeigt bei `l` die Langfassung der Lizenz
-
-Zur Herkunft:
-Für `main.py` ist keine ausdrückliche KI-Markierung im Dateikopf vorhanden.
 
 ### `config.py`
+Hier stehen zentrale Einstellungen und Pfade.
 
-Zentrale Pfad- und Projektkonfiguration.
-
-Aktuell definiert:
-
+Aktuell:
 - `BASE_DIR`
 - `DB_PATH`
-- `FOOD_DB_PATH`
 - `LICENSE_PATH`
 - `DB_TEST_PATH`
 - `DEVS`
 - `VERSION`
 
-Zur Herkunft:
-In `config.py` sind Teile ausdrücklich als KI-generiert und andere ausdrücklich als nicht KI-generiert kommentiert.
-
-### `README.md`
-
-Kurze Projektbeschreibung mit Start- und Testhinweisen. Die Datei ist als Einstieg brauchbar, aber in Details nicht komplett synchron mit dem aktuellen Repository-Stand.
-
-Zur Herkunft:
-Das README nennt sich selbst teilweise KI-generiert.
 
 ### `bug_tracker.py`
+Diese Datei sammelt bekannte Probleme und technische Baustellen des Projekts.
 
-Sammlung bekannter Probleme und Baustellen. Keine Laufzeitlogik, aber relevant für Wartung und Planung.
+Sie ist keine Laufzeitlogik, aber nützlich für Planung und Wartung.
 
 ### `requirements.txt`
+Hier stehen die Python-Abhängigkeiten des Projekts, zum Beispiel:
+- `flet`
+- `Flask`
+- `pytest`
+- weitere Hilfsbibliotheken
 
-Python-Abhängigkeiten des Projekts.
 
-## Verzeichnisse, die eher Entwicklungsumgebung als Projektstruktur sind
+## Was nicht direkt zum Kern gehört
 
-Diese Dinge sind vorhanden, gehören aber nicht zur fachlichen Architektur:
+Im Workspace gibt es außerdem:
 
-- `venv/`: Haupt-virtuelle Umgebung
-- `BLS_4_0_2025_DE/venv/`: zusätzliche virtuelle Umgebung im BLS-Unterordner
-- `__pycache__/`: Python-Zwischendateien
-- `.pytest_cache/`: pytest-Cache
-- `.git/`: Git-Metadaten
-- `.codex`: lokales Werkzeug-/Editor-Artefakt
-- `test_db/`: Zielordner für während Tests erzeugte temporäre Datenbanken
+- `venv/`: lokale virtuelle Python-Umgebung
+- `__pycache__/`: automatisch erzeugte Python-Zwischendateien
+- `.git/`: Git-Verwaltung
+- `.codex/`: lokale Werkzeug- oder Editor-Datei
 
-## Struktur-Fazit zum Status quo
+Diese Dinge sind wichtig für die Entwicklung, aber nicht Teil der eigentlichen Fachstruktur.
 
-Der aktuelle Stand lässt sich sinnvoll in vier Ebenen lesen:
+## Was macht `.gitignore`?
 
-- aktive Anwendung: `main.py`, `model/`, `ui/`, `data/`, `tests/`
-- projektrelevante Dokumentation und Analyse: `docs/`, `README.md`, `bug_tracker.py`
-- Entwicklungs- und Übergangsbereiche: `utils/`, `legacy/`
-- externe bzw. vorbereitende Datenarbeit und Lernmaterial: `BLS_4_0_2025_DE/`, `Beispiele/`
+Die Datei `.gitignore` legt fest, welche Dateien oder Ordner Git nicht verfolgen soll.
 
-Das Repository ist damit funktional nutzbar, aber strukturell noch gemischt: aktiver Code, Prototypen, Datenaufbereitung und Lernmaterial liegen aktuell noch recht nah beieinander.
+Im aktuellen Projekt betrifft das unter anderem:
+- Python-Caches
+- virtuelle Umgebungen
+- Editor-Dateien
+
+Wichtig:
+`.gitignore` löscht nichts. Sie verhindert nur, dass bestimmte Dateien versehentlich versioniert werden.
+
+- `utils/` sollte nur Hilfsfunktionen enthalten oder später sauber auf andere Ordner verteilt werden.
+- `legacy/` ist sinnvoll für alten Code, sollte aber nicht mit aktivem UI-Code verwechselt werden.
+- ältere UI-Dateien in `legacy/` könnten später weiter aufgeräumt oder klarer markiert werden.
