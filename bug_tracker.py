@@ -61,7 +61,7 @@ BUGS = [
         "id": "BUG-007",
         "title": "BMI calculator has not implemented the age, yet.",
         "status": "open",
-        "priority": "high",
+        "priority": "low",
         "area": "model/classes.py",
         "notes": "User.calculate_bmi() already exists.",
     },
