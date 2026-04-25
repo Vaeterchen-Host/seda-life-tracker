@@ -74,51 +74,51 @@ class BigSeven:
 class NutrientSummary:
     """This class defines the nutrient summary outside of the big seven."""
 
-    water: Optional[float]  # in g per 100g
-    monounsaturated_fat: Optional[float]  # in g per 100g
-    polyunsaturated_fat: Optional[float]  # in g per 100g
-    omega_3: Optional[float]  # in g per 100g
-    omega_6: Optional[float]  # in g per 100g
-    starch: Optional[float]  # in g per 100g
-    alcohol: Optional[float]  # in g per 100g
-    sodium: Optional[float]  # in mg per 100g
-    cholesterol: Optional[float]  # in mg per 100g
-    potassium: Optional[float]  # in mg per 100g
-    calcium: Optional[float]  # in mg per 100g
-    magnesium: Optional[float]  # in mg per 100g
-    phosphorus: Optional[float]  # in mg per 100g
-    iron: Optional[float]  # in mg per 100g
-    zinc: Optional[float]  # in mg per 100g
-    iodine: Optional[float]  # in µg per 100g
-    copper: Optional[float]  # in µg per 100g
-    manganese: Optional[float]  # in µg per 100g
-    fluoride: Optional[float]  # in µg per 100g
-    chromium: Optional[float]  # in µg per 100g
-    molybdenum: Optional[float]  # in µg per 100g
-    vitamin_a_re: Optional[float]  # in µg per 100g
-    vitamin_a_rae: Optional[float]  # in µg per 100g
-    retinol: Optional[float]  # in µg per 100g
-    beta_carotene: Optional[float]  # in µg per 100g
-    vitamin_d: Optional[float]  # in µg per 100g
-    vitamin_d2: Optional[float]  # in µg per 100g
-    vitamin_d3: Optional[float]  # in µg per 100g
-    vitamin_e: Optional[float]  # in mg per 100g
-    alpha_tocopherol: Optional[float]  # in mg per 100g
-    vitamin_k: Optional[float]  # in µg per 100g
-    vitamin_k1: Optional[float]  # in µg per 100g
-    vitamin_k2: Optional[float]  # in µg per 100g
-    vitamin_b1: Optional[float]  # in mg per 100g
-    vitamin_b2: Optional[float]  # in mg per 100g
-    niacin: Optional[float]  # in mg per 100g
-    niacin_equivalent: Optional[float]  # in mg per 100g
-    pantothenic_acid: Optional[float]  # in mg per 100g
-    vitamin_b6: Optional[float]  # in µg per 100g
-    biotin: Optional[float]  # in µg per 100g
-    folate_equivalent: Optional[float]  # in µg per 100g
-    folate: Optional[float]  # in µg per 100g
-    folic_acid: Optional[float]  # in µg per 100g
-    vitamin_b12: Optional[float]  # in µg per 100g
-    vitamin_c: Optional[float]  # in mg per 100g
+    water: Optional[float]  # in g per 100 Units
+    monounsaturated_fat: Optional[float]  # in g per 100 Units
+    polyunsaturated_fat: Optional[float]  # in g per 100 Units
+    omega_3: Optional[float]  # in g per 100 Units
+    omega_6: Optional[float]  # in g per 100 Units
+    starch: Optional[float]  # in g per 100 Units
+    alcohol: Optional[float]  # in g per 100 Units
+    sodium: Optional[float]  # in mg per 100 Units
+    cholesterol: Optional[float]  # in mg per 100 Units
+    potassium: Optional[float]  # in mg per 100 Units
+    calcium: Optional[float]  # in mg per 100 Units
+    magnesium: Optional[float]  # in mg per 100 Units
+    phosphorus: Optional[float]  # in mg per 100 Units
+    iron: Optional[float]  # in mg per 100 Units
+    zinc: Optional[float]  # in mg per 100 Units
+    iodine: Optional[float]  # in µg per 100 Units
+    copper: Optional[float]  # in µg per 100 Units
+    manganese: Optional[float]  # in µg per 100 Units
+    fluoride: Optional[float]  # in µg per 100 Units
+    chromium: Optional[float]  # in µg per 100 Units
+    molybdenum: Optional[float]  # in µg per 100 Units
+    vitamin_a_re: Optional[float]  # in µg per 100 Units
+    vitamin_a_rae: Optional[float]  # in µg per 100 Units
+    retinol: Optional[float]  # in µg per 100 Units
+    beta_carotene: Optional[float]  # in µg per 100 Units
+    vitamin_d: Optional[float]  # in µg per 100 Units
+    vitamin_d2: Optional[float]  # in µg per 100 Units
+    vitamin_d3: Optional[float]  # in µg per 100 Units
+    vitamin_e: Optional[float]  # in mg per 100 Units
+    alpha_tocopherol: Optional[float]  # in mg per 100 Units
+    vitamin_k: Optional[float]  # in µg per 100 Units
+    vitamin_k1: Optional[float]  # in µg per 100 Units
+    vitamin_k2: Optional[float]  # in µg per 100 Units
+    vitamin_b1: Optional[float]  # in mg per 100 Units
+    vitamin_b2: Optional[float]  # in mg per 100 Units
+    niacin: Optional[float]  # in mg per 100 Units
+    niacin_equivalent: Optional[float]  # in mg per 100 Units
+    pantothenic_acid: Optional[float]  # in mg per 100 Units
+    vitamin_b6: Optional[float]  # in µg per 100 Units
+    biotin: Optional[float]  # in µg per 100 Units
+    folate_equivalent: Optional[float]  # in µg per 100 Units
+    folate: Optional[float]  # in µg per 100 Units
+    folic_acid: Optional[float]  # in µg per 100 Units
+    vitamin_b12: Optional[float]  # in µg per 100 Units
+    vitamin_c: Optional[float]  # in mg per 100 Units
 
     def __post_init__(self):
         """Validate that the nutrient values are non-negative."""
@@ -251,9 +251,9 @@ class Food:
         return self._big_seven_per_100_units
 
     @property
-    def big_seven_per_100g(self):
-        """This is the getter for 'big_seven_per_100g'. Read only, no Setter."""
-        return self.big_seven_per_100_units
+    def big_seven_per_100_units(self):
+        """This is the getter for 'big_seven_per_100_units'. Read only, no Setter."""
+        return self._big_seven_per_100_units
 
     @property
     def nutrient_summary(self):
