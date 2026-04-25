@@ -251,11 +251,6 @@ class Food:
         return self._big_seven_per_100_units
 
     @property
-    def big_seven_per_100_units(self):
-        """This is the getter for 'big_seven_per_100_units'. Read only, no Setter."""
-        return self._big_seven_per_100_units
-
-    @property
     def nutrient_summary(self):
         """This is the getter for 'nutrient_summary'. Read only, no Setter."""
         return self._nutrient_summary
