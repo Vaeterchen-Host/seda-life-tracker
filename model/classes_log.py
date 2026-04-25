@@ -5,22 +5,48 @@
 """This module contains the log classes for the application."""
 
 from datetime import datetime
-
+from model.classes_food import BigSeven, NutrientSummary
 
 ## All classes for logging
 # Parent classes.
+
+
+# ai-generated content start: helper function for validating log lists. ai-generated.
+def _validate_log_list(logs, log_type, label):
+    """Validate that logs is a list containing only the expected log type."""
+    if not isinstance(logs, list) or not all(isinstance(log, log_type) for log in logs):
+        raise ValueError(f"{label} must be a list of {log_type.__name__} objects.")
+    return logs
+
+
+# ai-generated content end
+
+
 class LogItem:
     """This is the parent class for all log items."""
+
+    VALID_UNIT_TYPES = {
+        "g",
+        "ml",
+        "kg",  # Food/Weight
+        "calories",
+        "kcal",  # Activity
+        "minutes",
+        "hours",  # Activity
+        "steps",  # Activity
+        "liters",  # Water
+    }
 
     def __init__(self, log_id, log_value, unit_type, timestamp=None):
         """This is the constructor of LogItem."""
         self._log_id = log_id
-        self._log_value = log_value
-        self._unit_type = unit_type
-        self._timestamp = timestamp
+        self.log_value = log_value  # refactored by ai
+        self.unit_type = unit_type  # refactored by ai
 
-        if self._timestamp is None:
+        if timestamp is None:
             self.create_timestamp()
+        else:
+            self.timestamp = timestamp  # refactored by ai
 
     @property
     def id(self):
@@ -42,6 +68,22 @@ class LogItem:
         """This is the getter for 'timestamp'."""
         return self._timestamp
 
+    @log_value.setter
+    def log_value(self, new_log_value):
+        """This is the setter for 'log_value'."""
+        if not isinstance(new_log_value, (int, float)):
+            raise ValueError("Log value must be a number.")
+        self._log_value = new_log_value
+
+    @unit_type.setter
+    def unit_type(self, new_unit_type):
+        """This is the setter for 'unit_type'."""
+        if not isinstance(new_unit_type, str):
+            raise ValueError("Unit type must be a string.")
+        if new_unit_type not in self.VALID_UNIT_TYPES:
+            raise ValueError(f"Unit type must be one of {self.VALID_UNIT_TYPES}.")
+        self._unit_type = new_unit_type
+
     @timestamp.setter
     def timestamp(self, new_timestamp):
         """This is the setter for timestamp. It checks format."""
@@ -57,10 +99,34 @@ class LogItem:
 class LogHandler:
     """This is the parent class for all log handlers."""
 
-    def __init__(self, user_id, LogItem: list[LogItem]):
+    def __init__(self, user_id, logitem: list[LogItem]):
         """This is the constructor of LogHandler."""
         self._user_id = user_id
-        self._logs = LogItem
+        self._logs = logitem
+
+    def create_log(self, log_id, log_value, unit_type, timestamp=None):
+        """Method for creating a log item and adding it to the logs list."""
+        new_log = LogItem(log_id, log_value, unit_type, timestamp)
+        self._logs.append(new_log)
+
+    def retrieve_logs(self):
+        """Method for retrieving all logs."""
+        return self._logs
+
+    def update_log(
+        self, log_id, new_log_value=None, new_unit_type=None, new_timestamp=None
+    ):
+        """Method for updating a log item."""
+        for log in self._logs:
+            if log.id == log_id:
+                if new_log_value is not None:
+                    log.log_value = new_log_value
+                if new_unit_type is not None:
+                    log.unit_type = new_unit_type
+                if new_timestamp is not None:
+                    log.timestamp = new_timestamp
+                return log
+        raise ValueError("Log with the given ID not found.")
 
 
 class MealLog:
@@ -79,14 +145,9 @@ class MealLog:
         """This is the getter for id."""
         return self._id
 
-    @id.setter
-    def id(self, new_id):
-        """This is the setter for id."""
-        self._id = new_id
-
     def calculate_nutrient_summary(self):
         """Method for calculating the nutrient summary of the meal log."""
-        meal_summary = self._meal.calculate_nutrient_summary()
+        meal_summary = self._meal.nutrient_summary  # refactored by ai
         factor = self._amount_in_gram / 100
         return BigSeven(
             fat=meal_summary.fat * factor,
@@ -113,11 +174,6 @@ class WaterLog:
     def id(self):
         """This is the getter for id."""
         return self._id
-
-    @id.setter
-    def id(self, new_id):
-        """This is the setter for id."""
-        self._id = new_id
 
     @property
     def amount_in_ml(self):
@@ -159,11 +215,6 @@ class WeightLog:
         """This is the getter for id."""
         return self._id
 
-    @id.setter
-    def id(self, new_id):
-        """This is the setter for id."""
-        self._id = new_id
-
     @property
     def weight_in_kg(self):
         """This is the getter for weight_in_kg."""
@@ -201,8 +252,3 @@ class ActivityLog:
     def id(self):
         """This is the getter for activity log."""
         return self._id
-
-    @id.setter
-    def id(self, new_id):
-        """This is the setter for activity log."""
-        self._id = new_id

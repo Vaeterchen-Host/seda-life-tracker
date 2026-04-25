@@ -6,6 +6,14 @@
 
 from datetime import datetime
 
+from model.classes_food import _validate_log_list  # refactored by ai
+from model.classes_log import (  # refactored by ai
+    ActivityLog,
+    MealLog,
+    WaterLog,
+    WeightLog,
+)
+
 
 # User class. Somehow the main node of all classes.
 class User:
@@ -23,6 +31,7 @@ class User:
         weight: list[WeightLog],
         meal: list[MealLog],
         activity: list[ActivityLog],
+        food=None,  # refactored by ai
     ):
         """This is the constructor of User."""
         self._id = user_id
@@ -33,7 +42,7 @@ class User:
         self.fitness_lvl = fitness_lvl  # refactored by ai
         self.water_logs = water  # refactored by ai
         self.weight_logs = weight  # refactored by ai
-        self.food_logs = food  # refactored by ai
+        self._food = [] if food is None else food  # refactored by ai
         self.meal_logs = meal  # refactored by ai
         self.activity_logs = activity  # refactored by ai
 
@@ -42,11 +51,6 @@ class User:
     def id(self):
         """This is the getter for id"""
         return self._id
-
-    @id.setter
-    def id(self, new_id):
-        """This is the setter for id."""
-        self._id = new_id
 
     @property
     def name(self):

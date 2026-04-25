@@ -4,7 +4,7 @@
 
 """This module contains the food and meal classes for the application."""
 
-from datetime import datetime
+
 from dataclasses import dataclass, fields
 from typing import Optional
 
@@ -30,9 +30,19 @@ def _validate_non_negative(values):
             raise ValueError(f"{name} must be non-negative. Got {value}.")
 
 
-# All classes about food.
+def _add_optional_nutrient(current_total, nutrient_value, factor, none_as_zero=False):
+    """Add nutrient values while handling unknown values by meal context."""
+    if nutrient_value is None and none_as_zero:
+        nutrient_value = 0
+    if current_total is None or nutrient_value is None:
+        return None
+    return current_total + nutrient_value * factor
 
 
+# ai-generated content end: helper for optional nutrient calculations.
+
+
+## All classes about food.
 @dataclass
 class BigSeven:
     """This class defines the nutrient summary of a food."""
@@ -166,52 +176,152 @@ class NutrientSummary:
 class Food:
     """This class defines the food-items."""
 
+    VALID_UNIT_TYPES = {
+        "g",
+        "ml",
+    }
+
     def __init__(
         self,
         food_id,
         name,
+        amount,
         unit_type,
         calories,
-        big_seven_per_100g: BigSeven,
+        big_seven_per_100_units: BigSeven,
         nutrient_summary: NutrientSummary,
     ):
         """This is the constructor of Food."""
         self._id = food_id
-        self._name = name
-        self._unit_type = unit_type
+        self.name = name  # refactored by ai
+        self.amount = amount  # refactored by ai
+        self.unit_type = unit_type  # refactored by ai
         self._calories_per_100_units = calories
-        self._big_seven_per_100_units = big_seven_per_100g
+        self._big_seven_per_100_units = big_seven_per_100_units
         self._nutrient_summary = nutrient_summary
+
+    # Here are the food related methods.
+    @property
+    def id(self):
+        """This is the getter for 'food_id'. Read only, no Setter."""
+        return self._id
+
+    @property
+    def name(self):
+        """This is the getter for 'name'."""
+        return self._name
+
+    @name.setter
+    def name(self, new_name):
+        """This is the setter for 'name'."""
+        self._name = new_name
+
+    @property
+    def amount(self):
+        """This is the getter for 'amount'."""
+        return self._amount
+
+    @amount.setter
+    def amount(self, new_amount):
+        """This is the setter for 'amount'."""
+        if new_amount <= 0:
+            raise ValueError("Amount must be greater than 0.")
+        self._amount = new_amount
+
+    @property
+    def unit_type(self):
+        """This is the getter for 'unit_type'."""
+        return self._unit_type
+
+    @unit_type.setter
+    def unit_type(self, new_unit_type):
+        """This is the setter for 'unit_type'."""
+        if new_unit_type not in self.VALID_UNIT_TYPES:
+            raise ValueError(f"Unit type must be one of {self.VALID_UNIT_TYPES}.")
+        self._unit_type = new_unit_type
+
+    @property
+    def calories_per_100_units(self):
+        """This is the getter for 'calories'. Read only, no Setter."""
+        return self._calories_per_100_units
+
+    @property
+    def big_seven_per_100_units(self):
+        """This is the getter for 'big_seven_per_100_units'. Read only, no Setter."""
+        return self._big_seven_per_100_units
+
+    @property
+    def big_seven_per_100g(self):
+        """This is the getter for 'big_seven_per_100g'. Read only, no Setter."""
+        return self.big_seven_per_100_units
+
+    @property
+    def nutrient_summary(self):
+        """This is the getter for 'nutrient_summary'. Read only, no Setter."""
+        return self._nutrient_summary
 
 
 class Meal:
     """This class defines the meal."""
 
-    def __init__(self, meal_id, name, items: list[Food]):
+    def __init__(self, meal_id, name, food_items: list[Food]):
         """This is the constructor of Meal."""
         self._id = meal_id
-        self._name = name
-        self._items = items
+        self.name = name
+        self.food_items = food_items
 
     # Here are the meal related methods.
+    @property
+    def id(self):
+        """This is the getter for 'meal_id'. Read only, no Setter."""
+        return self._id
 
-    def calculate_calories(self):
-        """Method for calculating the calories of the meal."""
-        if not self._items:
+    @property
+    def name(self):
+        """This is the getter for 'name'."""
+        return self._name
+
+    @name.setter
+    def name(self, new_name):
+        """This is the setter for 'name'."""
+        self._name = new_name
+
+    @property
+    def food_items(self):
+        """This is the getter for 'food_items'."""
+        return self._food_items
+
+    @food_items.setter
+    def food_items(self, new_food_items):
+        """This is the setter for 'food_items'."""
+        if not isinstance(new_food_items, list) or not all(
+            isinstance(item, Food) for item in new_food_items
+        ):
+            raise ValueError("Food items must be a list of Food objects.")
+        self._food_items = new_food_items
+
+    @property
+    def calories(self):
+        """Getter of the total calories of the meal."""
+        if not self.food_items:
             return 0
         total_calories = 0
-        for item in self._items:
-            factor = item.amount_in_gram / 100
-            total_calories += item.calories_per_100_units * factor
+        none_as_zero = len(self.food_items) > 1
+        for item in self.food_items:
+            factor = item.amount / 100
+            total_calories = _add_optional_nutrient(
+                total_calories, item.calories_per_100_units, factor, none_as_zero
+            )
         return total_calories
 
-    def calculate_big_seven(self):
-        """Method for calculating the nutrient summary of the meal."""
-        if not self._items:
+    # ai-generated content start: meal nutrient aggregations. ai-generated.
+    @property
+    def big_seven(self):
+        """Getter of the big seven nutrients of the meal."""
+        if not self.food_items:
             return _zero_dataclass(BigSeven)
 
         total = {
-            "calorie": 0,
             "fat": 0,
             "saturated_fat": 0,
             "carbohydrate": 0,
@@ -221,177 +331,72 @@ class Meal:
             "salt": 0,
         }
 
-        for item in self._items:
-            factor = item.amount_in_gram / 100
-            nutrients = item.food.nutrients_per_100g
-            total["calorie"] += nutrients.calorie * factor
-            total["fat"] += nutrients.fat * factor
-            total["saturated_fat"] += nutrients.saturated_fat * factor
-            total["carbohydrate"] += nutrients.carbohydrate * factor
-            total["fibre"] += nutrients.fibre * factor
-            total["sugar"] += nutrients.sugar * factor
-            total["protein"] += nutrients.protein * factor
-            total["salt"] += nutrients.salt * factor
+        none_as_zero = len(self.food_items) > 1
+        for item in self.food_items:
+            factor = item.amount / 100
+            nutrients = item.big_seven_per_100_units
+            total["fat"] = _add_optional_nutrient(
+                total["fat"], nutrients.fat, factor, none_as_zero
+            )
+            total["saturated_fat"] = _add_optional_nutrient(
+                total["saturated_fat"], nutrients.saturated_fat, factor, none_as_zero
+            )
+            total["carbohydrate"] = _add_optional_nutrient(
+                total["carbohydrate"], nutrients.carbohydrate, factor, none_as_zero
+            )
+            total["fibre"] = _add_optional_nutrient(
+                total["fibre"], nutrients.fibre, factor, none_as_zero
+            )
+            total["sugar"] = _add_optional_nutrient(
+                total["sugar"], nutrients.sugar, factor, none_as_zero
+            )
+            total["protein"] = _add_optional_nutrient(
+                total["protein"], nutrients.protein, factor, none_as_zero
+            )
+            total["salt"] = _add_optional_nutrient(
+                total["salt"], nutrients.salt, factor, none_as_zero
+            )
 
         return BigSeven(
-            total["calorie"],
-            total["fat"],
-            total["saturated_fat"],
-            total["carbohydrate"],
-            total["fibre"],
-            total["sugar"],
-            total["protein"],
+            fat=total["fat"],
+            saturated_fat=total["saturated_fat"],
+            carbohydrate=total["carbohydrate"],
+            fibre=total["fibre"],
+            sugar=total["sugar"],
+            protein=total["protein"],
+            salt=total["salt"],
         )
 
-    def calculate_nutrient_summary(self):
-        """Method for calculating the nutrient summary of the meal."""
-        if not self._items:
+    @property
+    def nutrient_summary(self):
+        """Getter of the nutrient summary of the meal."""
+        if not self.food_items:
             return _zero_dataclass(NutrientSummary)
-        total = {
-            "water": 0,
-            "monounsaturated_fat": 0,
-            "polyunsaturated_fat": 0,
-            "omega_3": 0,
-            "omega_6": 0,
-            "starch": 0,
-            "alcohol": 0,
-            "sodium": 0,
-            "cholesterol": 0,
-            "potassium": 0,
-            "calcium": 0,
-            "magnesium": 0,
-            "phosphorus": 0,
-            "iron": 0,
-            "zinc": 0,
-            "iodine": 0,
-            "copper": 0,
-            "manganese": 0,
-            "fluoride": 0,
-            "chromium": 0,
-            "molybdenum": 0,
-            "vitamin_a_re": 0,
-            "vitamin_a_rae": 0,
-            "retinol": 0,
-            "beta_carotene": 0,
-            "vitamin_d": 0,
-            "vitamin_d2": 0,
-            "vitamin_d3": 0,
-            "vitamin_e": 0,
-            "alpha_tocopherol": 0,
-            "vitamin_k": 0,
-            "vitamin_k1": 0,
-            "vitamin_k2": 0,
-            "vitamin_b1": 0,
-            "vitamin_b2": 0,
-            "niacin": 0,
-            "niacin_equivalent": 0,
-            "pantothenic_acid": 0,
-            "vitamin_b6": 0,
-            "biotin": 0,
-            "folate_equivalent": 0,
-            "folate": 0,
-            "folic_acid": 0,
-            "vitamin_b12": 0,
-            "vitamin_c": 0,
-        }
-        for item in self._items:
-            factor = item.amount_in_gram / 100
-            nutrients = item.food.nutrient_summary
-            total["water"] += nutrients.water * factor
-            total["monounsaturated_fat"] += nutrients.monounsaturated_fat * factor
-            total["polyunsaturated_fat"] += nutrients.polyunsaturated_fat * factor
-            total["omega_3"] += nutrients.omega_3 * factor
-            total["omega_6"] += nutrients.omega_6 * factor
-            total["starch"] += nutrients.starch * factor
-            total["alcohol"] += nutrients.alcohol * factor
-            total["sodium"] += nutrients.sodium * factor
-            total["cholesterol"] += nutrients.cholesterol * factor
-            total["potassium"] += nutrients.potassium * factor
-            total["calcium"] += nutrients.calcium * factor
-            total["magnesium"] += nutrients.magnesium * factor
-            total["phosphorus"] += nutrients.phosphorus * factor
-            total["iron"] += nutrients.iron * factor
-            total["zinc"] += nutrients.zinc * factor
-            total["iodine"] += nutrients.iodine * factor
-            total["copper"] += nutrients.copper * factor
-            total["manganese"] += nutrients.manganese * factor
-            total["fluoride"] += nutrients.fluoride * factor
-            total["chromium"] += nutrients.chromium * factor
-            total["molybdenum"] += nutrients.molybdenum * factor
-            total["vitamin_a_re"] += nutrients.vitamin_a_re * factor
-            total["vitamin_a_rae"] += nutrients.vitamin_a_rae * factor
-            total["retinol"] += nutrients.retinol * factor
-            total["beta_carotene"] += nutrients.beta_carotene * factor
-            total["vitamin_d"] += nutrients.vitamin_d * factor
-            total["vitamin_d2"] += nutrients.vitamin_d2 * factor
-            total["vitamin_d3"] += nutrients.vitamin_d3 * factor
-            total["vitamin_e"] += nutrients.vitamin_e * factor
-            total["alpha_tocopherol"] += (
-                nutrients.alpha_tocopherol * factor  # noqa: E501, refactored by ai
-            )
-            total["vitamin_k"] += nutrients.vitamin_k * factor
-            total["vitamin_k1"] += nutrients.vitamin_k1 * factor
-            total["vitamin_k2"] += nutrients.vitamin_k2 * factor
-            total["vitamin_b1"] += nutrients.vitamin_b1 * factor
-            total["vitamin_b2"] += nutrients.vitamin_b2 * factor
-            total["niacin"] += nutrients.niacin * factor
-            total["niacin_equivalent"] += nutrients.niacin_equivalent * factor
-            total["pantothenic_acid"] += nutrients.pantothenic_acid * factor
-            total["vitamin_b6"] += nutrients.vitamin_b6 * factor
-            total["biotin"] += nutrients.biotin * factor
-            total["folate_equivalent"] += nutrients.folate_equivalent * factor
-            total["folate"] += nutrients.folate * factor
-            total["folic_acid"] += nutrients.folic_acid * factor
-            total["vitamin_b12"] += nutrients.vitamin_b12 * factor
-            total["vitamin_c"] += nutrients.vitamin_c * factor
-        return NutrientSummary(
-            total["water"],
-            total["monounsaturated_fat"],
-            total["polyunsaturated_fat"],
-            total["omega_3"],
-            total["omega_6"],
-            total["starch"],
-            total["alcohol"],
-            total["sodium"],
-            total["cholesterol"],
-            total["potassium"],
-            total["calcium"],
-            total["magnesium"],
-            total["phosphorus"],
-            total["iron"],
-            total["zinc"],
-            total["iodine"],
-            total["copper"],
-            total["manganese"],
-            total["fluoride"],
-            total["chromium"],
-            total["molybdenum"],
-            total["vitamin_a_re"],
-            total["vitamin_a_rae"],
-            total["retinol"],
-            total["beta_carotene"],
-            total["vitamin_d"],
-            total["vitamin_d2"],
-            total["vitamin_d3"],
-            total["vitamin_e"],
-            total["alpha_tocopherol"],
-            total["vitamin_k"],
-            total["vitamin_k1"],
-            total["vitamin_k2"],
-            total["vitamin_b1"],
-            total["vitamin_b2"],
-            total["niacin"],
-            total["niacin_equivalent"],
-            total["pantothenic_acid"],
-            total["vitamin_b6"],
-            total["biotin"],
-            total["folate_equivalent"],
-            total["folate"],
-            total["folic_acid"],
-            total["vitamin_b12"],
-            total["vitamin_c"],
-        )
 
-    def add_food_composition(self, food_item):
-        """Method for adding a meal composition. (Later when DB exists)"""
-        self._items.append(food_item)
+        total = _zero_dataclass(NutrientSummary)
+        none_as_zero = len(self.food_items) > 1
+        for item in self.food_items:
+            factor = item.amount / 100
+            nutrients = item.nutrient_summary
+            # refactored by ai: fields() lists all dataclass fields of NutrientSummary.
+            for nutrient_field in fields(NutrientSummary):
+                # refactored by ai: getattr(obj, name) reads an attribute by its name.
+                current_total = getattr(total, nutrient_field.name)
+                nutrient_value = getattr(nutrients, nutrient_field.name)
+                new_total = _add_optional_nutrient(
+                    current_total, nutrient_value, factor, none_as_zero
+                )
+                # refactored by ai: setattr(obj, name, value) writes an attribute by name.
+                setattr(total, nutrient_field.name, new_total)
+
+        return total
+
+    # ai-generated content end: meal nutrient aggregations.
+
+    def add_food_item(self, food_item):
+        """Method for adding a food item to meal-composition."""
+        self.food_items.append(food_item)
+
+    def remove_food_item(self, food_item_id):
+        """Method for removing a food item from meal-composition by id."""
+        self.food_items = [item for item in self.food_items if item.id != food_item_id]
