@@ -5,7 +5,7 @@
 """This module contains the log classes for the application."""
 
 from datetime import datetime
-from model.classes_food import BigSeven, NutrientSummary
+from model.classes_food import Meal
 
 ## All classes for logging
 # Parent classes.
