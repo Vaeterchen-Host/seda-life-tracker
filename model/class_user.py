@@ -6,15 +6,15 @@
 
 from datetime import datetime
 
-from model.classes_log import (  # refactored by ai
-    ActivityLogHandler,
+from model.classes_log import (
     ActivityLog,
-    MealLogHandler,
+    ActivityLogHandler,
     MealLog,
-    WaterLogHandler,
+    MealLogHandler,
     WaterLog,
-    WeightLogHandler,
+    WaterLogHandler,
     WeightLog,
+    WeightLogHandler,
 )
 
 

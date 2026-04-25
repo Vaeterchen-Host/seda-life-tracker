@@ -7,6 +7,7 @@
 from datetime import datetime
 from model.classes_food import Meal
 
+
 ## All classes for logging
 # Parent classes.
 
@@ -25,13 +26,13 @@ VALID_UNIT_TYPES = {
     "g",  # Meal
     "ml",  # Meal/Water
     "kg",  # Meal/Weight
-    "calories",  # Meal/Activity
-    "kcal",  # Activity
+    "kcal",  # Calories
     "minutes",  # Activity
-    "hours",  # Activity
-    "steps",  # Activity
-    "liters",  # Water
 }
+
+VALID_ACTIVITY_UNIT_TYPES = {
+    "minutes",
+}  # refactored by ai
 
 
 class LogItem:
@@ -371,6 +372,15 @@ class ActivityLog(LogItem):  # refactored by ai
         if new_activity_value is not None and new_activity_value < 0:
             raise ValueError("Activity value must not be negative.")
         self._activity_value = new_activity_value
+
+    @LogItem.unit_type.setter
+    def unit_type(self, new_unit_type):
+        """This is the setter for activity unit_type. Refactored by ai."""
+        if new_unit_type not in VALID_ACTIVITY_UNIT_TYPES:
+            raise ValueError(
+                f"Activity unit type must be one of {VALID_ACTIVITY_UNIT_TYPES}."
+            )
+        self._unit_type = new_unit_type
 
 
 class ActivityLogHandler(LogHandler):  # refactored by ai

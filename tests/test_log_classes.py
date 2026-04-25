@@ -66,6 +66,12 @@ def test_activity_log_stores_value_unit_and_calories():
     assert activity_log.unit_type == "minutes"
 
 
+def test_activity_log_rejects_invalid_unit_type():
+    """This test checks if activity logs only accept minutes. Refactored by ai."""
+    with pytest.raises(ValueError):
+        ActivityLog(1, 1, "walking", 120, "2026-03-21T12:12", 30, "steps")
+
+
 def test_meal_log_handler_accepts_meal_logs():
     """This test checks if meal log handlers manage meal logs. Refactored by ai."""
     meal_log = MealLog(1, 1, None, 250, "2026-03-22T12:00")

@@ -12,7 +12,7 @@ import pytest
 
 from config import FOOD_DB_PATH
 from model.database import Database, FoodDatabase
-from model.classes import User
+from model.class_user import User
 
 # pylint: skip-file
 
@@ -33,7 +33,7 @@ def db():
 @pytest.fixture
 def tobias():
     """Create a fresh user object for each test."""
-    return User(None, "Test", "2000-02-22", 185, "m", "beginner", [], [], [], [], [])
+    return User(1, "Test", "2000-02-22", 185, "m", "beginner", [], [], [], [])
 
 
 @pytest.fixture
@@ -189,14 +189,15 @@ def test_add_and_get_weight_log(db, tobias):
     )
     
     # 2. Add weight log (User ID 1)
-    db.add_weight_log(1, 85.5, "2026-04-19T09:00:00")
+    db.add_weight_log(1, 85.5, "2026-04-19T09:00:00", 185)
     
     # 3. Retrieve and validate
     logs = db.get_all_weight_logs()
     assert len(logs) == 1, "There should be exactly one weight log entry"
     assert logs[0][1] == 1, "User ID does not match"
     assert logs[0][2] == 85.5, "Weight value does not match"
-    assert logs[0][3] == "2026-04-19T09:00:00", "Timestamp does not match"
+    assert logs[0][3] == 185, "Height does not match"
+    assert logs[0][4] == "2026-04-19T09:00:00", "Timestamp does not match"
 
 
 def test_delete_weight_log(db, tobias):
@@ -272,12 +273,14 @@ def test_add_and_get_activity_log(db, tobias):
     )
     
     # Add activity (User ID 1, since it's a new database)
-    db.add_activity_log(1, "Jogging", 450.5, "2026-04-11T18:00:00")
+    db.add_activity_log(1, "Jogging", 450.5, "2026-04-11T18:00:00", 30, "minutes")
     
     logs = db.get_all_activity_logs()
     assert len(logs) == 1, "Activity log count should be 1"
     assert logs[0][2] == "Jogging", "Activity name does not match"
     assert logs[0][3] == 450.5, "Calories burned do not match"
+    assert logs[0][4] == 30, "Activity value does not match"
+    assert logs[0][5] == "minutes", "Unit type does not match"
 
 
 def test_delete_activity_log(db, tobias):
@@ -347,80 +350,16 @@ def test_food_database_custom_sql_query_returns_food_columns():
     assert "name_de" in column_names, "Expected name_de column in external foods table"
     assert "unit_type" in column_names, "Expected unit_type column in external foods table"
 
-# food log related tests
-def test_food_log_table_creation(db):
-    """This test checks if the food logs table is created successfully."""
+def test_food_log_table_is_not_created(db):
+    """This test checks that food_logs are replaced by meal_logs. Refactored by ai."""
     conn = db.connect()
     cursor = conn.cursor()
     cursor.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='food_logs'"
     )
     table_exists = cursor.fetchone() is not None
-    assert table_exists, "Food logs table could not be created"
+    assert not table_exists, "Food logs are legacy and should not be created"
     conn.close()
-
-def test_food_log_table_has_only_user_foreign_key(db):
-    """This test checks the reduced FK shape of food_logs. AI-generated."""
-    conn = db.connect()
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA foreign_key_list(food_logs)")
-    foreign_keys = cursor.fetchall()
-    conn.close()
-    assert len(foreign_keys) == 1, "food_logs should only keep the user foreign key"
-    assert foreign_keys[0][2] == "users", "food_logs should reference only users"
-
-
-def test_add_and_get_food_log(db, tobias, sample_food_row):
-    """Checks if a user can log a food item and retrieve it with the external food name. Partly AI-refactored."""
-    # 1. Setup: Create user and use external food master data
-    db.add_user(
-        tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
-    )
-
-    user_id = 1
-    food_id = sample_food_row["food_id"]
-
-    # 2. Add log entry
-    db.add_food_log(user_id, food_id, 150.0, "2026-04-19T12:00:00")
-
-    # 3. Retrieve and validate
-    logs = db.get_user_food_logs(user_id)
-    assert len(logs) == 1, "There should be exactly one food log entry"
-
-    expected_name = sample_food_row["name_de"] or sample_food_row["name_en"]
-    assert logs[0][1] == food_id, "Food ID from log does not match external food ID"
-    assert logs[0][2] == expected_name, "Food name from external food DB does not match"
-    assert logs[0][3] == 150.0, "Amount in gram does not match"
-    assert logs[0][4] == "2026-04-19T12:00:00", "Timestamp does not match"
-
-def test_get_user_food_logs_returns_none_name_for_missing_food_reference(db, tobias):
-    """This test checks behavior for orphaned external food references. AI-generated."""
-    db.add_user(
-        tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
-    )
-    db.add_food_log(1, 999999999, 90.0, "2026-04-19T07:30:00")
-    logs = db.get_user_food_logs(1)
-    assert len(logs) == 1, "There should be one food log entry"
-    assert logs[0][2] is None, "Missing external foods should yield a null joined name"
-
-
-def test_delete_food_log(db, tobias, sample_food_row):
-    """Checks if a food log entry can be deleted. Partly AI-refactored."""
-    # Setup
-    db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
-    db.add_food_log(1, sample_food_row["food_id"], 100.0, "2026-04-19T13:00:00")
-
-    # Get log ID
-    logs_before = db.get_user_food_logs(1)
-    log_id = logs_before[0][0]
-
-    # Delete
-    deleted_count = db.delete_food_log(log_id)
-    assert deleted_count == 1
-
-    # Verify deletion
-    logs_after = db.get_user_food_logs(1)
-    assert len(logs_after) == 0
 
 # meal related tests
 def test_meal_table_creation(db):
@@ -454,55 +393,56 @@ def test_delete_meal(db):
     assert len(all_meals) == 0, "Meal table should be empty after deletion"
 
 
-# meal item related tests
-def test_meal_item_table_creation(db):
-    """This test checks if the meal items table is created successfully."""
+# meal food item related tests
+def test_meal_food_item_table_creation(db):
+    """This test checks if the meal food items table is created successfully."""
     conn = db.connect()
     cursor = conn.cursor()
     cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='meal_items'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='meal_food_items'"
     )
     table_exists = cursor.fetchone() is not None
-    assert table_exists, "Meal items table could not be created"
+    assert table_exists, "Meal food items table could not be created"
     conn.close()
 
 
-def test_meal_item_table_has_only_meal_foreign_key(db):
-    """This test checks the reduced FK shape of meal_items. AI-generated."""
+def test_meal_food_item_table_has_only_meal_foreign_key(db):
+    """This test checks the reduced FK shape of meal_food_items. AI-generated."""
     conn = db.connect()
     cursor = conn.cursor()
-    cursor.execute("PRAGMA foreign_key_list(meal_items)")
+    cursor.execute("PRAGMA foreign_key_list(meal_food_items)")
     foreign_keys = cursor.fetchall()
     conn.close()
-    assert len(foreign_keys) == 1, "meal_items should only keep the meal foreign key"
-    assert foreign_keys[0][2] == "meals", "meal_items should reference only meals"
+    assert len(foreign_keys) == 1, "meal_food_items should only keep the meal foreign key"
+    assert foreign_keys[0][2] == "meals", "meal_food_items should reference only meals"
 
 
-def test_add_and_get_meal_item(db, sample_food_row):
+def test_add_and_get_meal_food_item(db, sample_food_row):
     """This test checks if a food from the external DB can be linked to a meal. Partly AI-refactored."""
     db.add_meal("Porridge")
 
     # Add Item
-    db.add_meal_item(1, sample_food_row["food_id"], 50.0)
+    db.add_meal_food_item(1, sample_food_row["food_id"], 50.0)
 
-    items = db.get_meal_items(1)
+    items = db.get_meal_food_items(1)
     assert len(items) == 1, "There should be one item in the meal"
     expected_name = sample_food_row["name_de"] or sample_food_row["name_en"]
     assert items[0][1] == sample_food_row["food_id"], "Food ID in meal item does not match"
     assert items[0][2] == expected_name, "Food name in meal item does not match"
     assert items[0][3] == 50.0, "Amount in gram does not match"
-    assert items[0][4] == sample_food_row["kcal"], "Calories should come from the external food DB"
-    assert items[0][5] == sample_food_row["fat"], "Fat should come from the external food DB"
+    assert items[0][4] == "g", "Unit type does not match"
+    assert items[0][5] == sample_food_row["kcal"], "Calories should come from the external food DB"
+    assert items[0][6] == sample_food_row["fat"], "Fat should come from the external food DB"
 
 
-def test_get_meal_items_returns_none_values_for_missing_food_reference(db):
-    """This test checks behavior for orphaned external food references in meal items. AI-generated."""
+def test_get_meal_food_items_returns_none_values_for_missing_food_reference(db):
+    """This test checks behavior for orphaned external food references in meal food items. AI-generated."""
     db.add_meal("Fallback Meal")
-    db.add_meal_item(1, 999999999, 25.0)
-    items = db.get_meal_items(1)
+    db.add_meal_food_item(1, 999999999, 25.0)
+    items = db.get_meal_food_items(1)
     assert len(items) == 1, "There should be one meal item"
     assert items[0][2] is None, "Missing external foods should yield a null joined name"
-    assert items[0][4] is None, "Missing external foods should yield null nutrient values"
+    assert items[0][5] is None, "Missing external foods should yield null nutrient values"
 
 
 # meal log related tests
@@ -525,19 +465,21 @@ def test_add_and_get_meal_log(db, tobias):
     db.add_meal("Standard Shake")
     
     # Log Meal
-    db.add_meal_log(1, 1, "2026-04-19T08:00:00")
+    db.add_meal_log(1, 1, 250, "2026-04-19T08:00:00")
     
     logs = db.get_user_meal_logs(1)
     assert len(logs) == 1, "There should be one meal log entry"
     assert logs[0][2] == "Standard Shake", "Logged meal name does not match"
-    assert logs[0][3] == "2026-04-19T08:00:00", "Timestamp does not match"
+    assert logs[0][3] == 250, "Amount does not match"
+    assert logs[0][4] == "g", "Unit type does not match"
+    assert logs[0][5] == "2026-04-19T08:00:00", "Timestamp does not match"
 
 
 def test_delete_meal_log(db, tobias):
     """This test checks if a meal log entry can be deleted."""
     db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
     db.add_meal("Snack")
-    db.add_meal_log(1, 1, "2026-04-19T20:00:00")
+    db.add_meal_log(1, 1, 100, "2026-04-19T20:00:00")
     
     # Delete
     db.delete_meal_log(1)

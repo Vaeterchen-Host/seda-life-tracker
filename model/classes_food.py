@@ -16,13 +16,6 @@ def _zero_dataclass(cls):
 
 
 # ai-generated content start: helper function for validating log lists. ai-generated.
-def _validate_log_list(logs, log_type, label):
-    """Validate that logs is a list containing only the expected log type."""
-    if not isinstance(logs, list) or not all(isinstance(log, log_type) for log in logs):
-        raise ValueError(f"{label} must be a list of {log_type.__name__} objects.")
-    return logs
-
-
 def _validate_non_negative(values):
     """Validate that nutrient values are non-negative."""
     for name, value in values.items():
