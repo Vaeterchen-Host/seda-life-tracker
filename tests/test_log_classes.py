@@ -11,7 +11,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest
 
-from model.classes_log import ActivityLog, MealLog, MealLogHandler, WaterLog, WeightLog
+from model.classes_log import (
+    ActivityLog,
+    MealLog,
+    MealLogHandler,
+    WaterLog,
+    WaterLogHandler,
+    WeightLog,
+)
 
 # pylint: skip-file
 
@@ -107,3 +114,17 @@ def test_meal_log_handler_create_and_delete_log():
     handler.delete_log(1)
 
     assert len(handler.logs) == 0
+
+
+def test_water_log_handler_water_intake_today_counts_only_today():
+    """This test checks if only today's water intake is summed. ai-generated."""
+    handler = WaterLogHandler(
+        1,
+        [
+            WaterLog(1, 1, 500, "2026-04-28T08:00:00"),
+            WaterLog(2, 1, 300, "2026-04-28T12:00:00"),
+            WaterLog(3, 1, 200, "2026-04-27T18:00:00"),
+        ],
+    )  # ai-generated
+
+    assert handler.water_intake_today() == 800

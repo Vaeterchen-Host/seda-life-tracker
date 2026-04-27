@@ -90,7 +90,7 @@ class LogItem:
 
     def create_timestamp(self):
         """Method for creating a timestamp. It can be used when creating a new log item."""
-        self._timestamp = datetime.now()
+        self._timestamp = datetime.now().isoformat()
 
 
 class LogHandler:
@@ -101,8 +101,8 @@ class LogHandler:
         if user_id is None:
             raise ValueError("User ID must not be None.")
         self._user_id = user_id
-        self.logs = logitems
         self._log_type = log_type  # refactored by ai
+        self.logs = logitems
 
     @property
     def user_id(self):
@@ -245,6 +245,16 @@ class WaterLogHandler(LogHandler):  # refactored by ai
                     log.timestamp = new_timestamp
                 return log
         raise ValueError("Log with the given ID not found.")
+
+    def water_intake_today(self):
+        """Method for calculating the total water intake of today. Partly AI-generated."""
+        today = datetime.now().date()
+        total_intake = sum(
+            log.amount_in_ml
+            for log in self.logs
+            if datetime.fromisoformat(log.timestamp).date() == today
+        )
+        return total_intake
 
 
 class WeightLog(LogItem):  # refactored by ai

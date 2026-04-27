@@ -141,6 +141,15 @@ class User:
         """This is the getter for the activity log handler. Refactored by ai."""
         return self._activity_log_handler  # refactored by ai
 
+    @property
+    def last_bmi(self):
+        """Method for calculating the BMI. Partly AI-generated."""
+        if not self.weight_log_handler.logs:
+            return None
+        if self.weight_log_handler.logs[-1] is not None:
+            return self.weight_log_handler.logs[-1].bmi
+        return None
+
     # User methods
 
     def update_biometrical_data(
@@ -155,22 +164,3 @@ class User:
             self.gender = gender
         if fitness_lvl is not None:
             self.fitness_lvl = fitness_lvl
-
-    def return_bmi(self):
-        """Method for calculating the BMI. Partly AI-generated."""
-        if self.height_in_cm is None or not self.weight_logs:
-            return "BMI cannot be calculated. Please add a weight log first."
-        height_in_m = self.height_in_cm / 100
-        latest_weight = self.weight_logs[-1].weight_in_kg
-        bmi = latest_weight / (height_in_m**2)
-        return round(bmi, 2)
-
-    def water_intake_today(self):
-        """Method for calculating the total water intake of today. Partly AI-generated."""
-        today = datetime.now().date()
-        total_intake = sum(
-            log.amount_in_ml
-            for log in self.water_logs
-            if datetime.fromisoformat(log.timestamp).date() == today
-        )
-        return total_intake
