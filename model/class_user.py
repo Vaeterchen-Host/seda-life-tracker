@@ -30,10 +30,10 @@ class User:
         height_in_cm,
         gender,
         fitness_lvl,
-        water: list[WaterLog],
-        weight: list[WeightLog],
-        meal: list[MealLog],
-        activity: list[ActivityLog],
+        water_logs: list[WaterLog],
+        weight_logs: list[WeightLog],
+        meal_logs: list[MealLog],
+        activity_logs: list[ActivityLog],
     ):
         """This is the constructor of User."""
         self._user_id = user_id
@@ -43,17 +43,19 @@ class User:
         self.gender = gender
         self.fitness_lvl = fitness_lvl
         self._water_log_handler = WaterLogHandler(
-            self.user_id, water
+            self.user_id, water_logs
         )  # refactored by ai
         self._weight_log_handler = WeightLogHandler(
-            self.user_id, weight
+            self.user_id, weight_logs
         )  # refactored by ai
-        self._meal_log_handler = MealLogHandler(self.user_id, meal)  # refactored by ai
+        self._meal_log_handler = MealLogHandler(
+            self.user_id, meal_logs
+        )  # refactored by ai
         self._activity_log_handler = ActivityLogHandler(
-            self.user_id, activity
+            self.user_id, activity_logs
         )  # refactored by ai
 
-    # Here are the biometrical data related methods.
+    # Aliases
     @property
     def user_id(self):
         """This is the getter for user_id"""
@@ -139,45 +141,7 @@ class User:
         """This is the getter for the activity log handler. Refactored by ai."""
         return self._activity_log_handler  # refactored by ai
 
-    @property
-    def water_logs(self):
-        """This is the getter for water logs."""
-        return self._water_log_handler.logs  # refactored by ai
-
-    @water_logs.setter
-    def water_logs(self, new_water_logs):
-        """This is the setter for water logs. Partly AI-generated."""
-        self._water_log_handler.logs = new_water_logs  # refactored by ai
-
-    @property
-    def weight_logs(self):
-        """This is the getter for weight logs."""
-        return self._weight_log_handler.logs  # refactored by ai
-
-    @weight_logs.setter
-    def weight_logs(self, new_weight_logs):
-        """This is the setter for weight logs. Partly AI-generated."""
-        self._weight_log_handler.logs = new_weight_logs  # refactored by ai
-
-    @property
-    def meal_logs(self):
-        """This is the getter for meal logs."""
-        return self._meal_log_handler.logs  # refactored by ai
-
-    @meal_logs.setter
-    def meal_logs(self, new_meal_logs):
-        """This is the setter for meal logs. Partly AI-generated."""
-        self._meal_log_handler.logs = new_meal_logs  # refactored by ai
-
-    @property
-    def activity_logs(self):
-        """This is the getter for activity logs."""
-        return self._activity_log_handler.logs  # refactored by ai
-
-    @activity_logs.setter
-    def activity_logs(self, new_activity_logs):
-        """This is the setter for activity logs."""
-        self._activity_log_handler.logs = new_activity_logs  # refactored by ai
+    # User methods
 
     def update_biometrical_data(
         self, birthdate=None, height_in_cm=None, gender=None, fitness_lvl=None
@@ -192,7 +156,7 @@ class User:
         if fitness_lvl is not None:
             self.fitness_lvl = fitness_lvl
 
-    def calculate_bmi(self):
+    def return_bmi(self):
         """Method for calculating the BMI. Partly AI-generated."""
         if self.height_in_cm is None or not self.weight_logs:
             return "BMI cannot be calculated. Please add a weight log first."
