@@ -4,6 +4,7 @@
 
 """Tests for the SEDA user class. Refactored by ai."""
 
+from dataclasses import fields
 from pathlib import Path
 import sys
 
@@ -12,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import pytest
 
 from model.class_user import User
+from model.classes_food import BigSeven, Food, Meal, NutrientSummary
 from model.classes_log import MealLog, WaterLog, WeightLog
 
 # pylint: skip-file
@@ -26,7 +28,7 @@ def water_log_1():
 @pytest.fixture
 def weight_log_1():
     """Create a weightlog object for each test. Refactored by ai."""
-    return WeightLog(1, 1, 80.5, "2026-03-21T12:12")
+    return WeightLog(1, 1, 80.5, None, "2026-03-21T12:12")
 
 
 @pytest.fixture
@@ -77,7 +79,7 @@ def test_get_weight_logs(test_user_class):
 def test_add_weight_log(test_user_class):
     """This test checks if weight logs are added correctly. Refactored by ai."""
     test_user_class.weight_log_handler.create_log(
-        None, 79.8, "2026-03-22T08:00", test_user_class.height_in_cm
+        None, 79.8, test_user_class.height_in_cm, "2026-03-22T08:00"
     )  # refactored by ai
 
     assert len(test_user_class.weight_log_handler.logs) == 2
@@ -90,7 +92,7 @@ def test_add_weight_log(test_user_class):
 def test_add_activity_log(test_user_class):
     """This test checks if activity logs are added correctly. Refactored by ai."""
     test_user_class.activity_log_handler.create_log(
-        None, "walking", 120, "2026-03-22T08:00", 30, "minutes"
+        None, "walking", 120, 30, "minutes", "2026-03-22T08:00"
     )  # refactored by ai
 
     assert len(test_user_class.activity_log_handler.logs) == 1
@@ -103,7 +105,7 @@ def test_add_activity_log(test_user_class):
 def test_last_bmi_returns_bmi_of_latest_weight_log(test_user_class):
     """This test checks if the latest weight log BMI is returned. ai-generated."""
     test_user_class.weight_log_handler.create_log(
-        None, 79.8, "2026-03-22T08:00", test_user_class.height_in_cm
+        None, 79.8, test_user_class.height_in_cm, "2026-03-22T08:00"
     )  # ai-generated
 
     assert test_user_class.last_bmi == 23.32
@@ -129,7 +131,7 @@ def test_last_bmi_returns_none_without_weight_logs():
 
 def test_get_meal_log_handler(test_user_class):
     """This test checks if the meal log handler is available. ai-generated."""
-    meal_log = MealLog(1, 1, None, 250, "2026-03-22T12:00")  # ai-generated
+    meal_log = MealLog(1, 1, None, 250, "g", "2026-03-22T12:00")  # ai-generated
     test_user_class.meal_log_handler.logs = [meal_log]  # ai-generated
 
     assert len(test_user_class.meal_log_handler.logs) == 1
@@ -140,3 +142,115 @@ def test_set_invalid_meal_log_handler_logs_raises_value_error(test_user_class):
     """This test checks if invalid handler logs are rejected. ai-generated."""
     with pytest.raises(ValueError):
         test_user_class.meal_log_handler.logs = ["not a meal log"]  # ai-generated
+
+
+def test_today_calories_burned_sums_only_today_activity_logs(
+    test_user_class, monkeypatch
+):
+    """This test checks if only today's burned calories are summed. ai-generated."""
+    class FrozenDateTime:
+        """Minimal datetime stand-in for today's date. ai-generated."""
+
+        @staticmethod
+        def now():
+            from datetime import datetime
+
+            return datetime.fromisoformat("2026-04-29T18:00:00")
+
+        @staticmethod
+        def fromisoformat(value):
+            from datetime import datetime
+
+            return datetime.fromisoformat(value)
+
+    monkeypatch.setattr("model.class_user.datetime", FrozenDateTime)
+    test_user_class.activity_log_handler.create_log(
+        1, "walking", 120, 30, "minutes", "2026-04-29T08:00:00"
+    )  # ai-generated
+    test_user_class.activity_log_handler.create_log(
+        2, "cycling", 200, 45, "minutes", "2026-04-29T18:00:00"
+    )  # ai-generated
+    test_user_class.activity_log_handler.create_log(
+        3, "running", 300, 60, "minutes", "2026-04-28T18:00:00"
+    )  # ai-generated
+
+    assert test_user_class.today_calories_burned == 320
+
+
+def test_today_net_calories_subtracts_burned_from_intake(monkeypatch):
+    """This test checks if net calories subtract activity from meal intake. ai-generated."""
+    user = User(
+        1,
+        "Test",
+        "2000-02-22",
+        185,
+        "m",
+        "beginner",
+        [],
+        [],
+        [],
+        [],
+    )  # ai-generated
+    food_item = Food(
+        1,
+        "Oats",
+        100,
+        "g",
+        370,
+        BigSeven(7, 1, 58, 10, 1, 13, 0.01),
+        NutrientSummary(*([0] * len(fields(NutrientSummary)))),
+    )  # ai-generated
+    meal = Meal(1, "Porridge", [food_item])  # ai-generated
+    user.meal_log_handler.create_log(
+        1, meal, 100, "g", "2026-04-29T08:00:00"
+    )  # ai-generated
+    user.activity_log_handler.create_log(
+        1, "walking", 120, 30, "minutes", "2026-04-29T12:00:00"
+    )  # ai-generated
+
+    class FrozenDateTime:
+        """Minimal datetime stand-in for today's date. ai-generated."""
+
+        @staticmethod
+        def now():
+            from datetime import datetime
+
+            return datetime.fromisoformat("2026-04-29T18:00:00")
+
+        @staticmethod
+        def fromisoformat(value):
+            from datetime import datetime
+
+            return datetime.fromisoformat(value)
+
+    monkeypatch.setattr("model.class_user.datetime", FrozenDateTime)
+
+    assert user.today_calorie_intake == 370
+    assert user.today_calories_burned == 120
+    assert user.today_net_calories == 250
+
+
+def test_daily_water_target_and_progress_use_latest_weight(test_user_class, monkeypatch):
+    """This test checks if the daily water status uses the latest weight. ai-generated."""
+    class FrozenDateTime:
+        """Minimal datetime stand-in for today's date. ai-generated."""
+
+        @staticmethod
+        def now():
+            from datetime import datetime
+
+            return datetime.fromisoformat("2026-03-22T18:00:00")
+
+        @staticmethod
+        def fromisoformat(value):
+            from datetime import datetime
+
+            return datetime.fromisoformat(value)
+
+    monkeypatch.setattr("model.class_user.datetime", FrozenDateTime)
+    monkeypatch.setattr("model.classes_log.datetime", FrozenDateTime)
+    test_user_class.water_log_handler.create_log(2, 1400, "2026-03-22T08:00")
+
+    assert test_user_class.daily_water_target == 2818
+    assert test_user_class.today_water_balance == 1418
+    assert test_user_class.today_water_progress == 49.68

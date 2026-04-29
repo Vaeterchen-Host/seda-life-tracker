@@ -302,6 +302,13 @@ class Meal:
             )
         return total_calories
 
+    @property
+    def total_amount(self):
+        """Getter of the total amount of the meal."""
+        if not self.food_items:
+            return 0
+        return sum(item.amount for item in self.food_items)
+
     # ai-generated content start: meal nutrient aggregations. ai-generated.
     @property
     def big_seven(self):

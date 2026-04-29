@@ -44,6 +44,7 @@ class FoodDatabase:
     def connect(self):
         """This method connects to the food database."""
         conn = sqlite3.connect(self._db)
+        conn.row_factory = sqlite3.Row  # refactored by ai
         return conn
 
     def end_connection(self, conn):
@@ -63,6 +64,44 @@ class FoodDatabase:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM foods WHERE name_en LIKE ?", (f"%{food_name}%",))
         return cursor.fetchall()
+
+    @connector
+    def search_foods(self, conn, food_name):
+        """Search foods by German or English name. ai-generated."""
+        cursor = conn.cursor()
+        search_term = food_name.strip().lower()  # ai-generated
+        cursor.execute(
+            """
+            SELECT *
+            FROM foods
+            WHERE lower(COALESCE(name_de, '')) LIKE ? OR lower(COALESCE(name_en, '')) LIKE ?
+            ORDER BY
+                CASE
+                    WHEN lower(COALESCE(name_de, '')) = ? OR lower(COALESCE(name_en, '')) = ? THEN 0
+                    WHEN lower(COALESCE(name_de, '')) LIKE ? OR lower(COALESCE(name_en, '')) LIKE ? THEN 1
+                    ELSE 2
+                END,
+                LENGTH(COALESCE(name_de, name_en)) ASC,
+                COALESCE(name_de, name_en) COLLATE NOCASE ASC
+            LIMIT 20
+            """,
+            (
+                f"%{search_term}%",
+                f"%{search_term}%",
+                search_term,
+                search_term,
+                f"{search_term}%",
+                f"{search_term}%",
+            ),
+        )
+        return cursor.fetchall()
+
+    @connector
+    def get_food_by_id(self, conn, food_id):
+        """Retrieve one food row by id. ai-generated."""
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM foods WHERE food_id = ?", (food_id,))
+        return cursor.fetchone()
 
     @connector
     def custom_sql_query(self, conn, query):
@@ -137,6 +176,7 @@ class Database:
             (name, birthdate, height_in_cm, gender, fitness_lvl),
         )
         conn.commit()
+        return cursor.lastrowid  # refactored by ai
 
     @connector
     def get_user(self, conn, name) -> list:
@@ -159,6 +199,14 @@ class Database:
         """This method deletes a user from database."""
         cursor = conn.cursor()
         cursor.execute("DELETE FROM users WHERE user_name = ?", (name,))
+        conn.commit()
+        return cursor.rowcount
+
+    @connector
+    def delete_user_by_id(self, conn, user_id) -> int:
+        """This method deletes a user by ID from database. ai-generated."""
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
         conn.commit()
         return cursor.rowcount
 
@@ -215,7 +263,12 @@ class Database:
     def get_all_water_logs(self, conn) -> list:
         """This method retrieves all water logs from the database."""
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM water_logs")
+        cursor.execute(
+            """
+            SELECT water_log_id, user_id, amount_in_ml, timestamp
+            FROM water_logs
+            """
+        )
         rows = cursor.fetchall()
         return rows
 
@@ -246,7 +299,7 @@ class Database:
         conn.commit()
 
     @connector
-    def add_weight_log(self, conn, user_id, weight_in_kg, timestamp, height_in_cm=None):
+    def add_weight_log(self, conn, user_id, weight_in_kg, height_in_cm=None, timestamp=None):
         """This method adds a weight logs to the database. Code partly AI-generated."""
         cursor = conn.cursor()
         # The '?' is a placeholder.
@@ -265,7 +318,12 @@ class Database:
     def get_all_weight_logs(self, conn) -> list:
         """This method retrieves all weight logs from the database."""
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM weight_logs")
+        cursor.execute(
+            """
+            SELECT weight_log_id, user_id, weight_in_kg, height_in_cm, timestamp
+            FROM weight_logs
+            """
+        )
         rows = cursor.fetchall()
         return rows
 
@@ -306,9 +364,9 @@ class Database:
         user_id,
         activity_name,
         calories_burned,
-        timestamp,
         activity_value=None,
         unit_type="minutes",
+        timestamp=None,
     ):
         """Adds an activity entry to the database."""
         cursor = conn.cursor()
@@ -334,7 +392,19 @@ class Database:
     def get_all_activity_logs(self, conn) -> list:
         """This method retrieves all activity logs from the database."""
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM activity_logs")
+        cursor.execute(
+            """
+            SELECT
+                activity_log_id,
+                user_id,
+                activity_name,
+                calories_burned,
+                activity_value,
+                unit_type,
+                timestamp
+            FROM activity_logs
+            """
+        )
         rows = cursor.fetchall()
         return rows
 
@@ -344,6 +414,37 @@ class Database:
         cursor = conn.cursor()
         cursor.execute(
             "DELETE FROM activity_logs WHERE activity_log_id = ?", (activity_log_id,)
+        )
+        conn.commit()
+        return cursor.rowcount
+
+    @connector
+    def update_activity_log(
+        self,
+        conn,
+        activity_log_id,
+        activity_name,
+        calories_burned,
+        activity_value=None,
+        unit_type="minutes",
+        timestamp=None,
+    ):
+        """Update an activity entry in the database. ai-generated."""
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE activity_logs
+            SET activity_name = ?, calories_burned = ?, activity_value = ?, unit_type = ?, timestamp = ?
+            WHERE activity_log_id = ?
+            """,
+            (
+                activity_name,
+                calories_burned,
+                activity_value,
+                unit_type,
+                timestamp,
+                activity_log_id,
+            ),
         )
         conn.commit()
         return cursor.rowcount
@@ -379,6 +480,21 @@ class Database:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM meals ORDER BY name ASC")
         return cursor.fetchall()
+
+    @connector
+    def get_meal_by_id(self, conn, meal_id):
+        """Retrieve one meal template by ID. ai-generated."""
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM meals WHERE meal_id = ?", (meal_id,))
+        return cursor.fetchone()
+
+    @connector
+    def update_meal(self, conn, meal_id, name):
+        """Update a meal template name. ai-generated."""
+        cursor = conn.cursor()
+        cursor.execute("UPDATE meals SET name = ? WHERE meal_id = ?", (name, meal_id))
+        conn.commit()
+        return cursor.rowcount
 
     @connector
     def delete_meal(self, conn, meal_id):
@@ -420,6 +536,14 @@ class Database:
         )
         conn.commit()
         return cursor.lastrowid  # refactored by ai
+
+    @connector
+    def delete_meal_food_items(self, conn, meal_id):
+        """Delete all food items of one meal template. ai-generated."""
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM meal_food_items WHERE meal_id = ?", (meal_id,))
+        conn.commit()
+        return cursor.rowcount
 
     @connector
     def get_meal_food_items(self, conn, meal_id):
@@ -478,7 +602,7 @@ class Database:
         conn.commit()
 
     @connector
-    def add_meal_log(self, conn, user_id, meal_id, amount, timestamp, unit_type="g"):
+    def add_meal_log(self, conn, user_id, meal_id, amount, unit_type="g", timestamp=None):
         """Adds a meal consumption entry to the log."""
         cursor = conn.cursor()
         cursor.execute(
@@ -497,7 +621,14 @@ class Database:
         cursor = conn.cursor()
         cursor.execute(
             """
-            SELECT ml.meal_log_id, ml.meal_id, m.name, ml.amount, ml.unit_type, ml.timestamp
+            SELECT
+                ml.meal_log_id,
+                ml.user_id,
+                ml.meal_id,
+                m.name,
+                ml.amount,
+                ml.unit_type,
+                ml.timestamp
             FROM meal_logs ml
             JOIN meals m ON ml.meal_id = m.meal_id
             WHERE ml.user_id = ?
@@ -512,5 +643,20 @@ class Database:
         """Deletes a specific meal log entry."""
         cursor = conn.cursor()
         cursor.execute("DELETE FROM meal_logs WHERE meal_log_id = ?", (meal_log_id,))
+        conn.commit()
+        return cursor.rowcount
+
+    @connector
+    def update_meal_log(self, conn, meal_log_id, meal_id, amount, unit_type="g", timestamp=None):
+        """Update a meal log entry. ai-generated."""
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE meal_logs
+            SET meal_id = ?, amount = ?, unit_type = ?, timestamp = ?
+            WHERE meal_log_id = ?
+            """,
+            (meal_id, amount, unit_type, timestamp, meal_log_id),
+        )
         conn.commit()
         return cursor.rowcount

@@ -150,6 +150,116 @@ class User:
             return self.weight_log_handler.logs[-1].bmi
         return None
 
+    @property
+    def age(self):
+        """Return the age of the user based on the birthdate. ai-generated."""
+        # fromisoformat() turns the stored ISO string back into a date we can compare.
+        birthdate = datetime.fromisoformat(self.birthdate).date()
+        today = datetime.now().date()
+        return today.year - birthdate.year - (
+            (today.month, today.day) < (birthdate.month, birthdate.day)
+        )
+
+    @property
+    def latest_weight(self):
+        """Return the latest logged weight. ai-generated."""
+        if not self.weight_log_handler.logs:
+            return None
+        return self.weight_log_handler.logs[-1].weight_in_kg
+
+    @property
+    def basal_metabolic_rate(self):
+        """Return the estimated daily calorie target. ai-generated."""
+        if self.latest_weight is None:
+            return None
+        # The formula uses the user's latest weight log so the target reacts to weight changes.
+        if self.gender == "m":
+            bmr = (
+                10 * self.latest_weight
+                + 6.25 * self.height_in_cm
+                - 5 * self.age
+                + 5
+            )
+        elif self.gender == "f":
+            bmr = (
+                10 * self.latest_weight
+                + 6.25 * self.height_in_cm
+                - 5 * self.age
+                - 161
+            )
+        else:
+            bmr = (
+                10 * self.latest_weight
+                + 6.25 * self.height_in_cm
+                - 5 * self.age
+                - 78
+            )
+        # The activity factor translates the base metabolic rate into a daily target.
+        activity_factor = {
+            "beginner": 1.2,
+            "intermediate": 1.55,
+            "advanced": 1.725,
+        }[self.fitness_lvl]
+        return round(bmr * activity_factor, 2)
+
+    @property
+    def daily_calorie_target(self):
+        """Return the estimated daily calorie target. ai-generated."""
+        return self.basal_metabolic_rate
+
+    @property
+    def today_calorie_intake(self):
+        """Return the calories of today's logged meals. ai-generated."""
+        today = datetime.now().date()
+        # Only logs from today are included, older meal logs stay available for later views.
+        calories = [
+            log.calories
+            for log in self.meal_log_handler.logs
+            if datetime.fromisoformat(log.timestamp).date() == today
+            and log.calories is not None
+        ]
+        return round(sum(calories), 2)
+
+    @property
+    def today_calories_burned(self):
+        """Return the calories burned by today's activity logs. ai-generated."""
+        today = datetime.now().date()
+        # The same date filter is used here so eaten and burned calories are comparable.
+        calories = [
+            log.calories_burned
+            for log in self.activity_log_handler.logs
+            if datetime.fromisoformat(log.timestamp).date() == today
+            and log.calories_burned is not None
+        ]
+        return round(sum(calories), 2)
+
+    @property
+    def today_net_calories(self):
+        """Return today's eaten calories minus burned calories. ai-generated."""
+        return round(self.today_calorie_intake - self.today_calories_burned, 2)
+
+    @property
+    def daily_water_target(self):
+        """Return the estimated daily water target in ml. ai-generated."""
+        if self.latest_weight is not None:
+            return round(self.latest_weight * 35)
+        return 2000
+
+    @property
+    def today_water_balance(self):
+        """Return the water target minus today's intake. ai-generated."""
+        return self.daily_water_target - self.water_log_handler.water_intake_today()
+
+    @property
+    def today_water_progress(self):
+        """Return the water progress of today in percent. ai-generated."""
+        if self.daily_water_target <= 0:
+            return None
+        return round(
+            (self.water_log_handler.water_intake_today() / self.daily_water_target) * 100,
+            2,
+        )
+
     # User methods
 
     def update_biometrical_data(

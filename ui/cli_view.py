@@ -12,7 +12,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 # pylint: disable=C0413, E1120, C0301
 from datetime import datetime
 from config import DEVS, LICENSE_PATH
-from model.classes import User
 from model.database import FoodDatabase
 from utils.paginator import paginator
 
@@ -157,7 +156,7 @@ def show_license_long():
 
 
 def create_user_by_input():
-    """Create a new user by asking for input. Partly AI-generated."""
+    """Create new user data by asking for input. Partly AI-generated."""
     while True:
         name = input("Enter your name: ")
         if name.strip():  # strip removes leading and trailing whitespaces.
@@ -200,18 +199,7 @@ def create_user_by_input():
         print(
             "Fitness level must be 'beginner', 'intermediate', or 'advanced'. Please enter a valid fitness level."
         )
-    return User(
-        None,
-        name,
-        birthdate,
-        height_in_cm,
-        gender,
-        fitness_lvl,
-        [],
-        [],
-        [],
-        [],
-    )
+    return name, birthdate, height_in_cm, gender, fitness_lvl
 
 
 def show_user_info_from_class(user):
@@ -367,13 +355,17 @@ def prompt_main_menu():
         1. Show user information
         2. All about water logs:
         3. All about weight log:
-        4. Change user information
-        5. Exit
+        4. All about meals:
+        5. All about activity logs:
+        6. Change user information
+        7. Show today's calorie status
+        8. Delete current user account
+        9. Exit
         
         l. Show License
                                 """
     )
-    return input("Enter your choice (1-5/l): ")
+    return input("Enter your choice (1-9/l): ")
 
 
 def prompt_water_log_menu():
@@ -385,10 +377,11 @@ def prompt_water_log_menu():
         2. Show all water logs
         3. Delete a water log
         4. Show today's water intake
-        5. Back to main menu
+        5. Show today's water status
+        6. Back to main menu
                                 """
     )
-    return input("Enter your choice (1-5): ")
+    return input("Enter your choice (1-6): ")
 
 
 def prompt_weight_log_menu():
@@ -404,6 +397,281 @@ def prompt_weight_log_menu():
                                 """
     )
     return input("Enter your choice (1-5): ")
+
+
+def prompt_meal_menu():
+    """Show the meal and calorie menu and handle user input. ai-generated."""
+    show_message(
+        """
+        What would you like to do with meals?
+        1. Search foods
+        2. Create a meal template
+        3. Show meal templates
+        4. Update a meal template
+        5. Delete a meal template
+        6. Consume a single food
+        7. Log a consumed meal
+        8. Show meal logs
+        9. Update a meal log
+        10. Delete a meal log
+        11. Show today's calorie status
+        12. Back to main menu
+                                """
+    )
+    return input("Enter your choice (1-12): ")
+
+
+def prompt_activity_menu():
+    """Show the activity log menu and handle user input. ai-generated."""
+    show_message(
+        """
+        What would you like to do with your activity logs?
+        1. Add an activity log
+        2. Show activity logs
+        3. Update an activity log
+        4. Delete an activity log
+        5. Back to main menu
+                                """
+    )
+    return input("Enter your choice (1-5): ")
+
+
+def prompt_meal_name():
+    """Prompt the user for a meal template name. ai-generated."""
+    meal_name = input("Enter the meal template name: ").strip()
+    return meal_name or None
+
+
+def prompt_food_search_term():
+    """Prompt the user for a food search term. ai-generated."""
+    search_term = input("Enter a German or English food name to search: ").strip()
+    return search_term or None
+
+
+def prompt_food_id():
+    """Prompt the user for a food id. ai-generated."""
+    try:
+        return int(input("Enter the food_id you want to use: "))
+    except ValueError:
+        print("Invalid input. Returning to the previous menu.")
+        return None
+
+
+def prompt_food_amount(unit_type):
+    """Prompt the user for a food amount. ai-generated."""
+    try:
+        amount = float(input(f"Enter the amount in {unit_type}: "))
+        if amount <= 0:
+            raise ValueError
+        return amount
+    except ValueError:
+        print("Invalid input. Please enter a valid positive amount.")
+        return None
+
+
+def prompt_meal_id():
+    """Prompt the user for a meal id. ai-generated."""
+    try:
+        return int(input("Enter the meal ID: "))
+    except ValueError:
+        print("Invalid input. Returning to the previous menu.")
+        return None
+
+
+def prompt_meal_log_parameters():
+    """Prompt the user for meal log values. ai-generated."""
+    try:
+        amount = float(input("Enter the consumed amount (g/ml): "))
+        if amount <= 0:
+            raise ValueError
+    except ValueError:
+        print("Invalid amount. Returning to the previous menu.")
+        return None, None, None
+
+    unit_type = input("Enter the unit type (g/ml): ").strip().lower() or "g"
+    if unit_type not in {"g", "ml"}:
+        print("Invalid unit type. Returning to the previous menu.")
+        return None, None, None
+
+    timestamp = input(
+        "Enter the timestamp (YYYY-MM-DDTHH:MM) or nothing for current time: "
+    )
+    if not timestamp:
+        timestamp = None
+    return amount, unit_type, timestamp
+
+
+def prompt_single_food_log_parameters(unit_type):
+    """Prompt the user for direct single-food logging values. ai-generated."""
+    amount = prompt_food_amount(unit_type)
+    if amount is None:
+        return None, None
+    timestamp = input(
+        "Enter the timestamp (YYYY-MM-DDTHH:MM) or nothing for current time: "
+    )
+    if not timestamp:
+        timestamp = None
+    return amount, timestamp
+
+
+def prompt_activity_log_parameters():
+    """Prompt the user for activity log values. ai-generated."""
+    activity_name = input("Enter the activity name: ").strip()
+    if not activity_name:
+        print("Invalid activity name. Returning to the previous menu.")
+        return None, None, None, None
+
+    try:
+        calories_burned = float(input("Enter the burned calories in kcal: "))
+        if calories_burned < 0:
+            raise ValueError
+    except ValueError:
+        print("Invalid burned calories. Returning to the previous menu.")
+        return None, None, None, None
+
+    activity_value_input = input(
+        "Enter the activity duration in minutes or nothing to skip: "
+    ).strip()
+    if activity_value_input:
+        try:
+            activity_value = float(activity_value_input)
+            if activity_value < 0:
+                raise ValueError
+        except ValueError:
+            print("Invalid activity duration. Returning to the previous menu.")
+            return None, None, None, None
+    else:
+        activity_value = None
+
+    timestamp = input(
+        "Enter the timestamp (YYYY-MM-DDTHH:MM) or nothing for current time: "
+    )
+    if not timestamp:
+        timestamp = None
+    return activity_name, calories_burned, activity_value, timestamp
+
+
+def prompt_yes_no(message):
+    """Prompt the user for a yes/no decision. ai-generated."""
+    return input(message).strip().lower() == "y"
+
+
+def prompt_optional_text(message):
+    """Prompt the user for an optional text value. ai-generated."""
+    return input(message).strip() or None
+
+
+def prompt_optional_float(message):
+    """Prompt the user for an optional float value. ai-generated."""
+    value = input(message).strip()
+    if not value:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        print("Invalid input. Returning to the previous menu.")
+        return None
+
+
+def prompt_optional_int(message):
+    """Prompt the user for an optional integer value. ai-generated."""
+    value = input(message).strip()
+    if not value:
+        return None
+    try:
+        return int(value)
+    except ValueError:
+        print("Invalid input. Returning to the previous menu.")
+        return None
+
+
+def prompt_optional_timestamp():
+    """Prompt the user for an optional timestamp. ai-generated."""
+    return (
+        input(
+            "Enter the timestamp (YYYY-MM-DDTHH:MM) or nothing to keep the current one: "
+        ).strip()
+        or None
+    )
+
+
+def show_food_search_results(food_rows):
+    """Show food search results. ai-generated."""
+    show_message("\nFood search results:")
+    for food_row in food_rows:
+        print(
+            f"food_id: {food_row['food_id']} | "
+            f"Name: {food_row['name_de'] or food_row['name_en']} | "
+            f"Unit: {food_row['unit_type']} | "
+            f"Calories/100 units: {food_row['kcal']}"
+        )
+
+
+def show_meal_templates(meals):
+    """Show all meal templates. ai-generated."""
+    if not meals:
+        print("No meal templates found.")
+        return
+    for meal in meals:
+        print(f"\nMeal ID: {meal.id} | Name: {meal.name} | Calories: {meal.calories}")
+        for food_item in meal.food_items:
+            print(
+                f"  - {food_item.name}: {food_item.amount} {food_item.unit_type} "
+                f"({food_item.calories_per_100_units} kcal/100 units)"
+            )
+
+
+def show_meal_logs(meal_logs):
+    """Show all meal logs. ai-generated."""
+    if not meal_logs:
+        print("No meal logs found.")
+        return
+    for log in meal_logs:
+        print(
+            f"ID: {log.id}, Meal: {log.meal.name}, Amount: {log.amount} {log.unit_type}, "
+            f"Calories: {log.calories}, Timestamp: {log.timestamp}"
+        )
+        print(
+            "  Big 7: "
+            f"Fat {log.big_seven.fat} g, "
+            f"Saturated fat {log.big_seven.saturated_fat} g, "
+            f"Carbohydrate {log.big_seven.carbohydrate} g, "
+            f"Sugar {log.big_seven.sugar} g, "
+            f"Fibre {log.big_seven.fibre} g, "
+            f"Protein {log.big_seven.protein} g, "
+            f"Salt {log.big_seven.salt} g"
+        )
+        # vars(...) exposes the dataclass fields as a dict so we can print only non-empty values.
+        additional_nutrients = [
+            f"{field_name}: {value}"
+            for field_name, value in vars(log.nutrient_summary).items()
+            if value not in (None, 0)
+        ]
+        if additional_nutrients:
+            print("  Additional nutrients: " + ", ".join(additional_nutrients))
+
+
+def show_activity_logs(activity_logs):
+    """Show all activity logs. ai-generated."""
+    if not activity_logs:
+        print("No activity logs found.")
+        return
+    for log in activity_logs:
+        print(
+            f"ID: {log.id}, Activity: {log.activity_name}, "
+            f"Burned calories: {log.calories_burned} kcal, "
+            f"Duration: {log.activity_value} minutes, Timestamp: {log.timestamp}"
+        )
+
+
+def show_water_status(status):
+    """Show today's water status. ai-generated."""
+    print(
+        f"\nWater today: {status['intake']} ml\n"
+        f"Water target: {status['target']} ml\n"
+        f"Difference: {status['difference']} ml\n"
+        f"Progress: {status['progress']} %\n"
+    )
 
 
 # Food-DB related functions

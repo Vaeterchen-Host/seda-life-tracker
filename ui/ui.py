@@ -188,7 +188,7 @@ def main(page: ft.Page):
             # Force validation by class
             # test_log = WeightLog(0, w, ts)
 
-            db.add_weight_log(current_user.id, w, ts)
+            db.add_weight_log(current_user.id, w, None, ts)
             weight_input.value = ""
             load_weight_logs()
         except ValueError as ex:

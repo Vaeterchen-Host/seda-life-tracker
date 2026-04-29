@@ -189,7 +189,7 @@ def test_add_and_get_weight_log(db, tobias):
     )
     
     # 2. Add weight log (User ID 1)
-    db.add_weight_log(1, 85.5, "2026-04-19T09:00:00", 185)
+    db.add_weight_log(1, 85.5, 185, "2026-04-19T09:00:00")
     
     # 3. Retrieve and validate
     logs = db.get_all_weight_logs()
@@ -204,7 +204,7 @@ def test_delete_weight_log(db, tobias):
     """This test checks if a weight log entry can be deleted."""
     # Setup
     db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
-    db.add_weight_log(1, 90.0, "2026-04-18T08:00:00")
+    db.add_weight_log(1, 90.0, None, "2026-04-18T08:00:00")
     
     # Get the ID of the entry
     logs_before = db.get_all_weight_logs()
@@ -231,6 +231,20 @@ def test_delete_user(db, tobias):
     db.delete_user(tobias.name)
     row = db.get_user(tobias.name)
     assert row is None, "User could not be deleted from the database"
+
+
+def test_delete_user_by_id(db, tobias):
+    """Test checks if user can be deleted by ID. ai-generated."""
+    user_id = db.add_user(
+        tobias.name,
+        tobias.birthdate,
+        tobias.height_in_cm,
+        tobias.gender,
+        tobias.fitness_lvl,
+    )
+    deleted_rows = db.delete_user_by_id(user_id)
+    assert deleted_rows == 1, "User could not be deleted by ID"
+    assert db.get_all_users() == [], "No users should remain in the database"
 
 
 def test_delete_water_log(db, tobias):
@@ -273,7 +287,7 @@ def test_add_and_get_activity_log(db, tobias):
     )
     
     # Add activity (User ID 1, since it's a new database)
-    db.add_activity_log(1, "Jogging", 450.5, "2026-04-11T18:00:00", 30, "minutes")
+    db.add_activity_log(1, "Jogging", 450.5, 30, "minutes", "2026-04-11T18:00:00")
     
     logs = db.get_all_activity_logs()
     assert len(logs) == 1, "Activity log count should be 1"
@@ -288,7 +302,7 @@ def test_delete_activity_log(db, tobias):
     db.add_user(
         tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
     )
-    db.add_activity_log(1, "Swimming", 300, "2026-04-11T19:00:00")
+    db.add_activity_log(1, "Swimming", 300, None, "minutes", "2026-04-11T19:00:00")
     
     # retrieving ID first
     logs = db.get_all_activity_logs()
@@ -301,6 +315,25 @@ def test_delete_activity_log(db, tobias):
     # verifying
     logs_after = db.get_all_activity_logs()
     assert len(logs_after) == 0, "Activity log table should be empty after deletion"
+
+
+def test_update_activity_log(db, tobias):
+    """This test checks if an activity log can be updated. ai-generated."""
+    db.add_user(
+        tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
+    )
+    db.add_activity_log(1, "Walking", 120, 30, "minutes", "2026-04-11T19:00:00")
+
+    updated_rows = db.update_activity_log(
+        1, "Running", 300, 45, "minutes", "2026-04-11T20:00:00"
+    )
+    logs = db.get_all_activity_logs()
+
+    assert updated_rows == 1, "One activity log should have been updated"
+    assert logs[0][2] == "Running", "Activity name should be updated"
+    assert logs[0][3] == 300, "Calories burned should be updated"
+    assert logs[0][4] == 45, "Activity value should be updated"
+    assert logs[0][6] == "2026-04-11T20:00:00", "Timestamp should be updated"
 
 
 # food database related tests
@@ -393,6 +426,16 @@ def test_delete_meal(db):
     assert len(all_meals) == 0, "Meal table should be empty after deletion"
 
 
+def test_update_meal(db):
+    """This test checks if a meal template name can be updated. ai-generated."""
+    db.add_meal("Lunch")
+    updated_rows = db.update_meal(1, "Late Lunch")
+
+    all_meals = db.get_all_meals()
+    assert updated_rows == 1, "One meal should have been updated"
+    assert all_meals[0][1] == "Late Lunch", "Meal name should be updated"
+
+
 # meal food item related tests
 def test_meal_food_item_table_creation(db):
     """This test checks if the meal food items table is created successfully."""
@@ -445,6 +488,18 @@ def test_get_meal_food_items_returns_none_values_for_missing_food_reference(db):
     assert items[0][5] is None, "Missing external foods should yield null nutrient values"
 
 
+def test_delete_meal_food_items(db, sample_food_row):
+    """This test checks if all meal food items of one meal can be deleted. ai-generated."""
+    db.add_meal("Porridge")
+    db.add_meal_food_item(1, sample_food_row["food_id"], 50.0)
+
+    deleted_rows = db.delete_meal_food_items(1)
+    items = db.get_meal_food_items(1)
+
+    assert deleted_rows == 1, "One meal food item should have been deleted"
+    assert items == [], "Meal food items should be empty after deletion"
+
+
 # meal log related tests
 def test_meal_log_table_creation(db):
     """This test checks if the meal logs table is created successfully."""
@@ -465,24 +520,42 @@ def test_add_and_get_meal_log(db, tobias):
     db.add_meal("Standard Shake")
     
     # Log Meal
-    db.add_meal_log(1, 1, 250, "2026-04-19T08:00:00")
+    db.add_meal_log(1, 1, 250, "g", "2026-04-19T08:00:00")
     
     logs = db.get_user_meal_logs(1)
     assert len(logs) == 1, "There should be one meal log entry"
-    assert logs[0][2] == "Standard Shake", "Logged meal name does not match"
-    assert logs[0][3] == 250, "Amount does not match"
-    assert logs[0][4] == "g", "Unit type does not match"
-    assert logs[0][5] == "2026-04-19T08:00:00", "Timestamp does not match"
+    assert logs[0][1] == 1, "User ID does not match"
+    assert logs[0][3] == "Standard Shake", "Logged meal name does not match"
+    assert logs[0][4] == 250, "Amount does not match"
+    assert logs[0][5] == "g", "Unit type does not match"
+    assert logs[0][6] == "2026-04-19T08:00:00", "Timestamp does not match"
 
 
 def test_delete_meal_log(db, tobias):
     """This test checks if a meal log entry can be deleted."""
     db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
     db.add_meal("Snack")
-    db.add_meal_log(1, 1, 100, "2026-04-19T20:00:00")
+    db.add_meal_log(1, 1, 100, "g", "2026-04-19T20:00:00")
     
     # Delete
     db.delete_meal_log(1)
     
     logs = db.get_user_meal_logs(1)
     assert len(logs) == 0, "Meal logs should be empty after deletion"
+
+
+def test_update_meal_log(db, tobias):
+    """This test checks if a meal log entry can be updated. ai-generated."""
+    db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
+    db.add_meal("Snack")
+    db.add_meal("Dinner")
+    db.add_meal_log(1, 1, 100, "g", "2026-04-19T20:00:00")
+
+    updated_rows = db.update_meal_log(1, 2, 250, "g", "2026-04-19T21:00:00")
+    logs = db.get_user_meal_logs(1)
+
+    assert updated_rows == 1, "One meal log should have been updated"
+    assert logs[0][2] == 2, "Meal ID should be updated"
+    assert logs[0][3] == "Dinner", "Meal name should reflect the updated meal"
+    assert logs[0][4] == 250, "Amount should be updated"
+    assert logs[0][6] == "2026-04-19T21:00:00", "Timestamp should be updated"

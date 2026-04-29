@@ -5,23 +5,23 @@
 """Main entry point for SEDA."""
 
 import sys
-import legacy.controller
-from ui.ui import main, ft
+
+from model.controller import main as cli_main
 from ui.cli_view import show_welcome, show_license_long
 
 show_welcome()
 
 if __name__ == "__main__":
-    ux = input(
-        """Do you want to run the CLI or GUI? Enter:
+    ux = input("""Do you want to run the CLI or GUI? Enter:
         'c' for CLI
         'g' for GUI
-        'l' for showing the license\n"""
-    ).lower()
+        'l' for showing the license\n""").lower()
     if ux == "g":
-        ft.app(target=main)
+        from ui.ui import ft, main as gui_main
+
+        ft.app(target=gui_main)
     elif ux == "c":
-        legacy.controller.main()
+        cli_main()
     elif ux == "l":
         show_license_long()
     else:

@@ -11,14 +11,14 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 # pylint: disable=C0413
-from model.classes import User
+from model.class_user import User
 from ui import cli_view
 
 
 def test_change_user_information_allows_name_change(monkeypatch):
     """Changing user information should also allow changing the name. AI-generated."""
     user = User(
-        None,
+        1,
         "Old Name",
         "2000-02-22",
         185,

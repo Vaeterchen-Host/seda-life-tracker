@@ -4,6 +4,8 @@
 
 """Tests for the SEDA log classes. Refactored by ai."""
 
+from dataclasses import fields
+from datetime import datetime, timedelta
 from pathlib import Path
 import sys
 
@@ -11,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import pytest
 
+from model.classes_food import BigSeven, Food, Meal, NutrientSummary
 from model.classes_log import (
     ActivityLog,
     MealLog,
@@ -34,7 +37,7 @@ def test_water_log_stores_amount_and_timestamp():
 
 def test_weight_log_stores_weight_and_timestamp():
     """This test checks if weight logs store values correctly. Refactored by ai."""
-    weight_log = WeightLog(1, 1, 80.5, "2026-03-21T12:12", 185)
+    weight_log = WeightLog(1, 1, 80.5, 185, "2026-03-21T12:12")
 
     assert weight_log.weight_in_kg == 80.5
     assert weight_log.height_in_cm == 185
@@ -44,7 +47,7 @@ def test_weight_log_stores_weight_and_timestamp():
 
 def test_meal_log_id_is_read_only():
     """This test checks if meal log ids cannot be changed. Refactored by ai."""
-    meal_log = MealLog(1, 1, None, 250, "2026-03-22T12:00")
+    meal_log = MealLog(1, 1, None, 250, "g", "2026-03-22T12:00")
 
     assert meal_log.id == 1
     assert meal_log.unit_type == "g"
@@ -65,7 +68,7 @@ def test_log_item_database_id_can_be_set_once_after_insert():
 
 def test_activity_log_stores_value_unit_and_calories():
     """This test checks if activity logs store values correctly. Refactored by ai."""
-    activity_log = ActivityLog(1, 1, "walking", 120, "2026-03-21T12:12", 30, "minutes")
+    activity_log = ActivityLog(1, 1, "walking", 120, 30, "minutes", "2026-03-21T12:12")
 
     assert activity_log.activity_name == "walking"
     assert activity_log.calories_burned == 120
@@ -76,12 +79,12 @@ def test_activity_log_stores_value_unit_and_calories():
 def test_activity_log_rejects_invalid_unit_type():
     """This test checks if activity logs only accept minutes. Refactored by ai."""
     with pytest.raises(ValueError):
-        ActivityLog(1, 1, "walking", 120, "2026-03-21T12:12", 30, "steps")
+        ActivityLog(1, 1, "walking", 120, 30, "steps", "2026-03-21T12:12")
 
 
 def test_meal_log_handler_accepts_meal_logs():
     """This test checks if meal log handlers manage meal logs. Refactored by ai."""
-    meal_log = MealLog(1, 1, None, 250, "2026-03-22T12:00")
+    meal_log = MealLog(1, 1, None, 250, "g", "2026-03-22T12:00")
     handler = MealLogHandler(1, [meal_log])
 
     assert handler.user_id == 1
@@ -100,13 +103,13 @@ def test_meal_log_handler_rejects_wrong_log_type():
 def test_meal_log_rejects_missing_user_id():
     """This test checks if meal logs require a user id. Refactored by ai."""
     with pytest.raises(ValueError):
-        MealLog(1, None, None, 250, "2026-03-22T12:00")
+        MealLog(1, None, None, 250, "g", "2026-03-22T12:00")
 
 
 def test_meal_log_handler_create_and_delete_log():
     """This test checks if meal log handlers create and delete logs. Refactored by ai."""
     handler = MealLogHandler(1, [])
-    new_log = handler.create_log(1, None, 250, "2026-03-22T12:00")
+    new_log = handler.create_log(1, None, 250, "g", "2026-03-22T12:00")
 
     assert new_log.id == 1
     assert len(handler.logs) == 1
@@ -118,13 +121,40 @@ def test_meal_log_handler_create_and_delete_log():
 
 def test_water_log_handler_water_intake_today_counts_only_today():
     """This test checks if only today's water intake is summed. ai-generated."""
+    today = datetime.now().date()  # ai-generated
+    yesterday = today - timedelta(days=1)  # ai-generated
     handler = WaterLogHandler(
         1,
         [
-            WaterLog(1, 1, 500, "2026-04-28T08:00:00"),
-            WaterLog(2, 1, 300, "2026-04-28T12:00:00"),
-            WaterLog(3, 1, 200, "2026-04-27T18:00:00"),
+            WaterLog(1, 1, 500, f"{today.isoformat()}T08:00:00"),
+            WaterLog(2, 1, 300, f"{today.isoformat()}T12:00:00"),
+            WaterLog(3, 1, 200, f"{yesterday.isoformat()}T18:00:00"),
         ],
     )  # ai-generated
 
     assert handler.water_intake_today() == 800
+
+
+def test_meal_log_scales_big_seven_and_nutrient_summary():
+    """This test checks if meal log nutrients are scaled to the logged amount. ai-generated."""
+    food_item = Food(
+        1,
+        "Oats",
+        100,
+        "g",
+        370,
+        BigSeven(7, 1, 58, 10, 1, 13, 0.01),
+        NutrientSummary(
+            **{
+                field.name: (3 if field.name == "sodium" else 0)
+                for field in fields(NutrientSummary)
+            }
+        ),
+    )  # ai-generated
+    meal = Meal(1, "Porridge", [food_item])  # ai-generated
+    meal_log = MealLog(1, 1, meal, 50, "g", "2026-03-22T12:00")
+
+    assert meal_log.calories == 185
+    assert meal_log.big_seven.fat == 3.5
+    assert meal_log.big_seven.protein == 6.5
+    assert meal_log.nutrient_summary.sodium == 1.5

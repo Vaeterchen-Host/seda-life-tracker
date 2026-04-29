@@ -4,8 +4,9 @@
 
 """This module contains the log classes for the application."""
 
+from dataclasses import fields
 from datetime import datetime
-from model.classes_food import Meal
+from model.classes_food import BigSeven, Meal, NutrientSummary
 
 
 ## All classes for logging
@@ -131,9 +132,7 @@ class LogHandler:
 class MealLog(LogItem):  # refactored by ai
     """This class defines the meal log."""
 
-    def __init__(
-        self, meal_log_id, user_id, meal: Meal, amount, timestamp, unit_type="g"
-    ):
+    def __init__(self, meal_log_id, user_id, meal: Meal, amount, unit_type="g", timestamp=None):
         """This is the constructor of MealLog."""
         super().__init__(meal_log_id, user_id, timestamp)
         self.meal = meal  # refactored by ai
@@ -162,6 +161,55 @@ class MealLog(LogItem):  # refactored by ai
             raise ValueError("Amount must be greater than 0.")
         self._amount = new_amount
 
+    @property
+    def calories(self):
+        """Return the calories of the logged meal amount. ai-generated."""
+        if self.meal is None or self.meal.calories is None:
+            return None
+        if self.meal.total_amount <= 0:
+            return None
+        # A meal log can represent only part of a meal template, so calories are scaled by ratio.
+        return round(self.meal.calories * (self.amount / self.meal.total_amount), 2)
+
+    @property
+    def big_seven(self):
+        """Return the logged amount of the meal's big seven nutrients. ai-generated."""
+        if self.meal is None or self.meal.total_amount <= 0:
+            return BigSeven(None, None, None, None, None, None, None)
+        factor = self.amount / self.meal.total_amount
+        # fields(BigSeven) lets us scale every nutrient without hardcoding each attribute twice.
+        return BigSeven(
+            **{
+                nutrient_field.name: (
+                    None
+                    if getattr(self.meal.big_seven, nutrient_field.name) is None
+                    else round(getattr(self.meal.big_seven, nutrient_field.name) * factor, 2)
+                )
+                for nutrient_field in fields(BigSeven)
+            }
+        )
+
+    @property
+    def nutrient_summary(self):
+        """Return the logged amount of the meal's additional nutrients. ai-generated."""
+        if self.meal is None or self.meal.total_amount <= 0:
+            return NutrientSummary(**{field.name: None for field in fields(NutrientSummary)})
+        factor = self.amount / self.meal.total_amount
+        # The nutrient summary follows the same ratio logic as calories and Big Seven.
+        return NutrientSummary(
+            **{
+                nutrient_field.name: (
+                    None
+                    if getattr(self.meal.nutrient_summary, nutrient_field.name) is None
+                    else round(
+                        getattr(self.meal.nutrient_summary, nutrient_field.name) * factor,
+                        2,
+                    )
+                )
+                for nutrient_field in fields(NutrientSummary)
+            }
+        )
+
 
 class MealLogHandler(LogHandler):  # refactored by ai
     """This class defines the meal log handler."""
@@ -170,9 +218,9 @@ class MealLogHandler(LogHandler):  # refactored by ai
         """This is the constructor of MealLogHandler."""
         super().__init__(user_id, logitems, MealLog)
 
-    def create_log(self, meal_log_id, meal: Meal, amount, timestamp, unit_type="g"):
+    def create_log(self, meal_log_id, meal: Meal, amount, unit_type="g", timestamp=None):
         """Method for creating a meal log item and adding it to the logs list."""
-        new_log = MealLog(meal_log_id, self.user_id, meal, amount, timestamp, unit_type)
+        new_log = MealLog(meal_log_id, self.user_id, meal, amount, unit_type, timestamp)
         self.logs.append(new_log)
         return new_log
 
@@ -260,9 +308,7 @@ class WaterLogHandler(LogHandler):  # refactored by ai
 class WeightLog(LogItem):  # refactored by ai
     """This class defines weightlog."""
 
-    def __init__(
-        self, weight_log_id, user_id, weight_in_kg, timestamp, height_in_cm=None
-    ):
+    def __init__(self, weight_log_id, user_id, weight_in_kg, height_in_cm=None, timestamp=None):
         """This is the constructor of weightlog."""
         super().__init__(weight_log_id, user_id, timestamp)
         self.weight_in_kg = weight_in_kg  # refactored by ai
@@ -308,10 +354,10 @@ class WeightLogHandler(LogHandler):  # refactored by ai
         """This is the constructor of WeightLogHandler."""
         super().__init__(user_id, logitems, WeightLog)
 
-    def create_log(self, weight_log_id, weight_in_kg, timestamp, height_in_cm=None):
+    def create_log(self, weight_log_id, weight_in_kg, height_in_cm=None, timestamp=None):
         """Method for creating a weight log item and adding it to the logs list."""
         new_log = WeightLog(
-            weight_log_id, self.user_id, weight_in_kg, timestamp, height_in_cm
+            weight_log_id, self.user_id, weight_in_kg, height_in_cm, timestamp
         )
         self.logs.append(new_log)
         return new_log
@@ -339,9 +385,9 @@ class ActivityLog(LogItem):  # refactored by ai
         user_id,
         activity_name,
         calories_burned,
-        timestamp,
         activity_value=None,
         unit_type="minutes",
+        timestamp=None,
     ):
         """This is the constructor of ActivityLog."""
         super().__init__(activity_log_id, user_id, timestamp)
@@ -406,9 +452,9 @@ class ActivityLogHandler(LogHandler):  # refactored by ai
         activity_log_id,
         activity_name,
         calories_burned,
-        timestamp,
         activity_value=None,
         unit_type="minutes",
+        timestamp=None,
     ):
         """Method for creating an activity log item and adding it to the logs list."""
         new_log = ActivityLog(
@@ -416,9 +462,9 @@ class ActivityLogHandler(LogHandler):  # refactored by ai
             self.user_id,
             activity_name,
             calories_burned,
-            timestamp,
             activity_value,
             unit_type,
+            timestamp,
         )
         self.logs.append(new_log)
         return new_log
