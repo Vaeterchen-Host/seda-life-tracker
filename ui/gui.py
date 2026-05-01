@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Tobias Mignat & Sabine Steverding
 # See LICENSE.md for the full license text.
 
-"""Graphical user interface for SEDA."""
+"""Graphical user interface for SEDA. This file is in this version mostly ai-generated."""
 
 # pylint: disable=all
 
@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from model.class_user import User
 from model.classes_food import BigSeven, Food, Meal, NutrientSummary
+from model.classes_log import MealLog
 from model.controller import (
     create_food_instance_from_food_row,
     create_meal_instances,
@@ -91,6 +92,9 @@ class SedaGuiApp:
 
         self.food_search_term = ""
         self.food_search_results = []
+        # Cache food DB rows so repeated redraws and language switches stay cheap.
+        self.food_row_cache = {}
+        self.license_text_cache = None
         self.meal_builder_name = ""
         self.meal_builder_items = []
         self.editing_meal_template_id = None
@@ -102,7 +106,7 @@ class SedaGuiApp:
         """Apply the fixed desktop page settings."""
         self.page.title = "seda - desktop gui"
         self.page.theme_mode = ft.ThemeMode.DARK
-        self.page.bgcolor = PAGE_BACKGROUND
+        self.page.bgcolor = self.page_background_color()
         self.page.padding = 0
         self.page.scroll = ft.ScrollMode.AUTO
         self.page.window.min_width = 1180
@@ -112,8 +116,44 @@ class SedaGuiApp:
         """Return a translated GUI string for the current language."""
         return get_translation(self.current_language, key, **kwargs)
 
+    def is_dark_mode(self):
+        """Return whether the current page theme is dark."""
+        return self.page.theme_mode in (ft.ThemeMode.DARK, "dark")
+
+    def toggle_theme(self, _=None):
+        """Switch between dark and light mode and redraw the desktop shell."""
+        self.page.theme_mode = (
+            ft.ThemeMode.LIGHT if self.is_dark_mode() else ft.ThemeMode.DARK
+        )  # refactored by ai
+        self.page.bgcolor = self.page_background_color()
+        self.render()
+
+    def page_background_color(self):
+        """Return the page background color for the active theme mode."""
+        return PAGE_BACKGROUND if self.is_dark_mode() else "#EEF2F5"
+
+    def surface_background_color(self):
+        """Return the default card background for the active theme mode."""
+        return SURFACE_BACKGROUND if self.is_dark_mode() else "#FFFFFF"
+
+    def surface_background_alt_color(self):
+        """Return the softer secondary background for the active theme mode."""
+        return SURFACE_BACKGROUND_ALT if self.is_dark_mode() else "#F4F9F8"
+
+    def surface_border_color(self):
+        """Return the border color for framed desktop sections."""
+        return SURFACE_BORDER if self.is_dark_mode() else "#C9D5DE"
+
+    def surface_muted_color(self):
+        """Return the muted helper text color for the active theme mode."""
+        return SURFACE_MUTED if self.is_dark_mode() else "#5E6B78"
+
+    def primary_text_color(self):
+        """Return the main readable text color for the active theme mode."""
+        return ft.Colors.WHITE if self.is_dark_mode() else "#18212B"
+
     def show_message(self, message, error=False):
-        """Show feedback in the footer and as a small snack bar."""
+        """Show short GUI feedback as a snack bar."""
         self.status_message = message
         self.status_is_error = error
         self.page.show_dialog(
@@ -185,13 +225,38 @@ class SedaGuiApp:
         return mapping.get(fitness_code, fitness_code)
 
     def format_timestamp(self, timestamp):
-        """Render ISO timestamps in a friendlier desktop format."""
+        """Render stored ISO timestamps in the current frontend locale format."""
         if not timestamp:
             return "-"
         try:
-            return datetime.fromisoformat(timestamp).strftime("%d.%m.%Y %H:%M")
+            dt_value = datetime.fromisoformat(timestamp)
+            if self.current_language == "de":
+                return dt_value.strftime("%d.%m.%Y %H:%M")
+            return dt_value.strftime("%Y-%m-%d %H:%M")
         except ValueError:
             return str(timestamp)
+
+    def format_birthdate(self, birthdate):
+        """Render stored ISO birthdates in the current frontend locale format."""
+        if not birthdate:
+            return ""
+        try:
+            date_value = datetime.fromisoformat(birthdate)
+            if self.current_language == "de":
+                return date_value.strftime("%d.%m.%Y")
+            return date_value.strftime("%Y-%m-%d")
+        except ValueError:
+            return str(birthdate)
+
+    def birthdate_input_hint(self):
+        """Return the locale-specific birthdate input hint for form fields."""
+        return "TT.MM.JJJJ" if self.current_language == "de" else "YYYY-MM-DD"
+
+    def timestamp_input_hint(self):
+        """Return the locale-specific timestamp input hint for form fields."""
+        return (
+            "TT.MM.JJJJ HH:MM" if self.current_language == "de" else "YYYY-MM-DD HH:MM"
+        )
 
     def format_amount(self, value, suffix=""):
         """Render numeric values without unnecessary trailing zeros."""
@@ -212,11 +277,17 @@ class SedaGuiApp:
         )
 
     def parse_birthdate(self, raw_value):
-        """Validate the date input and store it as ISO date text."""
+        """Validate one localized date input and store it as ISO date text."""
         try:
-            return datetime.fromisoformat(raw_value.strip()).date().isoformat()
+            cleaned = raw_value.strip()
+            if self.current_language == "de":
+                return datetime.strptime(cleaned, "%d.%m.%Y").date().isoformat()
+            return datetime.strptime(cleaned, "%Y-%m-%d").date().isoformat()
         except ValueError as exc:
-            raise ValueError(self.t("msg_invalid_birthdate")) from exc
+            try:
+                return datetime.fromisoformat(raw_value.strip()).date().isoformat()
+            except ValueError:
+                raise ValueError(self.t("msg_invalid_birthdate")) from exc
 
     def parse_required_int(self, raw_value):
         """Read one required integer field from a text input."""
@@ -239,21 +310,107 @@ class SedaGuiApp:
         return self.parse_required_float(raw_value)
 
     def parse_optional_timestamp(self, raw_value):
-        """Validate an optional ISO timestamp input."""
+        """Validate an optional localized timestamp input and return ISO text."""
         if raw_value is None or raw_value.strip() == "":
             return None
         try:
-            return datetime.fromisoformat(raw_value.strip()).isoformat()
+            cleaned = raw_value.strip()
+            if self.current_language == "de":
+                return datetime.strptime(cleaned, "%d.%m.%Y %H:%M").isoformat()
+            return datetime.strptime(cleaned, "%Y-%m-%d %H:%M").isoformat()
         except ValueError as exc:
-            raise ValueError(self.t("msg_invalid_timestamp")) from exc
+            try:
+                return datetime.fromisoformat(raw_value.strip()).isoformat()
+            except ValueError:
+                raise ValueError(self.t("msg_invalid_timestamp")) from exc
 
     def get_meal_templates(self):
         """Build all meal templates from DB rows into Meal objects."""
-        return create_meal_instances(self.main_db)
+        return [self.enrich_meal(meal) for meal in create_meal_instances(self.main_db)]
 
     def get_food_name(self, food_row):
         """Choose the best available display name from one food DB row."""
-        return food_row["name_de"] or food_row["name_en"]
+        if self.current_language == "de":
+            return food_row["name_de"] or food_row["name_en"]
+        return food_row["name_en"] or food_row["name_de"]
+
+    def get_food_row_by_id(self, food_id):
+        """Read one food DB row once and reuse it across GUI redraws."""
+        # The nutrition view can show the same food many times (search, builder,
+        # templates, meal logs), so we keep the fetched row in memory here.
+        if food_id not in self.food_row_cache:
+            self.food_row_cache[food_id] = self.food_db.get_food_by_id(food_id)
+        return self.food_row_cache[food_id]
+
+    def get_food_item_display_name(self, food_item: Food):
+        """Return one food-item label in the currently selected GUI language."""
+        # Food objects keep one stored name, so the GUI re-reads the DB label here
+        # to switch cleanly between German and English without changing the model.
+        food_row = self.get_food_row_by_id(food_item.id)
+        if food_row is None:
+            return food_item.name
+        return self.get_food_name(food_row)
+
+    def get_meal_display_name(self, meal: Meal):
+        """Return a localized meal title without overwriting custom template names."""
+        if len(meal.food_items) != 1:
+            return meal.name
+
+        food_row = self.get_food_row_by_id(meal.food_items[0].id)
+        if food_row is None:
+            return meal.name
+
+        # Only auto-localize one-food meals that were created from a plain food name.
+        # Custom template names should stay exactly as the user entered them.
+        known_food_names = {
+            food_row["name_de"] or food_row["name_en"],
+            food_row["name_en"] or food_row["name_de"],
+        }
+        if meal.name not in known_food_names:
+            return meal.name
+        return self.get_food_name(food_row)
+
+    def enrich_food_item(self, food_item: Food):
+        """Hydrate one stored meal item with full nutrient data from the food DB."""
+        food_row = self.get_food_row_by_id(food_item.id)
+        if food_row is None:
+            return food_item
+        return create_food_instance_from_food_row(food_row, food_item.amount)
+
+    def enrich_meal(self, meal: Meal):
+        """Hydrate a meal template so nutrient summary data is complete in the GUI."""
+        return Meal(
+            meal.id,
+            meal.name,
+            [self.enrich_food_item(food_item) for food_item in meal.food_items],
+        )  # refactored by ai
+
+    def enrich_meal_log(self, meal_log: MealLog):
+        """Create a temporary GUI copy of one meal log with a fully hydrated meal."""
+        return MealLog(
+            meal_log.id,
+            meal_log.user_id,
+            self.enrich_meal(meal_log.meal),
+            meal_log.amount,
+            meal_log.unit_type,
+            meal_log.timestamp,
+        )  # refactored by ai
+
+    def get_current_weight_log(self):
+        """Return the chronologically latest weight log based on its timestamp."""
+        if not self.current_user.weight_log_handler.logs:
+            return None
+        return max(
+            self.current_user.weight_log_handler.logs,
+            key=lambda log: log.timestamp or "",
+        )  # refactored by ai
+
+    def get_license_text(self):
+        """Load the project license text once and reuse it for the about dialog."""
+        if self.license_text_cache is None:
+            license_path = Path(__file__).resolve().parents[1] / "LICENSE.md"
+            self.license_text_cache = license_path.read_text(encoding="utf-8").strip()
+        return self.license_text_cache
 
     # ---------------------------
     # Dialog helpers
@@ -285,6 +442,34 @@ class SedaGuiApp:
         )
         self.page.show_dialog(dialog)
 
+    def open_license_dialog(self, _=None):
+        """Show the full license text in a readable scrollable dialog."""
+        dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Text(self.t("license_dialog_title")),
+            content=ft.Container(
+                width=760,
+                height=560,
+                content=ft.Column(
+                    [
+                        ft.Text(
+                            self.get_license_text(),
+                            selectable=True,
+                            color=self.primary_text_color(),
+                        )
+                    ],
+                    scroll=ft.ScrollMode.AUTO,
+                ),
+            ),
+            actions=[
+                ft.FilledButton(
+                    self.t("close"),
+                    on_click=lambda _: self.close_dialog(dialog),
+                )
+            ],
+        )
+        self.page.show_dialog(dialog)
+
     def open_activity_edit_dialog(self, activity_log):
         """Edit one activity entry in-place without leaving the activity page."""
         name_field = ft.TextField(
@@ -307,8 +492,9 @@ class SedaGuiApp:
         )
         timestamp_field = ft.TextField(
             label=self.t("optional_timestamp"),
-            value=activity_log.timestamp,
+            value=self.format_timestamp(activity_log.timestamp),
             helper=self.t("use_now_when_empty"),
+            hint_text=self.timestamp_input_hint(),
         )
 
         def save_changes(_):
@@ -375,7 +561,9 @@ class SedaGuiApp:
             label=self.t("meal_templates"),
             value=str(selected_meal.id) if selected_meal is not None else None,
             options=[
-                ft.DropdownOption(key=str(template.id), text=template.name)
+                ft.DropdownOption(
+                    key=str(template.id), text=self.get_meal_display_name(template)
+                )
                 for template in meal_templates
             ],
         )
@@ -394,8 +582,13 @@ class SedaGuiApp:
         )
         timestamp_field = ft.TextField(
             label=self.t("optional_timestamp"),
-            value="" if existing_log is None else existing_log.timestamp,
+            value=(
+                ""
+                if existing_log is None
+                else self.format_timestamp(existing_log.timestamp)
+            ),
             helper=self.t("use_now_when_empty"),
+            hint_text=self.timestamp_input_hint(),
         )
 
         title = (
@@ -476,7 +669,7 @@ class SedaGuiApp:
                 width=460,
                 content=ft.Column(
                     [
-                        ft.Text(copy, color=SURFACE_MUTED),
+                        ft.Text(copy, color=self.surface_muted_color()),
                         meal_dropdown,
                         amount_field,
                         unit_dropdown,
@@ -531,21 +724,23 @@ class SedaGuiApp:
                 content=ft.Column(
                     [
                         ft.Text(
-                            f"{meal_log.meal.name} | {self.format_amount(meal_log.amount, meal_log.unit_type)}",
-                            color=SURFACE_MUTED,
+                            f"{self.get_meal_display_name(meal_log.meal)} | "
+                            f"{self.format_amount(meal_log.amount, meal_log.unit_type)}",
+                            color=self.surface_muted_color(),
                         ),
                         self.build_surface_section(
                             self.t("big_seven"),
                             ft.Column(
                                 big_seven_controls
-                                or [ft.Text("-", color=SURFACE_MUTED)],
+                                or [ft.Text("-", color=self.surface_muted_color())],
                                 spacing=8,
                             ),
                         ),
                         self.build_surface_section(
                             self.t("nutrient_summary"),
                             ft.Column(
-                                summary_controls or [ft.Text("-", color=SURFACE_MUTED)],
+                                summary_controls
+                                or [ft.Text("-", color=self.surface_muted_color())],
                                 spacing=8,
                                 scroll=ft.ScrollMode.AUTO,
                             ),
@@ -573,6 +768,7 @@ class SedaGuiApp:
         timestamp_field = ft.TextField(
             label=self.t("optional_timestamp"),
             helper=self.t("use_now_when_empty"),
+            hint_text=self.timestamp_input_hint(),
         )
 
         title = (
@@ -619,7 +815,10 @@ class SedaGuiApp:
             except Exception as exc:
                 self.show_message(str(exc), error=True)
 
-        dialog_controls = [ft.Text(copy, color=SURFACE_MUTED), amount_field]
+        dialog_controls = [
+            ft.Text(copy, color=self.surface_muted_color()),
+            amount_field,
+        ]
         if mode == "consume":
             dialog_controls.append(timestamp_field)
 
@@ -848,7 +1047,7 @@ class SedaGuiApp:
                 [
                     ft.Text(title, size=18, weight=ft.FontWeight.BOLD),
                     (
-                        ft.Text(subtitle, size=12, color=SURFACE_MUTED)
+                        ft.Text(subtitle, size=12, color=self.surface_muted_color())
                         if subtitle
                         else ft.Container()
                     ),
@@ -864,8 +1063,8 @@ class SedaGuiApp:
         return ft.Container(
             padding=20,
             border_radius=8,
-            bgcolor=SURFACE_BACKGROUND,
-            border=ft.border.all(1, SURFACE_BORDER),
+            bgcolor=self.surface_background_color(),
+            border=ft.border.all(1, self.surface_border_color()),
             content=ft.Column(
                 [
                     ft.Row(
@@ -881,7 +1080,7 @@ class SedaGuiApp:
         """Render one compact label/value pair."""
         return ft.Row(
             [
-                ft.Text(label, color=SURFACE_MUTED, expand=1),
+                ft.Text(label, color=self.surface_muted_color(), expand=1),
                 ft.Text(value, weight=ft.FontWeight.W_500),
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -892,11 +1091,11 @@ class SedaGuiApp:
         return ft.Container(
             padding=12,
             border_radius=8,
-            bgcolor=SURFACE_BACKGROUND_ALT,
-            border=ft.border.all(1, SURFACE_BORDER),
+            bgcolor=self.surface_background_alt_color(),
+            border=ft.border.all(1, self.surface_border_color()),
             content=ft.Column(
                 [
-                    ft.Text(label, size=12, color=SURFACE_MUTED),
+                    ft.Text(label, size=12, color=self.surface_muted_color()),
                     ft.Text(value, size=18, weight=ft.FontWeight.BOLD, color=accent),
                 ],
                 spacing=4,
@@ -925,7 +1124,7 @@ class SedaGuiApp:
                     content=self.t(label_key),
                     icon=icon,
                     style=ft.ButtonStyle(
-                        color=ft.Colors.WHITE,
+                        color=self.primary_text_color(),
                         side=ft.BorderSide(1, BRAND_MINT),
                         shape=ft.RoundedRectangleBorder(radius=8),
                     ),
@@ -938,9 +1137,6 @@ class SedaGuiApp:
 
     def build_header(self):
         """Build the persistent desktop header with branding and active user."""
-        current_user_text = (
-            self.current_user.name if self.current_user is not None else "-"
-        )
         return ft.Column(
             [
                 ft.Row(
@@ -950,7 +1146,7 @@ class SedaGuiApp:
                                 ft.Text(
                                     f"{self.t('app_title')} v0.5",
                                     size=12,
-                                    color=SURFACE_MUTED,
+                                    color=self.surface_muted_color(),
                                 ),
                                 ft.Text(
                                     self.t("app_subtitle"),
@@ -962,19 +1158,14 @@ class SedaGuiApp:
                             tight=True,
                         ),
                         ft.Container(expand=True),
-                        self.build_metric_chip(
-                            self.t("current_language"),
-                            self.t(
-                                "language_en"
-                                if self.current_language == "en"
-                                else "language_de"
+                        ft.IconButton(
+                            icon=ft.Icons.SUNNY,
+                            icon_color=(
+                                BRAND_YELLOW if self.is_dark_mode() else BRAND_MINT
                             ),
-                            accent=BRAND_YELLOW,
-                        ),
-                        self.build_metric_chip(
-                            self.t("active_user"),
-                            current_user_text,
-                            accent=BRAND_MINT,
+                            bgcolor=self.surface_background_alt_color(),
+                            tooltip=self.t("toggle_theme"),
+                            on_click=self.toggle_theme,
                         ),
                     ],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -989,19 +1180,6 @@ class SedaGuiApp:
             spacing=18,
         )
 
-    def build_status_footer(self):
-        """Build the thin footer line shown across all desktop pages."""
-        return ft.Container(
-            padding=ft.padding.symmetric(horizontal=16, vertical=10),
-            bgcolor=BRAND_RED if self.status_is_error else BRAND_MINT,
-            content=ft.Text(
-                self.status_message or self.t("footer_hint"),
-                size=13,
-                color=ft.Colors.WHITE,
-                text_align=ft.TextAlign.CENTER,
-            ),
-        )
-
     def build_page_shell(self, content):
         """Assemble the persistent desktop shell around the current page body."""
         return ft.SafeArea(
@@ -1013,13 +1191,6 @@ class SedaGuiApp:
                     [
                         self.build_header(),
                         ft.Container(content=content, expand=True),
-                        ft.Text(
-                            self.t("footer_hint"),
-                            size=12,
-                            color=SURFACE_MUTED,
-                            text_align=ft.TextAlign.CENTER,
-                        ),
-                        self.build_status_footer(),
                     ],
                     spacing=20,
                 ),
@@ -1036,7 +1207,7 @@ class SedaGuiApp:
         name_field = ft.TextField(label=self.t("name"), autofocus=True)
         birthdate_field = ft.TextField(
             label=self.t("birthdate"),
-            hint_text=self.t("birthdate_hint"),
+            hint_text=self.birthdate_input_hint(),
         )
         height_field = ft.TextField(
             label=self.t("height_cm"),
@@ -1119,7 +1290,7 @@ class SedaGuiApp:
                             ft.Text(
                                 self.t("landing_copy"),
                                 size=16,
-                                color=SURFACE_MUTED,
+                                color=self.surface_muted_color(),
                             ),
                         ],
                         spacing=10,
@@ -1143,6 +1314,7 @@ class SedaGuiApp:
         """Build the first overview page with water, calories and quick actions."""
         calorie_status = get_today_calorie_status(self.current_user)
         water_status = get_today_water_status(self.current_user)
+        current_weight_log = self.get_current_weight_log()
 
         hero = ft.Row(
             [
@@ -1150,7 +1322,7 @@ class SedaGuiApp:
                     width=96,
                     height=96,
                     border_radius=8,
-                    border=ft.border.all(1, SURFACE_BORDER),
+                    border=ft.border.all(1, self.surface_border_color()),
                     content=ft.Icon(ft.Icons.MONITOR_HEART_OUTLINED, size=42),
                     alignment=ft.Alignment.CENTER,
                 ),
@@ -1164,7 +1336,7 @@ class SedaGuiApp:
                         ft.Text(
                             self.t("dashboard_intro"),
                             size=16,
-                            color=SURFACE_MUTED,
+                            color=self.surface_muted_color(),
                         ),
                     ],
                     spacing=8,
@@ -1182,19 +1354,19 @@ class SedaGuiApp:
                     ft.Column(
                         [
                             self.build_label_value_row(
-                                self.t("intake"),
+                                self.t("calories_eaten"),
                                 self.format_amount(calorie_status["intake"], "kcal"),
                             ),
                             self.build_label_value_row(
-                                self.t("burned"),
+                                self.t("calories_burned_label"),
                                 self.format_amount(calorie_status["burned"], "kcal"),
                             ),
                             self.build_label_value_row(
-                                self.t("net"),
+                                self.t("calorie_balance_label"),
                                 self.format_amount(calorie_status["net"], "kcal"),
                             ),
                             self.build_label_value_row(
-                                self.t("target"),
+                                self.t("calorie_goal"),
                                 self.format_amount(calorie_status["target"], "kcal"),
                             ),
                         ],
@@ -1216,11 +1388,11 @@ class SedaGuiApp:
                                         )
                                     ),
                                     color=BRAND_MINT,
-                                    bgcolor=SURFACE_BORDER,
+                                    bgcolor=self.surface_border_color(),
                                 ),
                                 ft.Text(
-                                    f"{self.t('difference')}: {self.format_amount(calorie_status['difference'], 'kcal')}",
-                                    color=SURFACE_MUTED,
+                                    f"{self.t('remaining_to_goal')}: {self.format_amount(calorie_status['difference'], 'kcal')}",
+                                    color=self.surface_muted_color(),
                                 ),
                             ],
                             spacing=10,
@@ -1250,14 +1422,14 @@ class SedaGuiApp:
                                 ft.ProgressBar(
                                     value=min(1, (water_status["progress"] or 0) / 100),
                                     color=BRAND_MINT,
-                                    bgcolor=SURFACE_BORDER,
+                                    bgcolor=self.surface_border_color(),
                                 ),
                                 ft.Text(
                                     self.t(
                                         "water_to_go",
                                         difference=water_status["difference"],
                                     ),
-                                    color=SURFACE_MUTED,
+                                    color=self.surface_muted_color(),
                                 ),
                             ],
                             spacing=12,
@@ -1274,17 +1446,18 @@ class SedaGuiApp:
                                     self.t("current_weight"),
                                     (
                                         self.format_amount(
-                                            self.current_user.latest_weight, "kg"
+                                            current_weight_log.weight_in_kg, "kg"
                                         )
-                                        if self.current_user.latest_weight is not None
+                                        if current_weight_log is not None
                                         else self.t("no_weight_logged")
                                     ),
                                 ),
                                 self.build_label_value_row(
                                     self.t("bmi"),
                                     (
-                                        self.format_amount(self.current_user.last_bmi)
-                                        if self.current_user.last_bmi is not None
+                                        self.format_amount(current_weight_log.bmi)
+                                        if current_weight_log is not None
+                                        and current_weight_log.bmi is not None
                                         else self.t("bmi_not_available")
                                     ),
                                 ),
@@ -1307,6 +1480,10 @@ class SedaGuiApp:
                         content=ft.FilledButton(
                             self.t("add_water"),
                             icon=ft.Icons.WATER_DROP,
+                            style=ft.ButtonStyle(
+                                bgcolor=BRAND_MINT,
+                                color=ft.Colors.WHITE,
+                            ),
                             expand=True,
                             on_click=lambda _: self.navigate("water"),
                         ),
@@ -1316,6 +1493,10 @@ class SedaGuiApp:
                         content=ft.FilledButton(
                             self.t("log_meal"),
                             icon=ft.Icons.RESTAURANT,
+                            style=ft.ButtonStyle(
+                                bgcolor=BRAND_MINT,
+                                color=ft.Colors.WHITE,
+                            ),
                             expand=True,
                             on_click=lambda _: self.navigate("nutrition"),
                         ),
@@ -1325,6 +1506,10 @@ class SedaGuiApp:
                         content=ft.FilledButton(
                             self.t("add_activity"),
                             icon=ft.Icons.DIRECTIONS_RUN,
+                            style=ft.ButtonStyle(
+                                bgcolor=BRAND_MINT,
+                                color=ft.Colors.WHITE,
+                            ),
                             expand=True,
                             on_click=lambda _: self.navigate("activity"),
                         ),
@@ -1334,6 +1519,10 @@ class SedaGuiApp:
                         content=ft.FilledButton(
                             self.t("go_to_profile"),
                             icon=ft.Icons.PERSON,
+                            style=ft.ButtonStyle(
+                                bgcolor=BRAND_MINT,
+                                color=ft.Colors.WHITE,
+                            ),
                             expand=True,
                             on_click=lambda _: self.navigate("profile"),
                         ),
@@ -1363,6 +1552,7 @@ class SedaGuiApp:
         timestamp_field = ft.TextField(
             label=self.t("optional_timestamp"),
             helper=self.t("use_now_when_empty"),
+            hint_text=self.timestamp_input_hint(),
             expand=True,
         )
 
@@ -1390,11 +1580,11 @@ class SedaGuiApp:
                     ft.ProgressBar(
                         value=min(1, (water_status["progress"] or 0) / 100),
                         color=BRAND_MINT,
-                        bgcolor=SURFACE_BORDER,
+                        bgcolor=self.surface_border_color(),
                     ),
                     ft.Text(
                         self.t("water_to_go", difference=water_status["difference"]),
-                        color=SURFACE_MUTED,
+                        color=self.surface_muted_color(),
                     ),
                 ],
                 spacing=12,
@@ -1424,8 +1614,8 @@ class SedaGuiApp:
                 ft.Container(
                     padding=12,
                     border_radius=8,
-                    bgcolor=SURFACE_BACKGROUND_ALT,
-                    border=ft.border.all(1, SURFACE_BORDER),
+                    bgcolor=self.surface_background_alt_color(),
+                    border=ft.border.all(1, self.surface_border_color()),
                     content=ft.Row(
                         [
                             ft.Text(
@@ -1435,7 +1625,7 @@ class SedaGuiApp:
                             ft.Text(
                                 self.format_timestamp(water_log.timestamp),
                                 expand=True,
-                                color=SURFACE_MUTED,
+                                color=self.surface_muted_color(),
                             ),
                             ft.IconButton(
                                 ft.Icons.DELETE_OUTLINE,
@@ -1457,7 +1647,8 @@ class SedaGuiApp:
         entries_section = self.build_surface_section(
             self.t("last_entries"),
             ft.Column(
-                water_rows or [ft.Text(self.t("no_water_logs"), color=SURFACE_MUTED)],
+                water_rows
+                or [ft.Text(self.t("no_water_logs"), color=self.surface_muted_color())],
                 spacing=10,
             ),
         )
@@ -1486,6 +1677,7 @@ class SedaGuiApp:
         timestamp_field = ft.TextField(
             label=self.t("optional_timestamp"),
             helper=self.t("use_now_when_empty"),
+            hint_text=self.timestamp_input_hint(),
             expand=True,
         )
 
@@ -1531,8 +1723,8 @@ class SedaGuiApp:
                 ft.Container(
                     padding=12,
                     border_radius=8,
-                    bgcolor=SURFACE_BACKGROUND_ALT,
-                    border=ft.border.all(1, SURFACE_BORDER),
+                    bgcolor=self.surface_background_alt_color(),
+                    border=ft.border.all(1, self.surface_border_color()),
                     content=ft.Row(
                         [
                             ft.Column(
@@ -1544,7 +1736,7 @@ class SedaGuiApp:
                                     ft.Text(
                                         f"{self.format_amount(activity_log.calories_burned, 'kcal')} | "
                                         f"{self.format_amount(activity_log.activity_value, 'minutes')}",
-                                        color=SURFACE_MUTED,
+                                        color=self.surface_muted_color(),
                                     ),
                                 ],
                                 spacing=4,
@@ -1552,7 +1744,7 @@ class SedaGuiApp:
                             ),
                             ft.Text(
                                 self.format_timestamp(activity_log.timestamp),
-                                color=SURFACE_MUTED,
+                                color=self.surface_muted_color(),
                                 width=170,
                             ),
                             ft.IconButton(
@@ -1584,7 +1776,11 @@ class SedaGuiApp:
             self.t("activity_logs"),
             ft.Column(
                 activity_rows
-                or [ft.Text(self.t("no_activity_logs"), color=SURFACE_MUTED)],
+                or [
+                    ft.Text(
+                        self.t("no_activity_logs"), color=self.surface_muted_color()
+                    )
+                ],
                 spacing=10,
             ),
         )
@@ -1612,24 +1808,29 @@ class SedaGuiApp:
             ft.Row(
                 [
                     self.build_metric_chip(
-                        self.t("intake"),
+                        self.t("calories_eaten"),
                         self.format_amount(calorie_status["intake"], "kcal"),
                         accent=BRAND_MINT,
                     ),
                     self.build_metric_chip(
-                        self.t("burned"),
+                        self.t("calories_burned_label"),
                         self.format_amount(calorie_status["burned"], "kcal"),
                         accent=BRAND_YELLOW,
                     ),
                     self.build_metric_chip(
-                        self.t("net"),
+                        self.t("calorie_balance_label"),
                         self.format_amount(calorie_status["net"], "kcal"),
-                        accent=ft.Colors.WHITE,
+                        accent=self.primary_text_color(),
                     ),
                     self.build_metric_chip(
-                        self.t("target"),
+                        self.t("calorie_goal"),
                         self.format_amount(calorie_status["target"], "kcal"),
                         accent=BRAND_MINT,
+                    ),
+                    self.build_metric_chip(
+                        self.t("remaining_to_goal"),
+                        self.format_amount(calorie_status["difference"], "kcal"),
+                        accent=BRAND_YELLOW,
                     ),
                 ],
                 wrap=True,
@@ -1643,8 +1844,8 @@ class SedaGuiApp:
                 ft.Container(
                     padding=12,
                     border_radius=8,
-                    bgcolor=SURFACE_BACKGROUND_ALT,
-                    border=ft.border.all(1, SURFACE_BORDER),
+                    bgcolor=self.surface_background_alt_color(),
+                    border=ft.border.all(1, self.surface_border_color()),
                     content=ft.Row(
                         [
                             ft.Column(
@@ -1655,7 +1856,7 @@ class SedaGuiApp:
                                     ),
                                     ft.Text(
                                         f"{self.format_amount(food_row['kcal'], 'kcal')} / 100 {food_row['unit_type']}",
-                                        color=SURFACE_MUTED,
+                                        color=self.surface_muted_color(),
                                     ),
                                 ],
                                 spacing=4,
@@ -1683,7 +1884,9 @@ class SedaGuiApp:
             self.t("food_search"),
             ft.Column(
                 [
-                    ft.Text(self.t("food_search_copy"), color=SURFACE_MUTED),
+                    ft.Text(
+                        self.t("food_search_copy"), color=self.surface_muted_color()
+                    ),
                     ft.Row(
                         [
                             search_field,
@@ -1697,7 +1900,12 @@ class SedaGuiApp:
                     ),
                     ft.Column(
                         search_rows
-                        or [ft.Text(self.t("no_food_results"), color=SURFACE_MUTED)],
+                        or [
+                            ft.Text(
+                                self.t("no_food_results"),
+                                color=self.surface_muted_color(),
+                            )
+                        ],
                         spacing=10,
                     ),
                 ],
@@ -1717,11 +1925,13 @@ class SedaGuiApp:
                 ft.Container(
                     padding=12,
                     border_radius=8,
-                    bgcolor=SURFACE_BACKGROUND_ALT,
-                    border=ft.border.all(1, SURFACE_BORDER),
+                    bgcolor=self.surface_background_alt_color(),
+                    border=ft.border.all(1, self.surface_border_color()),
                     content=ft.Row(
                         [
-                            ft.Text(food_item.name, expand=True),
+                            ft.Text(
+                                self.get_food_item_display_name(food_item), expand=True
+                            ),
                             ft.Text(
                                 self.format_amount(
                                     food_item.amount, food_item.unit_type
@@ -1745,12 +1955,17 @@ class SedaGuiApp:
             self.t("meal_template_builder"),
             ft.Column(
                 [
-                    ft.Text(self.t("builder_copy"), color=SURFACE_MUTED),
+                    ft.Text(self.t("builder_copy"), color=self.surface_muted_color()),
                     builder_name_field,
                     ft.Text(self.t("selected_items"), weight=ft.FontWeight.BOLD),
                     ft.Column(
                         builder_rows
-                        or [ft.Text(self.t("builder_empty"), color=SURFACE_MUTED)],
+                        or [
+                            ft.Text(
+                                self.t("builder_empty"),
+                                color=self.surface_muted_color(),
+                            )
+                        ],
                         spacing=10,
                     ),
                     ft.Row(
@@ -1783,31 +1998,32 @@ class SedaGuiApp:
                 ft.Container(
                     padding=12,
                     border_radius=8,
-                    bgcolor=SURFACE_BACKGROUND_ALT,
-                    border=ft.border.all(1, SURFACE_BORDER),
+                    bgcolor=self.surface_background_alt_color(),
+                    border=ft.border.all(1, self.surface_border_color()),
                     content=ft.Column(
                         [
                             ft.Row(
                                 [
                                     ft.Text(
-                                        meal.name,
+                                        self.get_meal_display_name(meal),
                                         weight=ft.FontWeight.BOLD,
                                         expand=True,
                                     ),
                                     ft.Text(
                                         self.format_amount(meal.calories, "kcal"),
-                                        color=SURFACE_MUTED,
+                                        color=self.surface_muted_color(),
                                     ),
                                 ]
                             ),
                             ft.Text(
                                 ", ".join(
                                     [
-                                        f"{item.name} ({self.format_amount(item.amount, item.unit_type)})"
+                                        f"{self.get_food_item_display_name(item)} "
+                                        f"({self.format_amount(item.amount, item.unit_type)})"
                                         for item in meal.food_items
                                     ]
                                 ),
-                                color=SURFACE_MUTED,
+                                color=self.surface_muted_color(),
                             ),
                             ft.Row(
                                 [
@@ -1831,7 +2047,7 @@ class SedaGuiApp:
                                         style=ft.ButtonStyle(color=BRAND_RED),
                                         on_click=lambda _, selected_meal=meal: self.open_confirm_dialog(
                                             self.t("msg_confirm_delete_template"),
-                                            selected_meal.name,
+                                            self.get_meal_display_name(selected_meal),
                                             lambda dialog, meal_id=selected_meal.id: (
                                                 self.close_dialog(dialog),
                                                 self.delete_meal_template(meal_id),
@@ -1852,19 +2068,24 @@ class SedaGuiApp:
             self.t("meal_templates"),
             ft.Column(
                 template_rows
-                or [ft.Text(self.t("no_meal_templates"), color=SURFACE_MUTED)],
+                or [
+                    ft.Text(
+                        self.t("no_meal_templates"), color=self.surface_muted_color()
+                    )
+                ],
                 spacing=10,
             ),
         )
 
         meal_log_rows = []
         for meal_log in self.sort_logs_desc(self.current_user.meal_log_handler.logs):
+            enriched_log = self.enrich_meal_log(meal_log)
             meal_log_rows.append(
                 ft.Container(
                     padding=12,
                     border_radius=8,
-                    bgcolor=SURFACE_BACKGROUND_ALT,
-                    border=ft.border.all(1, SURFACE_BORDER),
+                    bgcolor=self.surface_background_alt_color(),
+                    border=ft.border.all(1, self.surface_border_color()),
                     content=ft.Column(
                         [
                             ft.Row(
@@ -1872,13 +2093,15 @@ class SedaGuiApp:
                                     ft.Column(
                                         [
                                             ft.Text(
-                                                meal_log.meal.name,
+                                                self.get_meal_display_name(
+                                                    enriched_log.meal
+                                                ),
                                                 weight=ft.FontWeight.BOLD,
                                             ),
                                             ft.Text(
-                                                f"{self.format_amount(meal_log.amount, meal_log.unit_type)} | "
-                                                f"{self.format_amount(meal_log.calories, 'kcal')}",
-                                                color=SURFACE_MUTED,
+                                                f"{self.format_amount(enriched_log.amount, enriched_log.unit_type)} | "
+                                                f"{self.format_amount(enriched_log.calories, 'kcal')}",
+                                                color=self.surface_muted_color(),
                                             ),
                                         ],
                                         spacing=4,
@@ -1886,7 +2109,7 @@ class SedaGuiApp:
                                     ),
                                     ft.Text(
                                         self.format_timestamp(meal_log.timestamp),
-                                        color=SURFACE_MUTED,
+                                        color=self.surface_muted_color(),
                                     ),
                                 ]
                             ),
@@ -1895,7 +2118,7 @@ class SedaGuiApp:
                                     ft.FilledButton(
                                         self.t("show_details"),
                                         icon=ft.Icons.ARTICLE_OUTLINED,
-                                        on_click=lambda _, log=meal_log: self.open_meal_log_details_dialog(
+                                        on_click=lambda _, log=enriched_log: self.open_meal_log_details_dialog(
                                             log
                                         ),
                                     ),
@@ -1912,7 +2135,9 @@ class SedaGuiApp:
                                         style=ft.ButtonStyle(color=BRAND_RED),
                                         on_click=lambda _, log_id=meal_log.id: self.open_confirm_dialog(
                                             self.t("msg_confirm_delete_entry"),
-                                            meal_log.meal.name,
+                                            self.get_meal_display_name(
+                                                enriched_log.meal
+                                            ),
                                             lambda dialog, target_id=log_id: (
                                                 self.close_dialog(dialog),
                                                 self.delete_meal_log(target_id),
@@ -1932,7 +2157,8 @@ class SedaGuiApp:
         meal_logs_section = self.build_surface_section(
             self.t("meal_logs"),
             ft.Column(
-                meal_log_rows or [ft.Text(self.t("no_meal_logs"), color=SURFACE_MUTED)],
+                meal_log_rows
+                or [ft.Text(self.t("no_meal_logs"), color=self.surface_muted_color())],
                 spacing=10,
             ),
         )
@@ -1969,11 +2195,13 @@ class SedaGuiApp:
         """Build the profile page with inline forms and calculated values."""
         self.refresh_current_user_logs()
         calorie_status = get_today_calorie_status(self.current_user)
+        current_weight_log = self.get_current_weight_log()
 
         name_field = ft.TextField(label=self.t("name"), value=self.current_user.name)
         birthdate_field = ft.TextField(
             label=self.t("birthdate"),
-            value=self.current_user.birthdate,
+            value=self.format_birthdate(self.current_user.birthdate),
+            hint_text=self.birthdate_input_hint(),
         )
         height_field = ft.TextField(
             label=self.t("height_cm"),
@@ -2045,6 +2273,7 @@ class SedaGuiApp:
         weight_timestamp_field = ft.TextField(
             label=self.t("optional_timestamp"),
             helper=self.t("use_now_when_empty"),
+            hint_text=self.timestamp_input_hint(),
             expand=True,
         )
 
@@ -2065,8 +2294,8 @@ class SedaGuiApp:
                 ft.Container(
                     padding=12,
                     border_radius=8,
-                    bgcolor=SURFACE_BACKGROUND_ALT,
-                    border=ft.border.all(1, SURFACE_BORDER),
+                    bgcolor=self.surface_background_alt_color(),
+                    border=ft.border.all(1, self.surface_border_color()),
                     content=ft.Row(
                         [
                             ft.Text(
@@ -2076,12 +2305,12 @@ class SedaGuiApp:
                             ft.Text(
                                 self.format_amount(weight_log.bmi),
                                 width=100,
-                                color=SURFACE_MUTED,
+                                color=self.surface_muted_color(),
                             ),
                             ft.Text(
                                 self.format_timestamp(weight_log.timestamp),
                                 expand=True,
-                                color=SURFACE_MUTED,
+                                color=self.surface_muted_color(),
                             ),
                             ft.IconButton(
                                 ft.Icons.DELETE_OUTLINE,
@@ -2107,16 +2336,17 @@ class SedaGuiApp:
                     self.build_label_value_row(
                         self.t("latest_weight"),
                         (
-                            self.format_amount(self.current_user.latest_weight, "kg")
-                            if self.current_user.latest_weight is not None
+                            self.format_amount(current_weight_log.weight_in_kg, "kg")
+                            if current_weight_log is not None
                             else self.t("no_weight_logged")
                         ),
                     ),
                     self.build_label_value_row(
                         self.t("bmi"),
                         (
-                            self.format_amount(self.current_user.last_bmi)
-                            if self.current_user.last_bmi is not None
+                            self.format_amount(current_weight_log.bmi)
+                            if current_weight_log is not None
+                            and current_weight_log.bmi is not None
                             else self.t("bmi_not_available")
                         ),
                     ),
@@ -2136,7 +2366,12 @@ class SedaGuiApp:
                     ft.Text(self.t("weight_logs"), weight=ft.FontWeight.BOLD),
                     ft.Column(
                         weight_rows
-                        or [ft.Text(self.t("no_weight_logs"), color=SURFACE_MUTED)],
+                        or [
+                            ft.Text(
+                                self.t("no_weight_logs"),
+                                color=self.surface_muted_color(),
+                            )
+                        ],
                         spacing=10,
                     ),
                 ],
@@ -2159,8 +2394,9 @@ class SedaGuiApp:
                     self.build_label_value_row(
                         self.t("bmi"),
                         (
-                            self.format_amount(self.current_user.last_bmi)
-                            if self.current_user.last_bmi is not None
+                            self.format_amount(current_weight_log.bmi)
+                            if current_weight_log is not None
+                            and current_weight_log.bmi is not None
                             else self.t("bmi_not_available")
                         ),
                     ),
@@ -2189,7 +2425,9 @@ class SedaGuiApp:
             self.t("delete_account"),
             ft.Column(
                 [
-                    ft.Text(self.t("delete_account_copy"), color=SURFACE_MUTED),
+                    ft.Text(
+                        self.t("delete_account_copy"), color=self.surface_muted_color()
+                    ),
                     ft.Row(
                         [
                             ft.FilledButton(
@@ -2234,32 +2472,63 @@ class SedaGuiApp:
         """Build a lightweight about page connected to the live app state."""
         feature_section = self.build_surface_section(
             self.t("feature_overview"),
-            ft.Text(self.t("feature_overview_copy"), color=SURFACE_MUTED),
+            ft.Text(self.t("feature_overview_copy"), color=self.surface_muted_color()),
         )
 
         about_section = self.build_surface_section(
             self.t("about_title"),
             ft.Column(
                 [
-                    ft.Text(self.t("about_copy"), color=SURFACE_MUTED),
-                    self.build_label_value_row(
-                        self.t("active_user"),
-                        (
-                            self.current_user.name
-                            if self.current_user is not None
-                            else "-"
-                        ),
-                    ),
+                    ft.Text(self.t("about_copy"), color=self.surface_muted_color()),
                     self.build_label_value_row(
                         self.t("database_status"),
                         self.t("database_ready"),
+                    ),
+                    self.build_label_value_row(
+                        self.t("developers_label"),
+                        self.t("developers_value"),
                     ),
                 ],
                 spacing=10,
             ),
         )
 
-        return ft.Column([about_section, feature_section], spacing=20)
+        license_section = self.build_surface_section(
+            self.t("license_title"),
+            ft.Column(
+                [
+                    ft.Text(
+                        self.t("license_copy"), color=self.surface_muted_color()
+                    ),
+                    self.build_label_value_row(
+                        self.t("license_name_label"),
+                        self.t("license_name_value"),
+                    ),
+                    self.build_label_value_row(
+                        self.t("license_spdx_label"),
+                        "GPL-3.0-or-later",
+                    ),
+                    self.build_label_value_row(
+                        self.t("license_copyright_label"),
+                        self.t("license_copyright_value"),
+                    ),
+                    self.build_label_value_row(
+                        self.t("license_file_label"),
+                        "LICENSE.md",
+                    ),
+                    ft.FilledButton(
+                        self.t("show_full_license"),
+                        icon=ft.Icons.GAVEL_OUTLINED,
+                        on_click=self.open_license_dialog,
+                    ),
+                ],
+                spacing=10,
+            ),
+        )
+
+        return ft.Column(
+            [about_section, feature_section, license_section], spacing=20
+        )
 
     # ---------------------------
     # Render logic
@@ -2283,6 +2552,7 @@ class SedaGuiApp:
 
     def render(self):
         """Redraw the whole page from current state."""
+        self.page.bgcolor = self.page_background_color()
         self.page.clean()
         self.page.add(self.build_current_view())
         self.page.update()
