@@ -18,6 +18,10 @@ from model.classes_log import ActivityLog, MealLog, WaterLog, WeightLog
 from model.database import Database, FoodDatabase
 
 
+# ---------------------------
+# Setup and database access
+# These functions start the databases and check whether a connection works.
+# ---------------------------
 def connect_main_db():
     """Create the main database object and check the connection once."""
     main_db = Database()
@@ -48,6 +52,10 @@ def connect_food_db():
     return food_db
 
 
+# ---------------------------
+# Build model objects from database rows
+# These helpers translate plain DB rows into Python objects like User, Meal or Log items.
+# ---------------------------
 def create_water_log_instances_for_user(main_db: Database, user_id):
     """Create an array of WaterLog instances for the user."""
     return [
@@ -184,6 +192,10 @@ def create_user_instance_from_db(main_db: Database, db_user):
     )
 
 
+# ---------------------------
+# User loading and refresh
+# These functions create the current user and keep the in-memory handlers in sync with the DB.
+# ---------------------------
 def get_or_create_user(main_db: Database):
     """Create a user by existing data or by input."""
     users = main_db.get_all_users()  # pylint: disable=no-value-for-parameter
@@ -263,6 +275,10 @@ def refresh_user_logs_from_db(main_db: Database, user: User):
     refresh_activity_logs_from_db(main_db, user)
 
 
+# ---------------------------
+# User profile actions
+# These functions handle user data like showing or changing biometrical information.
+# ---------------------------
 def show_user_information(user: User):
     """Show the user's information."""
     ui.cli_view.show_user_info_from_class(user)
@@ -293,6 +309,10 @@ def update_biometrical_information(main_db: Database, user: User):
     show_user_information(user)
 
 
+# ---------------------------
+# Water log actions
+# CRUD for water logs plus today's water-related output.
+# ---------------------------
 def add_water_log(main_db: Database, user: User):
     """Add a water log to the user and persist it."""
     amount_in_ml, timestamp = ui.cli_view.create_water_log_parameters_by_input()
@@ -392,6 +412,10 @@ def show_last_bmi(user: User):
     ui.cli_view.show_message(f"\nBMI: {user.last_bmi}\n")
 
 
+# ---------------------------
+# Food search and meal-building helpers
+# These functions search foods and assemble Meal objects from chosen food items.
+# ---------------------------
 def search_foods(food_db: FoodDatabase):
     """Search foods in the external food database and display results. ai-generated."""
     search_term = ui.cli_view.prompt_food_search_term()
@@ -469,6 +493,10 @@ def create_meal_template(main_db: Database, food_db: FoodDatabase):
     return meal
 
 
+# ---------------------------
+# Meal template actions
+# Create, update, show and delete reusable meal templates.
+# ---------------------------
 def create_single_food_meal(main_db: Database, food_row):
     """Create a one-food meal object for direct logging. ai-generated."""
     meal_name = food_row["name_de"] or food_row["name_en"]
@@ -548,6 +576,10 @@ def delete_meal_template(main_db: Database):
     ui.cli_view.show_message("\nMeal template deleted successfully.\n")
 
 
+# ---------------------------
+# Meal log actions
+# Log eaten meals or single foods and keep the meal log in sync with the database.
+# ---------------------------
 def add_meal_log(main_db: Database, user: User):
     """Log a consumed meal for the current user. ai-generated."""
     meals = create_meal_instances(main_db)
@@ -699,6 +731,10 @@ def delete_meal_log(main_db: Database, user: User):
     ui.cli_view.show_message("\nMeal log deleted successfully.\n")
 
 
+# ---------------------------
+# Daily status helpers
+# These return plain dicts first, so CLI and a later Flet UI can use the same data easily.
+# ---------------------------
 def get_today_water_status(user: User):
     """Return today's water status as plain data. ai-generated."""
     # Returning plain data keeps the controller easy to call from CLI now and Flet later.
@@ -748,6 +784,10 @@ def show_today_calorie_status(user: User):
     )
 
 
+# ---------------------------
+# Activity log actions
+# CRUD for burned-calorie entries.
+# ---------------------------
 def add_activity_log(main_db: Database, user: User):
     """Add an activity log to the user and persist it. ai-generated."""
     activity_name, calories_burned, activity_value, timestamp = (
@@ -851,6 +891,10 @@ def delete_activity_log(main_db: Database, user: User):
     ui.cli_view.show_message("\nActivity log deleted successfully.\n")
 
 
+# ---------------------------
+# Account action
+# This removes the current user and then loads or creates the next active user.
+# ---------------------------
 def delete_current_user(main_db: Database, user: User):
     """Delete the current user and return the next active user. ai-generated."""
     if not ui.cli_view.prompt_yes_no(
@@ -872,6 +916,10 @@ def delete_current_user(main_db: Database, user: User):
     return new_user
 
 
+# ---------------------------
+# CLI menus
+# These functions connect the view input to the controller actions above.
+# ---------------------------
 def run_water_log_menu(main_db: Database, user: User):
     """Run the water log CLI menu."""
     while True:
@@ -989,6 +1037,10 @@ def cli_menu(main_db: Database, food_db: FoodDatabase, user: User):
             ui.cli_view.show_message("Invalid choice. Please try again.")
 
 
+# ---------------------------
+# Program entry point
+# This is the small bootstrap that starts CLI mode.
+# ---------------------------
 def main():
     """This is the main CLI entry point."""
     main_db = connect_main_db()

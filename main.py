@@ -17,7 +17,7 @@ if __name__ == "__main__":
         'g' for GUI
         'l' for showing the license\n""").lower()
     if ux == "g":
-        from ui.ui import ft, main as gui_main
+        from ui.gui import ft, main as gui_main
 
         ft.app(target=gui_main)
     elif ux == "c":
