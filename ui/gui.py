@@ -164,6 +164,7 @@ class SedaGuiApp:
             )
         )
         self.page.update()
+        print(message)  # for debugging
 
     def load_current_user(self):
         """Load the first available user and its logs into memory."""
