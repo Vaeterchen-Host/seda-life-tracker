@@ -322,7 +322,7 @@ def main(page: ft.Page):
         visible=False,
     )
 
-    # AI-generated content: about view with embedded license text.
+ content: about view with embedded license text.
     about_view = ft.Column(
         [
             ft.Card(

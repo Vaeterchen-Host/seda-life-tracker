@@ -25,5 +25,5 @@ if __name__ == "__main__":
     elif ux == "l":
         show_license_long()
     else:
-        print("Input invalid. Please enter 'g/c/l'. Exiting now...")  # refactored by ai
+        print("Input invalid. Please enter 'g/c/l'. Exiting now...")
         sys.exit(1)

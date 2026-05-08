@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from datetime import datetime
 
 
-# ai-generated content start: helper function for validating log lists.
+# Section start: helper function for validating log lists.
 def _validate_log_list(logs, log_type, label):
     """Validate that logs is a list containing only the expected log type."""
     if not isinstance(logs, list) or not all(isinstance(log, log_type) for log in logs):
@@ -215,8 +215,8 @@ class WaterLog:
     def __init__(self, water_log_id, amount_in_ml, timestamp):
         """This is the constructor of WaterLog."""
         self._id = water_log_id
-        self.amount_in_ml = amount_in_ml  # refactored by ai
-        self.timestamp = timestamp  # refactored by ai
+        self.amount_in_ml = amount_in_ml
+        self.timestamp = timestamp
 
     # Here are the water log related methods.
     @property
@@ -260,8 +260,8 @@ class WeightLog:
     def __init__(self, weight_log_id, weight_in_kg, timestamp):
         """This is the constructor of weightlog."""
         self._id = weight_log_id
-        self.weight_in_kg = weight_in_kg  # refactored by ai
-        self.timestamp = timestamp  # refactored by ai
+        self.weight_in_kg = weight_in_kg
+        self.timestamp = timestamp
 
     @property
     def id(self):
@@ -315,15 +315,15 @@ class User:
     ):
         """This is the constructor of User."""
         self._id = user_id
-        self.name = name  # refactored by ai
-        self.birthdate = birthdate  # refactored by ai
-        self.height_in_cm = height_in_cm  # refactored by ai
-        self.gender = gender  # refactored by ai
-        self.fitness_lvl = fitness_lvl  # refactored by ai
-        self.water_logs = water  # refactored by ai
-        self.weight_logs = weight  # refactored by ai
-        self.food_logs = food  # refactored by ai
-        self._meal = _validate_log_list(meal, MealLog, "Meal logs")  # refactored by ai
+        self.name = name
+        self.birthdate = birthdate
+        self.height_in_cm = height_in_cm
+        self.gender = gender
+        self.fitness_lvl = fitness_lvl
+        self.water_logs = water
+        self.weight_logs = weight
+        self.food_logs = food
+        self._meal = _validate_log_list(meal, MealLog, "Meal logs")
 
     # Here are the biometrical data related methods.
     @property
@@ -406,7 +406,7 @@ class User:
         """This is the setter for water logs. Partly AI-generated."""
         self._water = _validate_log_list(
             new_water_logs, WaterLog, "Water logs"
-        )  # refactored by ai
+        )
 
     @property
     def weight_logs(self):
@@ -418,7 +418,7 @@ class User:
         """This is the setter for weight logs. Partly AI-generated."""
         self._weight = _validate_log_list(
             new_weight_logs, WeightLog, "Weight logs"
-        )  # refactored by ai
+        )
 
     @property
     def food_logs(self):
@@ -430,7 +430,7 @@ class User:
         """This is the setter for food logs. Partly AI-generated."""
         self._food = _validate_log_list(
             new_food_logs, FoodLog, "Food logs"
-        )  # refactored by ai
+        )
 
     @property
     def meal_logs(self):

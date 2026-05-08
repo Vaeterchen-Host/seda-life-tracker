@@ -14,7 +14,7 @@ import model.classes
 
 # pylint: skip-file
 
-# AI-generated content start: fixtures for isolated test setup.
+# Section start: fixtures for isolated test setup.
 TEST_DB_DIR = Path(__file__).resolve().parents[1] / "test_db"
 
 
@@ -38,7 +38,7 @@ def tobias():
 
 # ------------------------------------
 
-# AI-generated content end
+# Section end
 
 
 def test_create_weight_log_table(db):

@@ -44,16 +44,16 @@ class User:
         self.fitness_lvl = fitness_lvl
         self._water_log_handler = WaterLogHandler(
             self.user_id, water_logs
-        )  # refactored by ai
+        )
         self._weight_log_handler = WeightLogHandler(
             self.user_id, weight_logs
-        )  # refactored by ai
+        )
         self._meal_log_handler = MealLogHandler(
             self.user_id, meal_logs
-        )  # refactored by ai
+        )
         self._activity_log_handler = ActivityLogHandler(
             self.user_id, activity_logs
-        )  # refactored by ai
+        )
 
     # Aliases
     @property
@@ -123,23 +123,23 @@ class User:
 
     @property
     def water_log_handler(self):
-        """This is the getter for the water log handler. Refactored by ai."""
-        return self._water_log_handler  # refactored by ai
+        """This is the getter for the water log handler. Partly AI-generated."""
+        return self._water_log_handler
 
     @property
     def weight_log_handler(self):
-        """This is the getter for the weight log handler. Refactored by ai."""
-        return self._weight_log_handler  # refactored by ai
+        """This is the getter for the weight log handler. Partly AI-generated."""
+        return self._weight_log_handler
 
     @property
     def meal_log_handler(self):
-        """This is the getter for the meal log handler. Refactored by ai."""
-        return self._meal_log_handler  # refactored by ai
+        """This is the getter for the meal log handler. Partly AI-generated."""
+        return self._meal_log_handler
 
     @property
     def activity_log_handler(self):
-        """This is the getter for the activity log handler. Refactored by ai."""
-        return self._activity_log_handler  # refactored by ai
+        """This is the getter for the activity log handler. Partly AI-generated."""
+        return self._activity_log_handler
 
     @property
     def last_bmi(self):

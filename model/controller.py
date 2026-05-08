@@ -57,36 +57,36 @@ def connect_food_db():
 # These helpers translate plain DB rows into Python objects like User, Meal or Log items.
 # ---------------------------
 def create_water_log_instances_for_user(main_db: Database, user_id):
-    """Create an array of WaterLog instances for the user."""
+    """Create an array of WaterLog instances for the user. Partly AI-generated."""
     return [
         WaterLog(
             log[0], log[1], log[2], log[3]
-        )  # log[0] is id, log[1] is user_id, log[2] is amount_in_ml, log[3] is timestamp. Refactored by ai.
+        )  # log[0] is id, log[1] is user_id, log[2] is amount_in_ml, log[3] is timestamp.
         for log in main_db.get_all_water_logs()  # pylint: disable=no-value-for-parameter
         if log[1] == user_id
-    ]  # refactored by ai
+    ]
 
 
 def create_weight_log_instances_for_user(main_db: Database, user_id):
-    """Create an array of WeightLog instances for the user."""
+    """Create an array of WeightLog instances for the user. Partly AI-generated."""
     return [
         WeightLog(
             log[0], log[1], log[2], log[3], log[4]
-        )  # log[0] is id, log[1] is user_id, log[2] is weight_in_kg, log[3] is height_in_cm, log[4] is timestamp. Refactored by ai.
+        )  # log[0] is id, log[1] is user_id, log[2] is weight_in_kg, log[3] is height_in_cm, log[4] is timestamp.
         for log in main_db.get_all_weight_logs()  # pylint: disable=no-value-for-parameter
         if log[1] == user_id
-    ]  # refactored by ai
+    ]
 
 
 def create_activity_log_instances_for_user(main_db: Database, user_id):
-    """Create an array of ActivityLog instances for the user."""
+    """Create an array of ActivityLog instances for the user. Partly AI-generated."""
     return [
         ActivityLog(
             log[0], log[1], log[2], log[3], log[4], log[5], log[6]
-        )  # log[0] is id, log[1] is user_id, log[2] is activity_name, log[3] is calories_burned, log[4] is activity_value, log[5] is unit_type, log[6] is timestamp. Refactored by ai.
+        )  # log[0] is id, log[1] is user_id, log[2] is activity_name, log[3] is calories_burned, log[4] is activity_value, log[5] is unit_type, log[6] is timestamp.
         for log in main_db.get_all_activity_logs()  # pylint: disable=no-value-for-parameter
         if log[1] == user_id
-    ]  # refactored by ai
+    ]
 
 
 def create_nutrient_summary_with_defaults(**overrides):
@@ -160,7 +160,7 @@ def create_meal_instances(main_db: Database):
 
 
 def create_meal_log_instances_for_user(main_db: Database, user_id):
-    """Create an array of MealLog instances for the user."""
+    """Create an array of MealLog instances for the user. Partly AI-generated."""
     return [
         MealLog(
             log[0],
@@ -169,11 +169,11 @@ def create_meal_log_instances_for_user(main_db: Database, user_id):
             log[4],
             log[5],
             log[6],
-        )  # log[0] is meal_log_id, log[1] is user_id, log[2] is meal_id, log[3] is meal_name, log[4] is amount, log[5] is unit_type, log[6] is timestamp. Refactored by ai.
+        )  # log[0] is meal_log_id, log[1] is user_id, log[2] is meal_id, log[3] is meal_name, log[4] is amount, log[5] is unit_type, log[6] is timestamp.
         for log in main_db.get_user_meal_logs(
             user_id
         )  # pylint: disable=no-value-for-parameter
-    ]  # refactored by ai
+    ]
 
 
 def create_user_instance_from_db(main_db: Database, db_user):
@@ -243,28 +243,28 @@ def refresh_water_logs_from_db(main_db: Database, user: User):
     """Refresh the water logs from DB into the current user object."""
     user.water_log_handler.logs = create_water_log_instances_for_user(
         main_db, user.user_id
-    )  # refactored by ai
+    )
 
 
 def refresh_weight_logs_from_db(main_db: Database, user: User):
     """Refresh the weight logs from DB into the current user object."""
     user.weight_log_handler.logs = create_weight_log_instances_for_user(
         main_db, user.user_id
-    )  # refactored by ai
+    )
 
 
 def refresh_meal_logs_from_db(main_db: Database, user: User):
     """Refresh the meal logs from DB into the current user object."""
     user.meal_log_handler.logs = create_meal_log_instances_for_user(
         main_db, user.user_id
-    )  # refactored by ai
+    )
 
 
 def refresh_activity_logs_from_db(main_db: Database, user: User):
     """Refresh the activity logs from DB into the current user object."""
     user.activity_log_handler.logs = create_activity_log_instances_for_user(
         main_db, user.user_id
-    )  # refactored by ai
+    )
 
 
 def refresh_user_logs_from_db(main_db: Database, user: User):
@@ -359,7 +359,7 @@ def add_weight_log(main_db: Database, user: User):
         weight_in_kg,
         user.height_in_cm,
         timestamp,
-    )  # refactored by ai
+    )
     db_id = main_db.add_weight_log(
         user.user_id,
         new_log.weight_in_kg,
@@ -476,7 +476,7 @@ def create_meal_template(main_db: Database, food_db: FoodDatabase):
         return None
 
     meal_id = main_db.add_meal(meal_name)  # pylint: disable=no-value-for-parameter
-    meal = Meal(meal_id, meal_name, [])  # ai-generated
+    meal = Meal(meal_id, meal_name, [])
 
     for food_item in collect_food_items_for_meal(food_db):
         meal.add_food_item(food_item)
@@ -602,7 +602,7 @@ def add_meal_log(main_db: Database, user: User):
 
     new_log = user.meal_log_handler.create_log(
         None, selected_meal, amount, unit_type, timestamp
-    )  # ai-generated
+    )
     db_id = main_db.add_meal_log(
         user.user_id, selected_meal.id, amount, unit_type, new_log.timestamp
     )  # pylint: disable=no-value-for-parameter
@@ -630,7 +630,7 @@ def add_single_food_log(main_db: Database, food_db: FoodDatabase, user: User):
         amount,
         selected_food_row["unit_type"],
         timestamp,
-    )  # ai-generated
+    )
     db_id = main_db.add_meal_log(
         user.user_id,
         single_food_meal.id,
@@ -802,7 +802,7 @@ def add_activity_log(main_db: Database, user: User):
         activity_value,
         "minutes",
         timestamp,
-    )  # ai-generated
+    )
     db_id = main_db.add_activity_log(
         user.user_id,
         new_log.activity_name,

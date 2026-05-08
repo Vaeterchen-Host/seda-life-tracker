@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 # Just for testing. Must be deleted.
 FOOD = "Olivenöl"
 
-FOOD_DISPLAY_SECTIONS = [  # ai-generated
+FOOD_DISPLAY_SECTIONS = [
     (
         "Energy and Basic Values (per 100g/ml)",
         [
@@ -357,7 +357,7 @@ def prompt_main_menu():
         7. Show today's calorie status
         8. Delete current user account
         9. Exit
-        
+
         l. Show License
                                 """)
     return input("Enter your choice (1-9/l): ")

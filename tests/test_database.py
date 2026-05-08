@@ -16,7 +16,7 @@ from model.class_user import User
 
 # pylint: skip-file
 
-# AI-generated content start: fixtures for isolated test setup.
+# Section start: fixtures for isolated test setup.
 TEST_DB_DIR = Path(__file__).resolve().parents[1] / "test_db"
 
 
@@ -77,7 +77,7 @@ def sample_food_with_name_en():
     return row
 
 
-# AI-generated content end
+# Section end
 
 
 # connection related tests
@@ -99,7 +99,7 @@ def test_close_connection(db):
 
 
 # User related tests
-# AI-generated content start.
+# Section start: user-related tests.
 def test_user_table_creation(db):
     """This test checks if the users table is created successfully."""
 
@@ -130,7 +130,7 @@ def test_add_a_user(db, tobias):
     assert row[5] == tobias.fitness_lvl, "Fitness level does not match"
 
 
-# AI-generated content end
+# Section end
 
 
 # water log related tests
@@ -187,10 +187,10 @@ def test_add_and_get_weight_log(db, tobias):
     db.add_user(
         tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
     )
-    
+
     # 2. Add weight log (User ID 1)
     db.add_weight_log(1, 85.5, 185, "2026-04-19T09:00:00")
-    
+
     # 3. Retrieve and validate
     logs = db.get_all_weight_logs()
     assert len(logs) == 1, "There should be exactly one weight log entry"
@@ -205,15 +205,15 @@ def test_delete_weight_log(db, tobias):
     # Setup
     db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
     db.add_weight_log(1, 90.0, None, "2026-04-18T08:00:00")
-    
+
     # Get the ID of the entry
     logs_before = db.get_all_weight_logs()
     weight_log_id = logs_before[0][0]
-    
+
     # Delete
     deleted_count = db.delete_weight_log(weight_log_id)
     assert deleted_count == 1, "One row should have been deleted"
-    
+
     # Verify
     logs_after = db.get_all_weight_logs()
     assert len(logs_after) == 0, "Weight log table should be empty after deletion"
@@ -285,10 +285,10 @@ def test_add_and_get_activity_log(db, tobias):
     db.add_user(
         tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
     )
-    
+
     # Add activity (User ID 1, since it's a new database)
     db.add_activity_log(1, "Jogging", 450.5, 30, "minutes", "2026-04-11T18:00:00")
-    
+
     logs = db.get_all_activity_logs()
     assert len(logs) == 1, "Activity log count should be 1"
     assert logs[0][2] == "Jogging", "Activity name does not match"
@@ -303,15 +303,15 @@ def test_delete_activity_log(db, tobias):
         tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
     )
     db.add_activity_log(1, "Swimming", 300, None, "minutes", "2026-04-11T19:00:00")
-    
+
     # retrieving ID first
     logs = db.get_all_activity_logs()
     activity_id = logs[0][0]
-    
+
     # deleting
     deleted_rows = db.delete_activity_log(activity_id)
     assert deleted_rows == 1, "One row should have been deleted"
-    
+
     # verifying
     logs_after = db.get_all_activity_logs()
     assert len(logs_after) == 0, "Activity log table should be empty after deletion"
@@ -338,7 +338,7 @@ def test_update_activity_log(db, tobias):
 
 # food database related tests
 def test_food_table_is_not_created_in_main_database(db):
-    """This test checks that foods are no longer stored in the main database. AI-refactored."""
+    """This test checks that foods are no longer stored in the main database. Partly AI-generated."""
     conn = db.connect()
     cursor = conn.cursor()
     cursor.execute(
@@ -384,7 +384,7 @@ def test_food_database_custom_sql_query_returns_food_columns():
     assert "unit_type" in column_names, "Expected unit_type column in external foods table"
 
 def test_food_log_table_is_not_created(db):
-    """This test checks that food_logs are replaced by meal_logs. Refactored by ai."""
+    """This test checks that food_logs are replaced by meal_logs. Partly AI-generated."""
     conn = db.connect()
     cursor = conn.cursor()
     cursor.execute(
@@ -411,7 +411,7 @@ def test_add_and_get_meal(db):
     """This test checks if a meal template can be added and retrieved."""
     meal_id = db.add_meal("Protein Breakfast")
     assert meal_id == 1, "First meal ID should be 1"
-    
+
     all_meals = db.get_all_meals()
     assert len(all_meals) == 1, "There should be one meal in the database"
     assert all_meals[0][1] == "Protein Breakfast", "Meal name does not match"
@@ -421,7 +421,7 @@ def test_delete_meal(db):
     """This test checks if a meal template can be deleted."""
     db.add_meal("Lunch")
     db.delete_meal(1)
-    
+
     all_meals = db.get_all_meals()
     assert len(all_meals) == 0, "Meal table should be empty after deletion"
 
@@ -461,7 +461,7 @@ def test_meal_food_item_table_has_only_meal_foreign_key(db):
 
 
 def test_add_and_get_meal_food_item(db, sample_food_row):
-    """This test checks if a food from the external DB can be linked to a meal. Partly AI-refactored."""
+    """This test checks if a food from the external DB can be linked to a meal. Partly AI-generated."""
     db.add_meal("Porridge")
 
     # Add Item
@@ -518,10 +518,10 @@ def test_add_and_get_meal_log(db, tobias):
     # Setup
     db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
     db.add_meal("Standard Shake")
-    
+
     # Log Meal
     db.add_meal_log(1, 1, 250, "g", "2026-04-19T08:00:00")
-    
+
     logs = db.get_user_meal_logs(1)
     assert len(logs) == 1, "There should be one meal log entry"
     assert logs[0][1] == 1, "User ID does not match"
@@ -536,10 +536,10 @@ def test_delete_meal_log(db, tobias):
     db.add_user(tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl)
     db.add_meal("Snack")
     db.add_meal_log(1, 1, 100, "g", "2026-04-19T20:00:00")
-    
+
     # Delete
     db.delete_meal_log(1)
-    
+
     logs = db.get_user_meal_logs(1)
     assert len(logs) == 0, "Meal logs should be empty after deletion"
 

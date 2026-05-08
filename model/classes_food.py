@@ -9,13 +9,13 @@ from dataclasses import dataclass, fields
 from typing import Optional
 
 
-# Helper functions for dataclass initialization and log validation. ai-generated.
+# Helper functions for dataclass initialization and log validation.
 def _zero_dataclass(cls):
     """Create a zero-valued dataclass instance for nutrient objects."""
     return cls(**{field.name: 0 for field in fields(cls)})
 
 
-# ai-generated content start: helper function for validating log lists. ai-generated.
+# Section start: helper function for validating log lists.
 def _validate_non_negative(values):
     """Validate that nutrient values are non-negative."""
     for name, value in values.items():
@@ -32,7 +32,7 @@ def _add_optional_nutrient(current_total, nutrient_value, factor, none_as_zero=F
     return current_total + nutrient_value * factor
 
 
-# ai-generated content end: helper for optional nutrient calculations.
+# Section end: helper for optional nutrient calculations.
 
 
 ## All classes about food.
@@ -186,9 +186,9 @@ class Food:
     ):
         """This is the constructor of Food."""
         self._id = food_id
-        self.name = name  # refactored by ai
-        self.amount = amount  # refactored by ai
-        self.unit_type = unit_type  # refactored by ai
+        self.name = name
+        self.amount = amount
+        self.unit_type = unit_type
         self._calories_per_100_units = calories
         self._big_seven_per_100_units = big_seven_per_100_units
         self._nutrient_summary = nutrient_summary
@@ -309,7 +309,7 @@ class Meal:
             return 0
         return sum(item.amount for item in self.food_items)
 
-    # ai-generated content start: meal nutrient aggregations. ai-generated.
+    # Section start: meal nutrient aggregations.
     @property
     def big_seven(self):
         """Getter of the big seven nutrients of the meal."""
@@ -373,20 +373,20 @@ class Meal:
         for item in self.food_items:
             factor = item.amount / 100
             nutrients = item.nutrient_summary
-            # refactored by ai: fields() lists all dataclass fields of NutrientSummary.
+            # fields() lists all dataclass fields of NutrientSummary.
             for nutrient_field in fields(NutrientSummary):
-                # refactored by ai: getattr(obj, name) reads an attribute by its name.
+                # getattr(obj, name) reads an attribute by its name.
                 current_total = getattr(total, nutrient_field.name)
                 nutrient_value = getattr(nutrients, nutrient_field.name)
                 new_total = _add_optional_nutrient(
                     current_total, nutrient_value, factor, none_as_zero
                 )
-                # refactored by ai: setattr(obj, name, value) writes an attribute by name.
+                # setattr(obj, name, value) writes an attribute by name.
                 setattr(total, nutrient_field.name, new_total)
 
         return total
 
-    # ai-generated content end: meal nutrient aggregations.
+    # Section end: meal nutrient aggregations.
 
     def add_food_item(self, food_item):
         """Method for adding a food item to meal-composition."""

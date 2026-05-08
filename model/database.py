@@ -15,7 +15,7 @@ from config import DB_PATH, FOOD_DB_PATH
 def connector(func):
     """This is a decorator for connecting and disconnecting to DB."""
 
-    # minor ai-generated fixes
+    # Minor follow-up fixes.
     def wrapper(self, *args, **kwargs):
         """This is the wrapper function for the decorator."""
         conn = self.connect()
@@ -44,7 +44,7 @@ class FoodDatabase:
     def connect(self):
         """This method connects to the food database."""
         conn = sqlite3.connect(self._db)
-        conn.row_factory = sqlite3.Row  # refactored by ai
+        conn.row_factory = sqlite3.Row
         return conn
 
     def end_connection(self, conn):
@@ -69,7 +69,7 @@ class FoodDatabase:
     def search_foods(self, conn, food_name):
         """Search foods by German or English name. ai-generated."""
         cursor = conn.cursor()
-        search_term = food_name.strip().lower()  # ai-generated
+        search_term = food_name.strip().lower()
         cursor.execute(
             """
             SELECT *
@@ -176,7 +176,7 @@ class Database:
             (name, birthdate, height_in_cm, gender, fitness_lvl),
         )
         conn.commit()
-        return cursor.lastrowid  # refactored by ai
+        return cursor.lastrowid
 
     @connector
     def get_user(self, conn, name) -> list:
@@ -257,7 +257,7 @@ class Database:
             (user_id, amount_in_ml, timestamp),
         )
         conn.commit()
-        return cursor.lastrowid  # refactored by ai
+        return cursor.lastrowid
 
     @connector
     def get_all_water_logs(self, conn) -> list:
@@ -312,7 +312,7 @@ class Database:
             (user_id, weight_in_kg, height_in_cm, timestamp),
         )
         conn.commit()
-        return cursor.lastrowid  # refactored by ai
+        return cursor.lastrowid
 
     @connector
     def get_all_weight_logs(self, conn) -> list:
@@ -386,7 +386,7 @@ class Database:
             ),
         )
         conn.commit()
-        return cursor.lastrowid  # refactored by ai
+        return cursor.lastrowid
 
     @connector
     def get_all_activity_logs(self, conn) -> list:
@@ -535,7 +535,7 @@ class Database:
             (meal_id, food_id, amount, unit_type),
         )
         conn.commit()
-        return cursor.lastrowid  # refactored by ai
+        return cursor.lastrowid
 
     @connector
     def delete_meal_food_items(self, conn, meal_id):
@@ -613,7 +613,7 @@ class Database:
             (user_id, meal_id, amount, unit_type, timestamp),
         )
         conn.commit()
-        return cursor.lastrowid  # refactored by ai
+        return cursor.lastrowid
 
     @connector
     def get_user_meal_logs(self, conn, user_id):

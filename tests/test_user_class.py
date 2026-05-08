@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Tobias Mignat & Sabine Steverding
 # See LICENSE.md for the full license text.
 
-"""Tests for the SEDA user class. Refactored by ai."""
+"""Tests for the SEDA user class. Partly AI-generated."""
 
 from dataclasses import fields
 from pathlib import Path
@@ -21,19 +21,19 @@ from model.classes_log import MealLog, WaterLog, WeightLog
 
 @pytest.fixture
 def water_log_1():
-    """Create a waterlog object for each test. Refactored by ai."""
+    """Create a waterlog object for each test. Partly AI-generated."""
     return WaterLog(1, 1, 900, "2026-03-21T12:12")
 
 
 @pytest.fixture
 def weight_log_1():
-    """Create a weightlog object for each test. Refactored by ai."""
+    """Create a weightlog object for each test. Partly AI-generated."""
     return WeightLog(1, 1, 80.5, None, "2026-03-21T12:12")
 
 
 @pytest.fixture
 def test_user_class(water_log_1, weight_log_1):
-    """Create a fresh user object for each test. Refactored by ai."""
+    """Create a fresh user object for each test. Partly AI-generated."""
     return User(
         1,
         "Test",
@@ -49,7 +49,7 @@ def test_user_class(water_log_1, weight_log_1):
 
 
 def test_get_water_logs(test_user_class):
-    """This test checks if water logs are retrieved correctly. Refactored by ai."""
+    """This test checks if water logs are retrieved correctly. Partly AI-generated."""
     assert len(test_user_class.water_log_handler.logs) == 1
     assert test_user_class.water_log_handler.logs[0].amount_in_ml == 900
     assert test_user_class.water_log_handler.logs[0].unit_type == "ml"
@@ -57,10 +57,10 @@ def test_get_water_logs(test_user_class):
 
 
 def test_add_water_log(test_user_class):
-    """This test checks if water logs are added correctly. Refactored by ai."""
+    """This test checks if water logs are added correctly. Partly AI-generated."""
     test_user_class.water_log_handler.create_log(
         None, 500, "2026-03-22T08:00"
-    )  # refactored by ai
+    )
 
     assert len(test_user_class.water_log_handler.logs) == 2
     assert test_user_class.water_log_handler.logs[1].amount_in_ml == 500
@@ -69,7 +69,7 @@ def test_add_water_log(test_user_class):
 
 
 def test_get_weight_logs(test_user_class):
-    """This test checks if weight logs are retrieved correctly. Refactored by ai."""
+    """This test checks if weight logs are retrieved correctly. Partly AI-generated."""
     assert len(test_user_class.weight_log_handler.logs) == 1
     assert test_user_class.weight_log_handler.logs[0].weight_in_kg == 80.5
     assert test_user_class.weight_log_handler.logs[0].unit_type == "kg"
@@ -77,10 +77,10 @@ def test_get_weight_logs(test_user_class):
 
 
 def test_add_weight_log(test_user_class):
-    """This test checks if weight logs are added correctly. Refactored by ai."""
+    """This test checks if weight logs are added correctly. Partly AI-generated."""
     test_user_class.weight_log_handler.create_log(
         None, 79.8, test_user_class.height_in_cm, "2026-03-22T08:00"
-    )  # refactored by ai
+    )
 
     assert len(test_user_class.weight_log_handler.logs) == 2
     assert test_user_class.weight_log_handler.logs[1].weight_in_kg == 79.8
@@ -90,10 +90,10 @@ def test_add_weight_log(test_user_class):
 
 
 def test_add_activity_log(test_user_class):
-    """This test checks if activity logs are added correctly. Refactored by ai."""
+    """This test checks if activity logs are added correctly. Partly AI-generated."""
     test_user_class.activity_log_handler.create_log(
         None, "walking", 120, 30, "minutes", "2026-03-22T08:00"
-    )  # refactored by ai
+    )
 
     assert len(test_user_class.activity_log_handler.logs) == 1
     assert test_user_class.activity_log_handler.logs[0].activity_name == "walking"
@@ -106,7 +106,7 @@ def test_last_bmi_returns_bmi_of_latest_weight_log(test_user_class):
     """This test checks if the latest weight log BMI is returned. ai-generated."""
     test_user_class.weight_log_handler.create_log(
         None, 79.8, test_user_class.height_in_cm, "2026-03-22T08:00"
-    )  # ai-generated
+    )
 
     assert test_user_class.last_bmi == 23.32
 
@@ -124,15 +124,15 @@ def test_last_bmi_returns_none_without_weight_logs():
         [],
         [],
         [],
-    )  # ai-generated
+    )
 
     assert test_user.last_bmi is None
 
 
 def test_get_meal_log_handler(test_user_class):
     """This test checks if the meal log handler is available. ai-generated."""
-    meal_log = MealLog(1, 1, None, 250, "g", "2026-03-22T12:00")  # ai-generated
-    test_user_class.meal_log_handler.logs = [meal_log]  # ai-generated
+    meal_log = MealLog(1, 1, None, 250, "g", "2026-03-22T12:00")
+    test_user_class.meal_log_handler.logs = [meal_log]
 
     assert len(test_user_class.meal_log_handler.logs) == 1
     assert test_user_class.meal_log_handler.logs[0].id == 1
@@ -141,7 +141,7 @@ def test_get_meal_log_handler(test_user_class):
 def test_set_invalid_meal_log_handler_logs_raises_value_error(test_user_class):
     """This test checks if invalid handler logs are rejected. ai-generated."""
     with pytest.raises(ValueError):
-        test_user_class.meal_log_handler.logs = ["not a meal log"]  # ai-generated
+        test_user_class.meal_log_handler.logs = ["not a meal log"]
 
 
 def test_today_calories_burned_sums_only_today_activity_logs(
@@ -166,13 +166,13 @@ def test_today_calories_burned_sums_only_today_activity_logs(
     monkeypatch.setattr("model.class_user.datetime", FrozenDateTime)
     test_user_class.activity_log_handler.create_log(
         1, "walking", 120, 30, "minutes", "2026-04-29T08:00:00"
-    )  # ai-generated
+    )
     test_user_class.activity_log_handler.create_log(
         2, "cycling", 200, 45, "minutes", "2026-04-29T18:00:00"
-    )  # ai-generated
+    )
     test_user_class.activity_log_handler.create_log(
         3, "running", 300, 60, "minutes", "2026-04-28T18:00:00"
-    )  # ai-generated
+    )
 
     assert test_user_class.today_calories_burned == 320
 
@@ -190,7 +190,7 @@ def test_today_net_calories_subtracts_burned_from_intake(monkeypatch):
         [],
         [],
         [],
-    )  # ai-generated
+    )
     food_item = Food(
         1,
         "Oats",
@@ -199,14 +199,14 @@ def test_today_net_calories_subtracts_burned_from_intake(monkeypatch):
         370,
         BigSeven(7, 1, 58, 10, 1, 13, 0.01),
         NutrientSummary(*([0] * len(fields(NutrientSummary)))),
-    )  # ai-generated
-    meal = Meal(1, "Porridge", [food_item])  # ai-generated
+    )
+    meal = Meal(1, "Porridge", [food_item])
     user.meal_log_handler.create_log(
         1, meal, 100, "g", "2026-04-29T08:00:00"
-    )  # ai-generated
+    )
     user.activity_log_handler.create_log(
         1, "walking", 120, 30, "minutes", "2026-04-29T12:00:00"
-    )  # ai-generated
+    )
 
     class FrozenDateTime:
         """Minimal datetime stand-in for today's date. ai-generated."""

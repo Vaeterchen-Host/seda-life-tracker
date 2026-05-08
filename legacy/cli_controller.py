@@ -58,24 +58,24 @@ else:
 
 # Create an array of WaterLog instances for the user
 def create_water_log_instances_for_user():
-    """Create an array of WaterLog instances for the user."""
+    """Create an array of WaterLog instances for the user. Partly AI-generated."""
     water_logs = []
     for log in main_db.get_all_water_logs():  # pylint: disable=no-value-for-parameter
         water_log_instance = WaterLog(
             log[0], log[1], log[2], log[3]
-        )  # Assuming log[0] is id, log[1] is user_id, log[2] is amount_in_ml, log[3] is timestamp. Refactored by ai.
+        )  # Assuming log[0] is id, log[1] is user_id, log[2] is amount_in_ml, log[3] is timestamp.
         water_logs.append(water_log_instance)
     return water_logs
 
 
 # Create an array of WeightLog instances for the user
 def create_weight_log_instances_for_user():
-    """Create an array of WeightLog instances for the user."""
+    """Create an array of WeightLog instances for the user. Partly AI-generated."""
     weight_logs = []
     for log in main_db.get_all_weight_logs():  # pylint: disable=no-value-for-parameter
         weight_log_instance = WeightLog(
             log[0], log[1], log[2], log[3]
-        )  # Assuming log[0] is id, log[1] is user_id, log[2] is weight_in_kg, log[3] is timestamp. Refactored by ai.
+        )  # Assuming log[0] is id, log[1] is user_id, log[2] is weight_in_kg, log[3] is timestamp.
         weight_logs.append(weight_log_instance)
     return weight_logs
 

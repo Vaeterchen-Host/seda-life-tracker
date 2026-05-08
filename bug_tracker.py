@@ -129,4 +129,13 @@ BUGS = [
         "area": "model/classes.py / model/database.py",
         "notes": "MealLog currently expects amount_in_gram, but the meal_logs table and add_meal_log() only store user_id, meal_id and timestamp. This needs to be aligned before meal log handling is extended further.",
     },
+    # Partly AI-generated: UX issue entry added during maintenance.
+    {
+        "id": "BUG-016",
+        "title": "Directly consumed single foods are stored as meal templates",
+        "status": "open",
+        "priority": "medium",
+        "area": "ui/gui.py / ui/gui_dialogs.py / model/controller.py / model/database.py",
+        "notes": "When a user consumes one food directly from search, the current flow persists it as a meal template. This is useful from a caching or reuse perspective, but clutters templates and hurts UX. We should replace this with a non-template storage strategy, for example an internal cache or a dedicated 'Recently eaten' / 'Zuletzt gegessen' concept.",
+    },
 ]

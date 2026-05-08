@@ -13,7 +13,7 @@ from model.classes_food import BigSeven, Meal, NutrientSummary
 # Parent classes.
 
 
-# ai-generated content start: helper function for validating log lists. ai-generated.
+# Section start: helper function for validating log lists.
 def _validate_log_list(logs, log_type, label):
     """Validate that logs is a list containing only the expected log type."""
     if not isinstance(logs, list) or not all(isinstance(log, log_type) for log in logs):
@@ -21,7 +21,7 @@ def _validate_log_list(logs, log_type, label):
     return logs
 
 
-# ai-generated content end
+# Section end
 
 VALID_UNIT_TYPES = {
     "g",  # Meal
@@ -45,7 +45,7 @@ class LogItem:
         if timestamp is None:
             self.create_timestamp()
         else:
-            self.timestamp = timestamp  # refactored by ai
+            self.timestamp = timestamp
 
     @property
     def id(self):
@@ -53,7 +53,7 @@ class LogItem:
         return self._log_id
 
     def set_database_id(self, new_id):
-        """Set the database id once after insert. Refactored by ai."""
+        """Set the database id once after insert. Partly AI-generated."""
         if self._log_id is not None:
             raise ValueError("ID is already set.")
         if new_id is None:
@@ -67,7 +67,7 @@ class LogItem:
 
     @property
     def unit_type(self):
-        """This is the getter for 'unit_type'. Refactored by ai."""
+        """This is the getter for 'unit_type'. Partly AI-generated."""
         return self._unit_type
 
     @property
@@ -82,7 +82,7 @@ class LogItem:
 
     @unit_type.setter
     def unit_type(self, new_unit_type):
-        """This is the setter for 'unit_type'. Refactored by ai."""
+        """This is the setter for 'unit_type'. Partly AI-generated."""
         if not isinstance(new_unit_type, str):
             raise ValueError("Unit type must be a string.")
         if new_unit_type not in VALID_UNIT_TYPES:
@@ -102,7 +102,7 @@ class LogHandler:
         if user_id is None:
             raise ValueError("User ID must not be None.")
         self._user_id = user_id
-        self._log_type = log_type  # refactored by ai
+        self._log_type = log_type
         self.logs = logitems
 
     @property
@@ -129,15 +129,15 @@ class LogHandler:
         self.logs = [log for log in self.logs if log.id != log_id]
 
 
-class MealLog(LogItem):  # refactored by ai
+class MealLog(LogItem):
     """This class defines the meal log."""
 
     def __init__(self, meal_log_id, user_id, meal: Meal, amount, unit_type="g", timestamp=None):
         """This is the constructor of MealLog."""
         super().__init__(meal_log_id, user_id, timestamp)
-        self.meal = meal  # refactored by ai
-        self.amount = amount  # refactored by ai
-        self.unit_type = unit_type  # refactored by ai
+        self.meal = meal
+        self.amount = amount
+        self.unit_type = unit_type
 
     @property
     def meal(self):
@@ -211,7 +211,7 @@ class MealLog(LogItem):  # refactored by ai
         )
 
 
-class MealLogHandler(LogHandler):  # refactored by ai
+class MealLogHandler(LogHandler):
     """This class defines the meal log handler."""
 
     def __init__(self, user_id, logitems: list[MealLog]):
@@ -247,14 +247,14 @@ class MealLogHandler(LogHandler):  # refactored by ai
         raise ValueError("Log with the given ID not found.")
 
 
-class WaterLog(LogItem):  # refactored by ai
+class WaterLog(LogItem):
     """This class defines the water log."""
 
     def __init__(self, water_log_id, user_id, amount, timestamp):
         """This is the constructor of WaterLog."""
         super().__init__(water_log_id, user_id, timestamp)
-        self.amount_in_ml = amount  # refactored by ai
-        self.unit_type = "ml"  # refactored by ai
+        self.amount_in_ml = amount
+        self.unit_type = "ml"
 
     @property
     def amount_in_ml(self):
@@ -270,7 +270,7 @@ class WaterLog(LogItem):  # refactored by ai
         self._amount_in_ml = new_amount
 
 
-class WaterLogHandler(LogHandler):  # refactored by ai
+class WaterLogHandler(LogHandler):
     """This class defines the water log handler."""
 
     def __init__(self, user_id, logitems: list[WaterLog]):
@@ -305,15 +305,15 @@ class WaterLogHandler(LogHandler):  # refactored by ai
         return total_intake
 
 
-class WeightLog(LogItem):  # refactored by ai
+class WeightLog(LogItem):
     """This class defines weightlog."""
 
     def __init__(self, weight_log_id, user_id, weight_in_kg, height_in_cm=None, timestamp=None):
         """This is the constructor of weightlog."""
         super().__init__(weight_log_id, user_id, timestamp)
-        self.weight_in_kg = weight_in_kg  # refactored by ai
-        self.height_in_cm = height_in_cm  # refactored by ai
-        self.unit_type = "kg"  # refactored by ai
+        self.weight_in_kg = weight_in_kg
+        self.height_in_cm = height_in_cm
+        self.unit_type = "kg"
 
     @property
     def weight_in_kg(self):
@@ -329,12 +329,12 @@ class WeightLog(LogItem):  # refactored by ai
 
     @property
     def height_in_cm(self):
-        """This is the getter for height_in_cm. Refactored by ai."""
+        """This is the getter for height_in_cm. Partly AI-generated."""
         return self._height_in_cm
 
     @height_in_cm.setter
     def height_in_cm(self, new_height):
-        """This is the setter for height_in_cm. Refactored by ai."""
+        """This is the setter for height_in_cm. Partly AI-generated."""
         if new_height is not None and (new_height <= 0 or new_height > 300):
             raise ValueError("Height must be between 0 and 300 cm.")
         self._height_in_cm = new_height
@@ -347,7 +347,7 @@ class WeightLog(LogItem):  # refactored by ai
         return round(self.weight_in_kg / (self.height_in_cm / 100) ** 2, 2)
 
 
-class WeightLogHandler(LogHandler):  # refactored by ai
+class WeightLogHandler(LogHandler):
     """This class defines the weight log handler."""
 
     def __init__(self, user_id, logitems: list[WeightLog]):
@@ -376,7 +376,7 @@ class WeightLogHandler(LogHandler):  # refactored by ai
         raise ValueError("Log with the given ID not found.")
 
 
-class ActivityLog(LogItem):  # refactored by ai
+class ActivityLog(LogItem):
     """This class defines the activity log for burned calories."""
 
     def __init__(
@@ -393,8 +393,8 @@ class ActivityLog(LogItem):  # refactored by ai
         super().__init__(activity_log_id, user_id, timestamp)
         self.activity_name = activity_name
         self.calories_burned = calories_burned
-        self.activity_value = activity_value  # refactored by ai
-        self.unit_type = unit_type  # refactored by ai
+        self.activity_value = activity_value
+        self.unit_type = unit_type
 
     @property
     def activity_name(self):
@@ -422,25 +422,25 @@ class ActivityLog(LogItem):  # refactored by ai
 
     @property
     def activity_value(self):
-        """This is the getter for activity_value. Refactored by ai."""
+        """This is the getter for activity_value. Partly AI-generated."""
         return self._activity_value
 
     @activity_value.setter
     def activity_value(self, new_activity_value):
-        """This is the setter for activity_value. Refactored by ai."""
+        """This is the setter for activity_value. Partly AI-generated."""
         if new_activity_value is not None and new_activity_value < 0:
             raise ValueError("Activity value must not be negative.")
         self._activity_value = new_activity_value
 
     @LogItem.unit_type.setter
     def unit_type(self, new_unit_type):
-        """This is the setter for activity unit_type. Refactored by ai."""
+        """This is the setter for activity unit_type. Partly AI-generated."""
         if new_unit_type not in VALID_UNIT_TYPES:
             raise ValueError(f"Activity unit type must be one of {VALID_UNIT_TYPES}.")
         self._unit_type = new_unit_type
 
 
-class ActivityLogHandler(LogHandler):  # refactored by ai
+class ActivityLogHandler(LogHandler):
     """This class defines the activity log handler."""
 
     def __init__(self, user_id, logitems: list[ActivityLog]):
