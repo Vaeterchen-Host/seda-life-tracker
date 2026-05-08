@@ -4,7 +4,6 @@
 
 """CLI view functions for SEDA."""
 
-
 import sys
 from pathlib import Path
 
@@ -130,8 +129,7 @@ def prompt_log_id():
 
 def show_welcome():
     """Show a short license notice."""
-    show_message(
-        f"""
+    show_message(f"""
         Welcome to SEDA - Your personal fitness assistant!
 
                 seda  Copyright (C) 2026  {DEVS}
@@ -139,8 +137,7 @@ def show_welcome():
         This is free software, and you are welcome to redistribute it
         under certain conditions.
         Type "l" for details.\n
-                 """
-    )
+                 """)
 
 
 def show_license_long():
@@ -213,7 +210,7 @@ def show_user_info_from_class(user):
 
 
 def change_user_information(user):
-    """Change the user's information by asking for input."""
+    """Return input for updating user information."""
     print(
         "Change User Information. If you want to keep the current value, just press Enter."
     )
@@ -349,8 +346,7 @@ def show_weight_logs(weight_logs):
 
 def prompt_main_menu():
     """Show the main menu and handle user input."""
-    show_message(
-        """
+    show_message("""
         What would you like to do?
         1. Show user information
         2. All about water logs:
@@ -363,15 +359,13 @@ def prompt_main_menu():
         9. Exit
         
         l. Show License
-                                """
-    )
+                                """)
     return input("Enter your choice (1-9/l): ")
 
 
 def prompt_water_log_menu():
     """Show the water log menu and handle user input."""
-    show_message(
-        """
+    show_message("""
         What would you like to do with your water logs?
         1. Add a water log
         2. Show all water logs
@@ -379,30 +373,26 @@ def prompt_water_log_menu():
         4. Show today's water intake
         5. Show today's water status
         6. Back to main menu
-                                """
-    )
+                                """)
     return input("Enter your choice (1-6): ")
 
 
 def prompt_weight_log_menu():
     """Show the weight log menu and handle user input."""
-    show_message(
-        """
+    show_message("""
         What would you like to do with your weight logs?
         1. Add a weight log
         2. Show all weight logs
         3. Delete a weight log
         4. Calculate BMI.
         5. Back to main menu
-                                """
-    )
+                                """)
     return input("Enter your choice (1-5): ")
 
 
 def prompt_meal_menu():
     """Show the meal and calorie menu and handle user input. ai-generated."""
-    show_message(
-        """
+    show_message("""
         What would you like to do with meals?
         1. Search foods
         2. Create a meal template
@@ -416,23 +406,20 @@ def prompt_meal_menu():
         10. Delete a meal log
         11. Show today's calorie status
         12. Back to main menu
-                                """
-    )
+                                """)
     return input("Enter your choice (1-12): ")
 
 
 def prompt_activity_menu():
     """Show the activity log menu and handle user input. ai-generated."""
-    show_message(
-        """
+    show_message("""
         What would you like to do with your activity logs?
         1. Add an activity log
         2. Show activity logs
         3. Update an activity log
         4. Delete an activity log
         5. Back to main menu
-                                """
-    )
+                                """)
     return input("Enter your choice (1-5): ")
 
 
@@ -678,8 +665,7 @@ def show_water_status(status):
 def example_query(food_name="Hafer"):
     """Example function. For testing and demonstration purposes.
     It queries the food database for a given food name.
-    It must be deleted or replaced in the final version
-    This function is ai-generated."""
+    It must be deleted or replaced in the final version"""
     db = FoodDatabase()
 
     query = f"""
