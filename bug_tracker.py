@@ -28,7 +28,7 @@ BUGS = [
         "title": "controller.main mixes setup, DB loading and menu control",
         "status": "open",
         "priority": "low",
-        "area": "model/controller.py",
+        "area": "controllers/cli_controller.py",
         "notes": "Pylint reports too many statements, branches and local variables in main(). Not urgent, but worth refactoring later.",
     },
     {
@@ -36,7 +36,7 @@ BUGS = [
         "title": "create_user_instance_from_db depends on loop variable db_user",
         "status": "open",
         "priority": "medium",
-        "area": "model/controller.py",
+        "area": "application/builders.py",
         "notes": "The function reads db_user from outer scope. This is fragile and depends on previous control flow."
         "Currently i don't care because of the single-user setup, but this will need to be addressed for multi-user support.",
     },
@@ -45,7 +45,7 @@ BUGS = [
         "title": "Water and weight logs are loaded without filtering by user",
         "status": "open",
         "priority": "low",
-        "area": "model/controller.py",
+        "area": "application/builders.py",
         "notes": "create_water_log_instances_for_user() and create_weight_log_instances_for_user() currently load every log from the database."
         " This is not a problem with the current single-user setup, but will need to be addressed for multi-user support.",
     },
@@ -54,7 +54,7 @@ BUGS = [
         "title": "Controller and view naming is still inconsistent",
         "status": "open",
         "priority": "medium",
-        "area": "model/controller.py / ui/cli_view.py",
+        "area": "controllers/cli_controller.py / ui/cli_view.py",
         "notes": "There are several similar names such as show_user_info_from_class, create_water_log_parameters_by_input and older variants. This makes wiring easy to break.",
     },
     {
@@ -102,7 +102,7 @@ BUGS = [
         "title": "CLI should display long license text page by page",
         "status": "closed",
         "priority": "low",
-        "area": "ui/cli_view.py / model/controller.py",
+        "area": "ui/cli_view.py / controllers/cli_controller.py",
         "notes": "If the GPL text is shown in the CLI, it should be paginated, for example in blocks of 25 to 30 lines with Enter to continue, instead of printing one very long block.",
     },
     {
@@ -135,7 +135,7 @@ BUGS = [
         "title": "Directly consumed single foods are stored as meal templates",
         "status": "open",
         "priority": "medium",
-        "area": "ui/gui.py / ui/gui_dialogs.py / model/controller.py / model/database.py",
+        "area": "ui/gui.py / ui/gui_dialogs.py / application/meal_service.py / model/database.py",
         "notes": "When a user consumes one food directly from search, the current flow persists it as a meal template. This is useful from a caching or reuse perspective, but clutters templates and hurts UX. We should replace this with a non-template storage strategy, for example an internal cache or a dedicated 'Recently eaten' / 'Zuletzt gegessen' concept.",
     },
 ]

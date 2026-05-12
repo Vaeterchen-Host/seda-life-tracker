@@ -11,8 +11,10 @@ from dataclasses import fields
 import flet as ft
 
 from model.classes_food import BigSeven, Meal, NutrientSummary
-from model.controller import (
+from application.builders import (
     create_food_instance_from_food_row,
+)
+from application.meal_service import (
     create_single_food_meal,
 )
 from ui.gui_theme import (

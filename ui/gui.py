@@ -18,10 +18,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from model.class_user import User
 from model.classes_food import Food, Meal
 from model.classes_log import MealLog
-from model.controller import (
+from application.builders import (
     create_food_instance_from_food_row,
     create_meal_instances,
     create_user_instance_from_db,
+)
+from application.user_service import (
     refresh_user_logs_from_db,
 )
 from model.database import Database, FoodDatabase

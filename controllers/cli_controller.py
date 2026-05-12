@@ -5,16 +5,22 @@
 """CLI controller functions for SEDA."""
 
 import sys
-from dataclasses import fields
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 # pylint: disable=E1120, C0301
 
 import ui.cli_view
+from application.builders import (
+    create_food_instance_from_food_row,
+    create_meal_instances,
+    create_user_instance_from_db,
+)
+from application.meal_service import create_single_food_meal
+from application.status_service import get_today_calorie_status, get_today_water_status
+from application.user_service import refresh_user_logs_from_db
 from model.class_user import User
-from model.classes_food import BigSeven, Food, Meal, NutrientSummary
-from model.classes_log import ActivityLog, MealLog, WaterLog, WeightLog
+from model.classes_food import Meal
 from model.database import Database, FoodDatabase
 
 
@@ -52,150 +58,6 @@ def connect_food_db():
     return food_db
 
 
-# ---------------------------
-# Build model objects from database rows
-# These helpers translate plain DB rows into Python objects like User, Meal or Log items.
-# ---------------------------
-def create_water_log_instances_for_user(main_db: Database, user_id):
-    """Create an array of WaterLog instances for the user. Partly AI-generated."""
-    return [
-        WaterLog(
-            log[0], log[1], log[2], log[3]
-        )  # log[0] is id, log[1] is user_id, log[2] is amount_in_ml, log[3] is timestamp.
-        for log in main_db.get_all_water_logs()  # pylint: disable=no-value-for-parameter
-        if log[1] == user_id
-    ]
-
-
-def create_weight_log_instances_for_user(main_db: Database, user_id):
-    """Create an array of WeightLog instances for the user. Partly AI-generated."""
-    return [
-        WeightLog(
-            log[0], log[1], log[2], log[3], log[4]
-        )  # log[0] is id, log[1] is user_id, log[2] is weight_in_kg, log[3] is height_in_cm, log[4] is timestamp.
-        for log in main_db.get_all_weight_logs()  # pylint: disable=no-value-for-parameter
-        if log[1] == user_id
-    ]
-
-
-def create_activity_log_instances_for_user(main_db: Database, user_id):
-    """Create an array of ActivityLog instances for the user. Partly AI-generated."""
-    return [
-        ActivityLog(
-            log[0], log[1], log[2], log[3], log[4], log[5], log[6]
-        )  # log[0] is id, log[1] is user_id, log[2] is activity_name, log[3] is calories_burned, log[4] is activity_value, log[5] is unit_type, log[6] is timestamp.
-        for log in main_db.get_all_activity_logs()  # pylint: disable=no-value-for-parameter
-        if log[1] == user_id
-    ]
-
-
-def create_nutrient_summary_with_defaults(**overrides):
-    """Create a nutrient summary with None defaults. ai-generated."""
-    # fields(...) reads all dataclass attributes so we can build a complete summary shape.
-    values = {field.name: None for field in fields(NutrientSummary)}
-    values.update(overrides)
-    return NutrientSummary(**values)
-
-
-def create_food_instance_from_food_row(food_row, amount):
-    """Create a Food instance from an external food DB row. ai-generated."""
-    # The external food DB already stores the nutrient columns, so we map them into our objects here.
-    big_seven = BigSeven(
-        **{field.name: food_row[field.name] for field in fields(BigSeven)}
-    )
-    nutrient_summary = NutrientSummary(
-        **{field.name: food_row[field.name] for field in fields(NutrientSummary)}
-    )
-    return Food(
-        food_row["food_id"],
-        food_row["name_de"] or food_row["name_en"],
-        amount,
-        food_row["unit_type"],
-        food_row["kcal"],
-        big_seven,
-        nutrient_summary,
-    )
-
-
-def create_food_instance_from_meal_item_row(meal_item_row):
-    """Create a Food instance from a meal item DB row. ai-generated."""
-    big_seven = BigSeven(
-        fat=meal_item_row[6],
-        saturated_fat=meal_item_row[7],
-        carbohydrate=meal_item_row[8],
-        fibre=meal_item_row[9],
-        sugar=meal_item_row[10],
-        protein=meal_item_row[11],
-        salt=meal_item_row[12],
-    )
-    nutrient_summary = create_nutrient_summary_with_defaults(sodium=meal_item_row[13])
-    return Food(
-        meal_item_row[1],
-        meal_item_row[2],
-        meal_item_row[3],
-        meal_item_row[4],
-        meal_item_row[5],
-        big_seven,
-        nutrient_summary,
-    )
-
-
-def create_meal_instance_from_db(main_db: Database, meal_row):
-    """Create a Meal instance with its food items from DB data. ai-generated."""
-    food_items = [
-        create_food_instance_from_meal_item_row(item_row)
-        for item_row in main_db.get_meal_food_items(
-            meal_row[0]
-        )  # pylint: disable=no-value-for-parameter
-    ]
-    return Meal(meal_row[0], meal_row[1], food_items)
-
-
-def create_meal_instances(main_db: Database):
-    """Create Meal instances for all stored meal templates. ai-generated."""
-    return [
-        create_meal_instance_from_db(main_db, meal_row)
-        for meal_row in main_db.get_all_meals()  # pylint: disable=no-value-for-parameter
-    ]
-
-
-def create_meal_log_instances_for_user(main_db: Database, user_id):
-    """Create an array of MealLog instances for the user. Partly AI-generated."""
-    return [
-        MealLog(
-            log[0],
-            log[1],
-            create_meal_instance_from_db(main_db, (log[2], log[3])),
-            log[4],
-            log[5],
-            log[6],
-        )  # log[0] is meal_log_id, log[1] is user_id, log[2] is meal_id, log[3] is meal_name, log[4] is amount, log[5] is unit_type, log[6] is timestamp.
-        for log in main_db.get_user_meal_logs(
-            user_id
-        )  # pylint: disable=no-value-for-parameter
-    ]
-
-
-def create_user_instance_from_db(main_db: Database, db_user):
-    """Create a User class instance from database data."""
-    return User(
-        db_user[0],  # id
-        db_user[1],  # name
-        db_user[2],  # birthdate
-        db_user[3],  # height_in_cm
-        db_user[4],  # gender
-        db_user[5],  # fitness_lvl
-        create_water_log_instances_for_user(main_db, db_user[0]),  # water_logs
-        create_weight_log_instances_for_user(main_db, db_user[0]),  # weight_logs
-        create_meal_log_instances_for_user(main_db, db_user[0]),  # meal_logs
-        create_activity_log_instances_for_user(main_db, db_user[0]),  # activity_logs
-    )
-
-
-# ---------------------------
-# User loading and refresh
-# These functions create the current user and keep the in-memory handlers in sync with the DB.
-# ---------------------------
 def get_or_create_user(main_db: Database):
     """Create a user by existing data or by input."""
     users = main_db.get_all_users()  # pylint: disable=no-value-for-parameter
@@ -237,42 +99,6 @@ def get_or_create_user(main_db: Database):
             """)
 
     return create_user_instance_from_db(main_db, users[0])
-
-
-def refresh_water_logs_from_db(main_db: Database, user: User):
-    """Refresh the water logs from DB into the current user object."""
-    user.water_log_handler.logs = create_water_log_instances_for_user(
-        main_db, user.user_id
-    )
-
-
-def refresh_weight_logs_from_db(main_db: Database, user: User):
-    """Refresh the weight logs from DB into the current user object."""
-    user.weight_log_handler.logs = create_weight_log_instances_for_user(
-        main_db, user.user_id
-    )
-
-
-def refresh_meal_logs_from_db(main_db: Database, user: User):
-    """Refresh the meal logs from DB into the current user object."""
-    user.meal_log_handler.logs = create_meal_log_instances_for_user(
-        main_db, user.user_id
-    )
-
-
-def refresh_activity_logs_from_db(main_db: Database, user: User):
-    """Refresh the activity logs from DB into the current user object."""
-    user.activity_log_handler.logs = create_activity_log_instances_for_user(
-        main_db, user.user_id
-    )
-
-
-def refresh_user_logs_from_db(main_db: Database, user: User):
-    """Refresh all log handlers of the current user from DB."""
-    refresh_water_logs_from_db(main_db, user)
-    refresh_weight_logs_from_db(main_db, user)
-    refresh_meal_logs_from_db(main_db, user)
-    refresh_activity_logs_from_db(main_db, user)
 
 
 # ---------------------------
@@ -417,7 +243,7 @@ def show_last_bmi(user: User):
 # These functions search foods and assemble Meal objects from chosen food items.
 # ---------------------------
 def search_foods(food_db: FoodDatabase):
-    """Search foods in the external food database and display results. ai-generated."""
+    """Search foods in the external food database and display results. AI-generated."""
     search_term = ui.cli_view.prompt_food_search_term()
     if not search_term:
         ui.cli_view.show_message("Search aborted.")
@@ -431,7 +257,7 @@ def search_foods(food_db: FoodDatabase):
 
 
 def choose_food_from_search_results(food_rows):
-    """Choose one food from search results. ai-generated."""
+    """Choose one food from search results. AI-generated."""
     if not food_rows:
         return None
     selected_food_id = ui.cli_view.prompt_food_id()
@@ -445,7 +271,7 @@ def choose_food_from_search_results(food_rows):
 
 
 def collect_food_items_for_meal(food_db: FoodDatabase):
-    """Collect food items for a meal template from food search results. ai-generated."""
+    """Collect food items for a meal template from food search results. AI-generated."""
     food_items = []
     while True:
         food_rows = search_foods(food_db)
@@ -469,7 +295,7 @@ def collect_food_items_for_meal(food_db: FoodDatabase):
 
 
 def create_meal_template(main_db: Database, food_db: FoodDatabase):
-    """Create a meal template from searched foods. ai-generated."""
+    """Create a meal template from searched foods. AI-generated."""
     meal_name = ui.cli_view.prompt_meal_name()
     if not meal_name:
         ui.cli_view.show_message("Meal creation aborted.")
@@ -497,20 +323,8 @@ def create_meal_template(main_db: Database, food_db: FoodDatabase):
 # Meal template actions
 # Create, update, show and delete reusable meal templates.
 # ---------------------------
-def create_single_food_meal(main_db: Database, food_row):
-    """Create a one-food meal object for direct logging. ai-generated."""
-    meal_name = food_row["name_de"] or food_row["name_en"]
-    meal_id = main_db.add_meal(meal_name)  # pylint: disable=no-value-for-parameter
-    # Food DB values are stored per 100 units, so the helper meal uses 100 g/ml as its base.
-    food_item = create_food_instance_from_food_row(food_row, 100)
-    main_db.add_meal_food_item(
-        meal_id, food_item.id, food_item.amount, food_item.unit_type
-    )  # pylint: disable=no-value-for-parameter
-    return Meal(meal_id, meal_name, [food_item])
-
-
 def update_meal_template(main_db: Database, food_db: FoodDatabase):
-    """Update a meal template name and optionally rebuild its foods. ai-generated."""
+    """Update a meal template name and optionally rebuild its foods. AI-generated."""
     meals = create_meal_instances(main_db)
     if not meals:
         ui.cli_view.show_message("No meal templates found.")
@@ -557,13 +371,13 @@ def update_meal_template(main_db: Database, food_db: FoodDatabase):
 
 
 def show_meal_templates(main_db: Database):
-    """Show all meal templates. ai-generated."""
+    """Show all meal templates. AI-generated."""
     meals = create_meal_instances(main_db)
     ui.cli_view.show_meal_templates(meals)
 
 
 def delete_meal_template(main_db: Database):
-    """Delete one meal template. ai-generated."""
+    """Delete one meal template. AI-generated."""
     meal_id = ui.cli_view.prompt_meal_id()
     if meal_id is None:
         return
@@ -581,7 +395,7 @@ def delete_meal_template(main_db: Database):
 # Log eaten meals or single foods and keep the meal log in sync with the database.
 # ---------------------------
 def add_meal_log(main_db: Database, user: User):
-    """Log a consumed meal for the current user. ai-generated."""
+    """Log a consumed meal for the current user. AI-generated."""
     meals = create_meal_instances(main_db)
     if not meals:
         ui.cli_view.show_message("No meal templates found.")
@@ -611,7 +425,7 @@ def add_meal_log(main_db: Database, user: User):
 
 
 def add_single_food_log(main_db: Database, food_db: FoodDatabase, user: User):
-    """Log one searched food directly without manual meal-template creation. ai-generated."""
+    """Log one searched food directly without manual meal-template creation. AI-generated."""
     food_rows = search_foods(food_db)
     selected_food_row = choose_food_from_search_results(food_rows)
     if selected_food_row is None:
@@ -643,7 +457,7 @@ def add_single_food_log(main_db: Database, food_db: FoodDatabase, user: User):
 
 
 def update_meal_log(main_db: Database, user: User):
-    """Update one meal log in object state and DB. ai-generated."""
+    """Update one meal log in object state and DB. AI-generated."""
     meals = create_meal_instances(main_db)
     if not meals:
         ui.cli_view.show_message("No meal templates found.")
@@ -706,12 +520,12 @@ def update_meal_log(main_db: Database, user: User):
 
 
 def show_meal_logs(user: User):
-    """Show all meal logs of the user. ai-generated."""
+    """Show all meal logs of the user. AI-generated."""
     ui.cli_view.show_meal_logs(user.meal_log_handler.logs)
 
 
 def delete_meal_log(main_db: Database, user: User):
-    """Delete one meal log from DB and object state. ai-generated."""
+    """Delete one meal log from DB and object state. AI-generated."""
     show_meal_logs(user)
     meal_log_id = ui.cli_view.prompt_log_id()
     if meal_log_id is None:
@@ -733,42 +547,15 @@ def delete_meal_log(main_db: Database, user: User):
 
 # ---------------------------
 # Daily status helpers
-# These return plain dicts first, so CLI and a later Flet UI can use the same data easily.
+# These connect shared status data to CLI output.
 # ---------------------------
-def get_today_water_status(user: User):
-    """Return today's water status as plain data. ai-generated."""
-    # Returning plain data keeps the controller easy to call from CLI now and Flet later.
-    return {
-        "intake": user.water_log_handler.water_intake_today(),
-        "target": user.daily_water_target,
-        "difference": user.today_water_balance,
-        "progress": user.today_water_progress,
-    }
-
-
 def show_today_water_status(user: User):
-    """Show today's water status. ai-generated."""
+    """Show today's water status. AI-generated."""
     ui.cli_view.show_water_status(get_today_water_status(user))
 
 
-def get_today_calorie_status(user: User):
-    """Return today's calorie status as plain data. ai-generated."""
-    intake = user.today_calorie_intake
-    burned = user.today_calories_burned
-    net = user.today_net_calories
-    target = user.daily_calorie_target
-    difference = None if target is None else round(target - net, 2)
-    return {
-        "intake": intake,
-        "burned": burned,
-        "net": net,
-        "target": target,
-        "difference": difference,
-    }
-
-
 def show_today_calorie_status(user: User):
-    """Show the current calorie status of today. ai-generated."""
+    """Show the current calorie status of today. AI-generated."""
     status = get_today_calorie_status(user)
     intake = status["intake"]
     burned = status["burned"]
@@ -789,7 +576,7 @@ def show_today_calorie_status(user: User):
 # CRUD for burned-calorie entries.
 # ---------------------------
 def add_activity_log(main_db: Database, user: User):
-    """Add an activity log to the user and persist it. ai-generated."""
+    """Add an activity log to the user and persist it. AI-generated."""
     activity_name, calories_burned, activity_value, timestamp = (
         ui.cli_view.prompt_activity_log_parameters()
     )
@@ -816,12 +603,12 @@ def add_activity_log(main_db: Database, user: User):
 
 
 def show_activity_logs(user: User):
-    """Show all activity logs of the user. ai-generated."""
+    """Show all activity logs of the user. AI-generated."""
     ui.cli_view.show_activity_logs(user.activity_log_handler.logs)
 
 
 def update_activity_log(main_db: Database, user: User):
-    """Update one activity log in object state and DB. ai-generated."""
+    """Update one activity log in object state and DB. AI-generated."""
     show_activity_logs(user)
     activity_log_id = ui.cli_view.prompt_log_id()
     if activity_log_id is None:
@@ -871,7 +658,7 @@ def update_activity_log(main_db: Database, user: User):
 
 
 def delete_activity_log(main_db: Database, user: User):
-    """Delete one activity log from DB and object state. ai-generated."""
+    """Delete one activity log from DB and object state. AI-generated."""
     show_activity_logs(user)
     activity_log_id = ui.cli_view.prompt_log_id()
     if activity_log_id is None:
@@ -896,7 +683,7 @@ def delete_activity_log(main_db: Database, user: User):
 # This removes the current user and then loads or creates the next active user.
 # ---------------------------
 def delete_current_user(main_db: Database, user: User):
-    """Delete the current user and return the next active user. ai-generated."""
+    """Delete the current user and return the next active user. AI-generated."""
     if not ui.cli_view.prompt_yes_no(
         "Do you really want to delete the current user account? (y/n): "
     ):
@@ -959,7 +746,7 @@ def run_weight_log_menu(main_db: Database, user: User):
 
 
 def run_meal_menu(main_db: Database, food_db: FoodDatabase, user: User):
-    """Run the meal and calorie CLI menu. ai-generated."""
+    """Run the meal and calorie CLI menu. AI-generated."""
     while True:
         meal_choice = ui.cli_view.prompt_meal_menu()
         if meal_choice == "1":
@@ -991,7 +778,7 @@ def run_meal_menu(main_db: Database, food_db: FoodDatabase, user: User):
 
 
 def run_activity_log_menu(main_db: Database, user: User):
-    """Run the activity log CLI menu. ai-generated."""
+    """Run the activity log CLI menu. AI-generated."""
     while True:
         activity_choice = ui.cli_view.prompt_activity_menu()
         if activity_choice == "1":

@@ -15,10 +15,14 @@ import flet as ft
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from model.class_user import User
-from model.controller import (
+from application.builders import (
     create_user_instance_from_db,
+)
+from application.status_service import (
     get_today_calorie_status,
     get_today_water_status,
+)
+from application.user_service import (
     refresh_user_logs_from_db,
 )
 from model.database import Database

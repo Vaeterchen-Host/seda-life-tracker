@@ -6,7 +6,7 @@
 
 import sys
 
-from model.controller import main as cli_main
+from controllers.cli_controller import main as cli_main
 from ui.cli_view import show_welcome, show_license_long
 
 show_welcome()

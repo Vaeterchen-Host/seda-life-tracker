@@ -9,7 +9,7 @@
 import flet as ft
 
 from config import DEVS
-from model.controller import get_today_calorie_status, get_today_water_status
+from application.status_service import get_today_calorie_status, get_today_water_status
 from ui.gui_theme import BRAND_MINT, BRAND_RED, BRAND_YELLOW
 
 
