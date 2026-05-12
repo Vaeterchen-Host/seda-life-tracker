@@ -11,6 +11,7 @@ env/
 .DS_Store
 .vscode/
 .idea/
+.codex
 
 # Local example code
 Beispiele/
