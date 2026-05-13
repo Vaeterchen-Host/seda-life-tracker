@@ -68,6 +68,8 @@ Hier liegt die Projektdokumentation.
 Aktuell:
 - `de_struktur.md`: deutsche Beschreibung der Projektstruktur
 - `en_structur.md`: englische Version der Strukturübersicht
+- `gui_backlog.md`: GUI-, UX- und produktnahe Aufgabenliste
+- `design_system.md`: schlanke Style- und Layout-Konventionen für die GUI
 - `v0.1/`: ältere exportierte Diagramme aus einer früheren Projektphase
 - `v0.5/`: freier Release-Ordner für Material der aktuellen Version
 - mehrere exportierte Diagramme als `.png`
@@ -156,6 +158,7 @@ Wichtig:
 Diese Datei sammelt bekannte Probleme und technische Baustellen des Projekts.
 
 Sie ist keine Laufzeitlogik, aber nützlich für Planung und Wartung.
+GUI- und UX-Planung liegen nun bewusst getrennt in `docs/gui_backlog.md`.
 
 ### `requirements.txt`
 Hier stehen die Python-Abhängigkeiten des Projekts, zum Beispiel:

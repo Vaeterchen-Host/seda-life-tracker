@@ -68,6 +68,8 @@ This folder contains project documentation.
 Current content:
 - `de_struktur.md`: German structure overview
 - `en_structur.md`: English structure overview
+- `gui_backlog.md`: GUI, UX, and product-facing follow-up backlog
+- `design_system.md`: lightweight GUI style and layout conventions
 - `v0.1/`: older exported diagrams from an earlier project phase
 - `v0.5/`: release folder reserved for the current version
 - several exported diagrams as `.png`
@@ -154,6 +156,7 @@ Important:
 This file collects known issues and technical debt.
 
 It is not part of runtime logic, but it is useful for planning and maintenance.
+GUI and UX planning now live separately in `docs/gui_backlog.md`.
 
 ### `requirements.txt`
 This file lists the Python dependencies, for example:

@@ -29,6 +29,8 @@ SEDA is a Python fitness tracking project with both a command-line interface and
 - `test_db/` contains isolated test database fixtures
 - `tests/` contains automated tests
 - `docs/` contains structure notes and release documentation folders
+- `docs/gui_backlog.md` collects GUI and UX follow-up work
+- `docs/design_system.md` captures stable GUI style conventions
 - `BLS_4_0_2025_DE/` contains the source material and import helper for the external food database
 - `Beispiele/` contains learning and tutorial files that are not part of the runtime path
 - `legacy/` keeps older code for reference
@@ -74,6 +76,8 @@ python -m pytest
 
 - The project currently mixes active code, utilities, and older experiments.
 - `bug_tracker.py` documents known issues and technical debt.
+- `docs/gui_backlog.md` separates GUI and UX planning from the technical bug tracker.
+- `docs/design_system.md` keeps shared layout and style rules in one place.
 - `docs/` also contains exported diagrams, analysis files, and release-specific documentation folders such as `docs/v0.1/` and `docs/v0.5/`.
 - The external food lookup data used by the nutrition features is stored separately from the main app database.
 
