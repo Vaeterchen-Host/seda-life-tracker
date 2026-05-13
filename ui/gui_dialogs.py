@@ -20,8 +20,8 @@ from application.meal_service import (
 from ui.gui_theme import (
     BIG_SEVEN_LABELS,
     BIG_SEVEN_LABELS_DE,
-    BRAND_MINT,
-    BRAND_RED,
+    SEDA_MINT,
+    SEDA_RED,
 )
 
 
@@ -48,7 +48,7 @@ def open_confirm_dialog(self, title, content, on_confirm):
             ),
             ft.FilledButton(
                 self.t("yes_delete"),
-                style=ft.ButtonStyle(bgcolor=BRAND_RED),
+                style=ft.ButtonStyle(bgcolor=SEDA_RED),
                 on_click=lambda _: on_confirm(dialog),
             ),
         ],
@@ -79,6 +79,7 @@ def open_license_dialog(self, _=None):
         actions=[
             ft.FilledButton(
                 self.t("close"),
+                style=self.primary_filled_button_style(),
                 on_click=lambda _: self.close_dialog(dialog),
             )
         ],
@@ -164,7 +165,11 @@ def open_activity_edit_dialog(self, activity_log):
                 self.t("cancel"),
                 on_click=lambda _: self.close_dialog(dialog),
             ),
-            ft.FilledButton(self.t("save"), on_click=save_changes),
+            ft.FilledButton(
+                self.t("save"),
+                style=self.primary_filled_button_style(),
+                on_click=save_changes,
+            ),
         ],
     )
     self.page.show_dialog(dialog)
@@ -300,7 +305,11 @@ def open_meal_log_dialog(self, meal: Meal = None, existing_log=None):
                 self.t("cancel"),
                 on_click=lambda _: self.close_dialog(dialog),
             ),
-            ft.FilledButton(self.t("save"), on_click=save_log),
+            ft.FilledButton(
+                self.t("save"),
+                style=self.primary_filled_button_style(),
+                on_click=save_log,
+            ),
         ],
     )
     self.page.show_dialog(dialog)
@@ -369,6 +378,7 @@ def open_meal_log_details_dialog(self, meal_log):
         actions=[
             ft.FilledButton(
                 self.t("close"),
+                style=self.primary_filled_button_style(),
                 on_click=lambda _: self.close_dialog(dialog),
             )
         ],
@@ -449,7 +459,11 @@ def open_food_amount_dialog(self, food_row, mode):
                 self.t("cancel"),
                 on_click=lambda _: self.close_dialog(dialog),
             ),
-            ft.FilledButton(self.t("save"), on_click=confirm),
+            ft.FilledButton(
+                self.t("save"),
+                style=self.primary_filled_button_style(),
+                on_click=confirm,
+            ),
         ],
     )
     self.page.show_dialog(dialog)

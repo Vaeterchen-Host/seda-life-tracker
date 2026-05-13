@@ -9,7 +9,7 @@
 import flet as ft
 
 from config import VERSION
-from ui.gui_theme import BRAND_MINT, BRAND_YELLOW, NAV_ITEMS
+from ui.gui_theme import SEDA_MINT, SEDA_YELLOW, NAV_ITEMS
 
 
 # ---------------------------
@@ -62,7 +62,7 @@ def build_label_value_row(self, label, value):
     )
 
 
-def build_metric_chip(self, label, value, accent=BRAND_MINT):
+def build_metric_chip(self, label, value, accent=SEDA_MINT):
     """Render one compact dashboard metric as a small framed block. Partly AI-generated."""
     return ft.Container(
         padding=12,
@@ -90,7 +90,7 @@ def build_primary_nav(self):
                 content=self.t(label_key),
                 icon=icon,
                 style=ft.ButtonStyle(
-                    bgcolor=BRAND_YELLOW,
+                    bgcolor=SEDA_YELLOW,
                     color=ft.Colors.BLACK,
                     shape=ft.RoundedRectangleBorder(radius=8),
                 ),
@@ -102,7 +102,7 @@ def build_primary_nav(self):
                 icon=icon,
                 style=ft.ButtonStyle(
                     color=self.primary_text_color(),
-                    side=ft.BorderSide(1, BRAND_MINT),
+                    side=ft.BorderSide(1, SEDA_MINT),
                     shape=ft.RoundedRectangleBorder(radius=8),
                 ),
                 on_click=lambda _, target=view_name: self.navigate(target),
@@ -138,7 +138,7 @@ def build_header(self):
                     ft.Container(expand=True),
                     ft.IconButton(
                         icon=ft.Icons.SUNNY,
-                        icon_color=BRAND_YELLOW if self.is_dark_mode() else BRAND_MINT,
+                        icon_color=SEDA_YELLOW if self.is_dark_mode() else SEDA_MINT,
                         bgcolor=self.surface_background_alt_color(),
                         tooltip=self.t("toggle_theme"),
                         on_click=self.toggle_theme,

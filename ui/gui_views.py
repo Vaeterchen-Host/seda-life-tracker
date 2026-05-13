@@ -10,7 +10,7 @@ import flet as ft
 
 from config import DEVS
 from application.status_service import get_today_calorie_status, get_today_water_status
-from ui.gui_theme import BRAND_MINT, BRAND_RED, BRAND_YELLOW
+from ui.gui_theme import SEDA_MINT, SEDA_RED, SEDA_YELLOW
 
 
 # ---------------------------
@@ -78,7 +78,7 @@ def build_create_user_view(self):
                     self.t("create_user"),
                     icon=ft.Icons.PERSON_ADD,
                     style=ft.ButtonStyle(
-                        bgcolor=BRAND_YELLOW,
+                        bgcolor=SEDA_YELLOW,
                         color=ft.Colors.BLACK,
                         shape=ft.RoundedRectangleBorder(radius=8),
                     ),
@@ -201,7 +201,7 @@ def build_dashboard_view(self):
                                         / calorie_status["target"],
                                     )
                                 ),
-                                color=BRAND_MINT,
+                                color=SEDA_MINT,
                                 bgcolor=self.surface_border_color(),
                             ),
                             ft.Text(
@@ -235,7 +235,7 @@ def build_dashboard_view(self):
                             ),
                             ft.ProgressBar(
                                 value=min(1, (water_status["progress"] or 0) / 100),
-                                color=BRAND_MINT,
+                                color=SEDA_MINT,
                                 bgcolor=self.surface_border_color(),
                             ),
                             ft.Text(
@@ -295,7 +295,7 @@ def build_dashboard_view(self):
                         self.t("add_water"),
                         icon=ft.Icons.WATER_DROP,
                         style=ft.ButtonStyle(
-                            bgcolor=BRAND_MINT,
+                            bgcolor=SEDA_MINT,
                             color=ft.Colors.WHITE,
                         ),
                         expand=True,
@@ -308,7 +308,7 @@ def build_dashboard_view(self):
                         self.t("log_meal"),
                         icon=ft.Icons.RESTAURANT,
                         style=ft.ButtonStyle(
-                            bgcolor=BRAND_MINT,
+                            bgcolor=SEDA_MINT,
                             color=ft.Colors.WHITE,
                         ),
                         expand=True,
@@ -321,7 +321,7 @@ def build_dashboard_view(self):
                         self.t("add_activity"),
                         icon=ft.Icons.DIRECTIONS_RUN,
                         style=ft.ButtonStyle(
-                            bgcolor=BRAND_MINT,
+                            bgcolor=SEDA_MINT,
                             color=ft.Colors.WHITE,
                         ),
                         expand=True,
@@ -334,7 +334,7 @@ def build_dashboard_view(self):
                         self.t("go_to_profile"),
                         icon=ft.Icons.PERSON,
                         style=ft.ButtonStyle(
-                            bgcolor=BRAND_MINT,
+                            bgcolor=SEDA_MINT,
                             color=ft.Colors.WHITE,
                         ),
                         expand=True,
@@ -394,7 +394,7 @@ def build_water_view(self):
                 ),
                 ft.ProgressBar(
                     value=min(1, (water_status["progress"] or 0) / 100),
-                    color=BRAND_MINT,
+                    color=SEDA_MINT,
                     bgcolor=self.surface_border_color(),
                 ),
                 ft.Text(
@@ -415,6 +415,7 @@ def build_water_view(self):
                 ft.FilledButton(
                     self.t("save"),
                     icon=ft.Icons.SAVE,
+                    style=self.primary_filled_button_style(),
                     on_click=submit_water,
                 ),
             ],
@@ -444,7 +445,7 @@ def build_water_view(self):
                         ),
                         ft.IconButton(
                             ft.Icons.DELETE_OUTLINE,
-                            icon_color=BRAND_RED,
+                            icon_color=SEDA_RED,
                             on_click=lambda _, log_id=water_log.id: self.open_confirm_dialog(
                                 self.t("msg_confirm_delete_entry"),
                                 self.t("water_today"),
@@ -519,6 +520,7 @@ def build_activity_view(self):
                         ft.FilledButton(
                             self.t("save"),
                             icon=ft.Icons.SAVE,
+                            style=self.primary_filled_button_style(),
                             on_click=submit_activity,
                         ),
                     ],
@@ -565,14 +567,14 @@ def build_activity_view(self):
                         ),
                         ft.IconButton(
                             ft.Icons.EDIT_OUTLINED,
-                            icon_color=BRAND_MINT,
+                            icon_color=SEDA_MINT,
                             on_click=lambda _, log=activity_log: self.open_activity_edit_dialog(
                                 log
                             ),
                         ),
                         ft.IconButton(
                             ft.Icons.DELETE_OUTLINE,
-                            icon_color=BRAND_RED,
+                            icon_color=SEDA_RED,
                             on_click=lambda _, log_id=activity_log.id: self.open_confirm_dialog(
                                 self.t("msg_confirm_delete_entry"),
                                 activity_log.activity_name,
@@ -623,12 +625,12 @@ def build_nutrition_view(self):
                 self.build_metric_chip(
                     self.t("calories_eaten"),
                     self.format_amount(calorie_status["intake"], "kcal"),
-                    accent=BRAND_MINT,
+                    accent=SEDA_MINT,
                 ),
                 self.build_metric_chip(
                     self.t("calories_burned_label"),
                     self.format_amount(calorie_status["burned"], "kcal"),
-                    accent=BRAND_YELLOW,
+                    accent=SEDA_YELLOW,
                 ),
                 self.build_metric_chip(
                     self.t("calorie_balance_label"),
@@ -638,12 +640,12 @@ def build_nutrition_view(self):
                 self.build_metric_chip(
                     self.t("calorie_goal"),
                     self.format_amount(calorie_status["target"], "kcal"),
-                    accent=BRAND_MINT,
+                    accent=SEDA_MINT,
                 ),
                 self.build_metric_chip(
                     self.t("remaining_to_goal"),
                     self.format_amount(calorie_status["difference"], "kcal"),
-                    accent=BRAND_YELLOW,
+                    accent=SEDA_YELLOW,
                 ),
             ],
             wrap=True,
@@ -677,6 +679,7 @@ def build_nutrition_view(self):
                         ),
                         ft.FilledButton(
                             self.t("consume"),
+                            style=self.primary_filled_button_style(),
                             on_click=lambda _, row=food_row: self.open_food_amount_dialog(
                                 row, "consume"
                             ),
@@ -704,6 +707,7 @@ def build_nutrition_view(self):
                         ft.FilledButton(
                             self.t("search"),
                             icon=ft.Icons.SEARCH,
+                            style=self.primary_filled_button_style(),
                             on_click=lambda _: self.search_foods(),
                         ),
                     ],
@@ -749,7 +753,7 @@ def build_nutrition_view(self):
                         ),
                         ft.IconButton(
                             ft.Icons.DELETE_OUTLINE,
-                            icon_color=BRAND_RED,
+                            icon_color=SEDA_RED,
                             on_click=lambda _, item_index=index: (
                                 self.meal_builder_items.pop(item_index),
                                 self.render(),
@@ -786,6 +790,7 @@ def build_nutrition_view(self):
                                 else "save_template"
                             ),
                             icon=ft.Icons.SAVE,
+                            style=self.primary_filled_button_style(),
                             on_click=lambda _: self.handle_save_meal_template(),
                         ),
                         ft.OutlinedButton(
@@ -839,6 +844,7 @@ def build_nutrition_view(self):
                                 ft.FilledButton(
                                     self.t("log_meal"),
                                     icon=ft.Icons.ADD_TASK,
+                                    style=self.primary_filled_button_style(),
                                     on_click=lambda _, selected_meal=meal: self.open_meal_log_dialog(
                                         meal=selected_meal
                                     ),
@@ -853,7 +859,7 @@ def build_nutrition_view(self):
                                 ft.OutlinedButton(
                                     self.t("delete"),
                                     icon=ft.Icons.DELETE_OUTLINE,
-                                    style=ft.ButtonStyle(color=BRAND_RED),
+                                    style=ft.ButtonStyle(color=SEDA_RED),
                                     on_click=lambda _, selected_meal=meal: self.open_confirm_dialog(
                                         self.t("msg_confirm_delete_template"),
                                         self.get_meal_display_name(selected_meal),
@@ -923,6 +929,7 @@ def build_nutrition_view(self):
                                 ft.FilledButton(
                                     self.t("show_details"),
                                     icon=ft.Icons.ARTICLE_OUTLINED,
+                                    style=self.primary_filled_button_style(),
                                     on_click=lambda _, log=enriched_log: self.open_meal_log_details_dialog(
                                         log
                                     ),
@@ -937,7 +944,7 @@ def build_nutrition_view(self):
                                 ft.OutlinedButton(
                                     self.t("delete"),
                                     icon=ft.Icons.DELETE_OUTLINE,
-                                    style=ft.ButtonStyle(color=BRAND_RED),
+                                    style=ft.ButtonStyle(color=SEDA_RED),
                                     on_click=lambda _, log_id=meal_log.id: self.open_confirm_dialog(
                                         self.t("msg_confirm_delete_entry"),
                                         self.get_meal_display_name(enriched_log.meal),
@@ -1058,6 +1065,7 @@ def build_profile_view(self):
                         ft.FilledButton(
                             self.t("save"),
                             icon=ft.Icons.SAVE,
+                            style=self.primary_filled_button_style(),
                             on_click=submit_profile,
                         ),
                     ]
@@ -1114,7 +1122,7 @@ def build_profile_view(self):
                         ),
                         ft.IconButton(
                             ft.Icons.DELETE_OUTLINE,
-                            icon_color=BRAND_RED,
+                            icon_color=SEDA_RED,
                             on_click=lambda _, log_id=weight_log.id: self.open_confirm_dialog(
                                 self.t("msg_confirm_delete_entry"),
                                 self.t("weight_bmi"),
@@ -1157,6 +1165,7 @@ def build_profile_view(self):
                         ft.FilledButton(
                             self.t("add_weight_log"),
                             icon=ft.Icons.MONITOR_WEIGHT_OUTLINED,
+                            style=self.primary_filled_button_style(),
                             on_click=submit_weight,
                         ),
                     ],
@@ -1233,7 +1242,7 @@ def build_profile_view(self):
                         ft.FilledButton(
                             self.t("delete_account"),
                             icon=ft.Icons.DELETE_FOREVER_OUTLINED,
-                            style=ft.ButtonStyle(bgcolor=BRAND_RED),
+                            style=ft.ButtonStyle(bgcolor=SEDA_RED),
                             on_click=lambda _: self.open_confirm_dialog(
                                 self.t("delete_account_confirm_title"),
                                 self.t(
@@ -1318,6 +1327,7 @@ def build_about_view(self):
                 ft.FilledButton(
                     self.t("show_full_license"),
                     icon=ft.Icons.GAVEL_OUTLINED,
+                    style=self.primary_filled_button_style(),
                     on_click=self.open_license_dialog,
                 ),
             ],

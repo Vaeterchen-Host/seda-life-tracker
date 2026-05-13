@@ -28,8 +28,8 @@ from application.user_service import (
 )
 from model.database import Database, FoodDatabase
 from ui.gui_theme import (
-    BRAND_MINT,
-    BRAND_RED,
+    SEDA_MINT,
+    SEDA_RED,
     PAGE_BACKGROUND,
     SURFACE_BACKGROUND,
     SURFACE_BACKGROUND_ALT,
@@ -121,6 +121,13 @@ class SedaGuiApp:
         """Return the main readable text color for the active theme mode."""
         return ft.Colors.WHITE if self.is_dark_mode() else "#18212B"
 
+    def primary_filled_button_style(self):
+        """Return the default style for primary filled buttons. Partly AI-generated."""
+        return ft.ButtonStyle(
+            bgcolor=SEDA_MINT,
+            color=ft.Colors.WHITE,
+        )
+
     def show_message(self, message, error=False):
         """Show short GUI feedback as a snack bar."""
         self.status_message = message
@@ -128,7 +135,7 @@ class SedaGuiApp:
         self.page.show_dialog(
             ft.SnackBar(
                 content=ft.Text(message),
-                bgcolor=BRAND_RED if error else BRAND_MINT,
+                bgcolor=SEDA_RED if error else SEDA_MINT,
             )
         )
         self.page.update()
