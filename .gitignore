@@ -12,6 +12,7 @@ env/
 .vscode/
 .idea/
 .codex
+.obsidian
 
 # Local example code
 Beispiele/
