@@ -238,6 +238,7 @@ class Database:
                        water_log_id INTEGER PRIMARY KEY AUTOINCREMENT,
                        user_id INTEGER NOT NULL,
                        amount_in_ml INTEGER NOT NULL,
+                       source_type TEXT NOT NULL DEFAULT 'manual' CHECK(source_type IN ('manual', 'food')),
                        timestamp TEXT NOT NULL,
                        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
             )"""
@@ -245,16 +246,16 @@ class Database:
         conn.commit()
 
     @connector
-    def add_water_log(self, conn, user_id, amount_in_ml, timestamp):
+    def add_water_log(self, conn, user_id, amount_in_ml, timestamp, source_type="manual"):
         """This method adds a water logs to the database. Code partly AI-generated."""
         cursor = conn.cursor()
         # The '?' is a placeholder.
         cursor.execute(
             """
-            INSERT INTO water_logs (user_id, amount_in_ml, timestamp)
-            VALUES (?, ?, ?)
+            INSERT INTO water_logs (user_id, amount_in_ml, source_type, timestamp)
+            VALUES (?, ?, ?, ?)
             """,
-            (user_id, amount_in_ml, timestamp),
+            (user_id, amount_in_ml, source_type, timestamp),
         )
         conn.commit()
         return cursor.lastrowid
@@ -265,7 +266,7 @@ class Database:
         cursor = conn.cursor()
         cursor.execute(
             """
-            SELECT water_log_id, user_id, amount_in_ml, timestamp
+            SELECT water_log_id, user_id, amount_in_ml, timestamp, source_type
             FROM water_logs
             """
         )
@@ -458,49 +459,118 @@ class Database:
             """
             CREATE TABLE IF NOT EXISTS meals (
                 meal_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL
+                user_id INTEGER,
+                name TEXT NOT NULL,
+                is_template INTEGER NOT NULL DEFAULT 1 CHECK(is_template IN (0, 1)),
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
             )
             """
         )
         conn.commit()
 
     @connector
-    def add_meal(self, conn, name):
-        """Adds a new meal template and returns its ID."""
+    def add_meal(self, conn, name, user_id=None, is_template=1):
+        """Adds a new meal template and returns its ID. AI-generated."""
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO meals (name) VALUES (?)", (name,))
+        cursor.execute(
+            "INSERT INTO meals (user_id, name, is_template) VALUES (?, ?, ?)",
+            (user_id, name, is_template),
+        )
         conn.commit()
         return (
             cursor.lastrowid
         )  # "lastrowid" returns the new ID to immediately link ingredients (MealItems) to this meal
 
     @connector
-    def get_all_meals(self, conn):
-        """Retrieves all meal templates from the database."""
+    def get_all_meals(self, conn, user_id=None, include_shared=False, templates_only=False):
+        """Retrieve meal templates, optionally scoped to one user. AI-generated."""
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM meals ORDER BY name ASC")
+        template_clause = " AND is_template = 1" if templates_only else ""
+        if user_id is None:
+            cursor.execute(
+                f"SELECT meal_id, name, user_id, is_template FROM meals WHERE 1=1{template_clause} ORDER BY name ASC"
+            )
+        elif include_shared:
+            cursor.execute(
+                """
+                SELECT meal_id, name, user_id, is_template
+                FROM meals
+                WHERE (user_id = ? OR user_id IS NULL)
+                """
+                + template_clause
+                + """
+                ORDER BY name ASC
+                """,
+                (user_id,),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT meal_id, name, user_id, is_template
+                FROM meals
+                WHERE user_id = ?
+                """
+                + template_clause
+                + """
+                ORDER BY name ASC
+                """,
+                (user_id,),
+            )
         return cursor.fetchall()
 
     @connector
-    def get_meal_by_id(self, conn, meal_id):
-        """Retrieve one meal template by ID. ai-generated."""
+    def get_meal_by_id(self, conn, meal_id, user_id=None, include_shared=False):
+        """Retrieve one meal template by ID, optionally scoped to one user. AI-generated."""
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM meals WHERE meal_id = ?", (meal_id,))
+        if user_id is None:
+            cursor.execute(
+                "SELECT meal_id, name, user_id FROM meals WHERE meal_id = ?",
+                (meal_id,),
+            )
+        elif include_shared:
+            cursor.execute(
+                """
+                SELECT meal_id, name, user_id
+                FROM meals
+                WHERE meal_id = ? AND (user_id = ? OR user_id IS NULL)
+                """,
+                (meal_id, user_id),
+            )
+        else:
+            cursor.execute(
+                "SELECT meal_id, name, user_id FROM meals WHERE meal_id = ? AND user_id = ?",
+                (meal_id, user_id),
+            )
         return cursor.fetchone()
 
     @connector
-    def update_meal(self, conn, meal_id, name):
-        """Update a meal template name. ai-generated."""
+    def update_meal(self, conn, meal_id, name, user_id=None):
+        """Update a meal template name, optionally scoped to one user. AI-generated."""
         cursor = conn.cursor()
-        cursor.execute("UPDATE meals SET name = ? WHERE meal_id = ?", (name, meal_id))
+        if user_id is None:
+            cursor.execute(
+                "UPDATE meals SET name = ? WHERE meal_id = ?",
+                (name, meal_id),
+            )
+        else:
+            cursor.execute(
+                "UPDATE meals SET name = ? WHERE meal_id = ? AND user_id = ?",
+                (name, meal_id, user_id),
+            )
         conn.commit()
         return cursor.rowcount
 
     @connector
-    def delete_meal(self, conn, meal_id):
-        """Deletes a meal template by its ID."""
+    def delete_meal(self, conn, meal_id, user_id=None):
+        """Delete one meal template, optionally scoped to one user. AI-generated."""
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM meals WHERE meal_id = ?", (meal_id,))
+        if user_id is None:
+            cursor.execute("DELETE FROM meals WHERE meal_id = ?", (meal_id,))
+        else:
+            cursor.execute(
+                "DELETE FROM meals WHERE meal_id = ? AND user_id = ?",
+                (meal_id, user_id),
+            )
         conn.commit()
         return cursor.rowcount
 
@@ -592,7 +662,7 @@ class Database:
                 user_id INTEGER NOT NULL,
                 meal_id INTEGER NOT NULL,
                 amount REAL NOT NULL,
-                unit_type TEXT NOT NULL CHECK(unit_type IN ('g', 'ml')),
+                unit_type TEXT NOT NULL CHECK(unit_type IN ('g', 'ml', 'portion')),
                 timestamp TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE,
                 FOREIGN KEY (meal_id) REFERENCES meals (meal_id) ON DELETE CASCADE

@@ -24,6 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "data" / "database.db"
 FOOD_DB_PATH = BASE_DIR / "data" / "bls_foods.sqlite"
 LICENSE_PATH = BASE_DIR / "LICENSE.md"
+ASSETS_DIR = BASE_DIR / "assets"
 
 # -----------------------------
 # This content ist not AI-generated.
@@ -39,3 +40,4 @@ if __name__ == "__main__":
     print(f"test.db is in: {DB_TEST_PATH}")
     print(f"License file is in: {LICENSE_PATH}")
     print(f"Food database is in: {FOOD_DB_PATH}")
+    print(f"Assets directory is: {ASSETS_DIR}")

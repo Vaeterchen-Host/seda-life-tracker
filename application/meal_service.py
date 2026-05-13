@@ -14,10 +14,14 @@ from application.builders import create_food_instance_from_food_row
 # Meal helpers
 # Small shared helpers around meal-template construction.
 # ---------------------------
-def create_single_food_meal(main_db: Database, food_row):
+def create_single_food_meal(main_db: Database, user_id, food_row):
     """Create a one-food meal object for direct logging. AI-generated."""
     meal_name = food_row["name_de"] or food_row["name_en"]
-    meal_id = main_db.add_meal(meal_name)  # pylint: disable=no-value-for-parameter
+    meal_id = main_db.add_meal(
+        meal_name,
+        user_id,
+        is_template=0,
+    )  # pylint: disable=no-value-for-parameter
     # Food DB values are stored per 100 units, so the helper meal uses 100 g/ml as its base.
     food_item = create_food_instance_from_food_row(food_row, 100)
     main_db.add_meal_food_item(

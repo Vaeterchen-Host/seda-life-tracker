@@ -26,9 +26,15 @@ def _validate_log_list(logs, log_type, label):
 VALID_UNIT_TYPES = {
     "g",  # Meal
     "ml",  # Meal/Water
+    "portion",  # Meal template multiplier
     "kg",  # Meal/Weight
     "kcal",  # Calories
     "minutes",  # Activity
+}
+
+VALID_WATER_LOG_SOURCES = {
+    "manual",
+    "food",
 }
 
 
@@ -162,21 +168,32 @@ class MealLog(LogItem):
         self._amount = new_amount
 
     @property
+    def _meal_factor(self):
+        """Return the factor used to scale one meal log against its base meal. AI-generated."""
+        if self.meal is None:
+            return None
+        if self.unit_type == "portion":
+            return self.amount
+        if self.meal.total_amount <= 0:
+            return None
+        return self.amount / self.meal.total_amount
+
+    @property
     def calories(self):
         """Return the calories of the logged meal amount. ai-generated."""
         if self.meal is None or self.meal.calories is None:
             return None
-        if self.meal.total_amount <= 0:
+        factor = self._meal_factor
+        if factor is None:
             return None
-        # A meal log can represent only part of a meal template, so calories are scaled by ratio.
-        return round(self.meal.calories * (self.amount / self.meal.total_amount), 2)
+        return round(self.meal.calories * factor, 2)
 
     @property
     def big_seven(self):
         """Return the logged amount of the meal's big seven nutrients. ai-generated."""
-        if self.meal is None or self.meal.total_amount <= 0:
+        factor = self._meal_factor
+        if self.meal is None or factor is None:
             return BigSeven(None, None, None, None, None, None, None)
-        factor = self.amount / self.meal.total_amount
         # fields(BigSeven) lets us scale every nutrient without hardcoding each attribute twice.
         return BigSeven(
             **{
@@ -192,9 +209,9 @@ class MealLog(LogItem):
     @property
     def nutrient_summary(self):
         """Return the logged amount of the meal's additional nutrients. ai-generated."""
-        if self.meal is None or self.meal.total_amount <= 0:
+        factor = self._meal_factor
+        if self.meal is None or factor is None:
             return NutrientSummary(**{field.name: None for field in fields(NutrientSummary)})
-        factor = self.amount / self.meal.total_amount
         # The nutrient summary follows the same ratio logic as calories and Big Seven.
         return NutrientSummary(
             **{
@@ -250,10 +267,11 @@ class MealLogHandler(LogHandler):
 class WaterLog(LogItem):
     """This class defines the water log."""
 
-    def __init__(self, water_log_id, user_id, amount, timestamp):
+    def __init__(self, water_log_id, user_id, amount, timestamp, source_type="manual"):
         """This is the constructor of WaterLog."""
         super().__init__(water_log_id, user_id, timestamp)
         self.amount_in_ml = amount
+        self.source_type = source_type
         self.unit_type = "ml"
 
     @property
@@ -269,6 +287,22 @@ class WaterLog(LogItem):
             raise ValueError("Amount must be greater than 0 ml.")
         self._amount_in_ml = new_amount
 
+    @property
+    def source_type(self):
+        """Return where the water log originated from. AI-generated."""
+        return self._source_type
+
+    @source_type.setter
+    def source_type(self, new_source_type):
+        """Validate and store the water log source type. AI-generated."""
+        if not isinstance(new_source_type, str):
+            raise ValueError("Water log source type must be a string.")
+        if new_source_type not in VALID_WATER_LOG_SOURCES:
+            raise ValueError(
+                f"Water log source type must be one of {VALID_WATER_LOG_SOURCES}."
+            )
+        self._source_type = new_source_type
+
 
 class WaterLogHandler(LogHandler):
     """This class defines the water log handler."""
@@ -277,13 +311,15 @@ class WaterLogHandler(LogHandler):
         """This is the constructor of WaterLogHandler."""
         super().__init__(user_id, logitems, WaterLog)
 
-    def create_log(self, water_log_id, amount, timestamp):
+    def create_log(self, water_log_id, amount, timestamp, source_type="manual"):
         """Method for creating a water log item and adding it to the logs list."""
-        new_log = WaterLog(water_log_id, self.user_id, amount, timestamp)
+        new_log = WaterLog(water_log_id, self.user_id, amount, timestamp, source_type)
         self.logs.append(new_log)
         return new_log
 
-    def update_log(self, log_id, new_amount=None, new_timestamp=None):
+    def update_log(
+        self, log_id, new_amount=None, new_timestamp=None, new_source_type=None
+    ):
         """Method for updating a water log item."""
         for log in self.logs:
             if log.id == log_id:
@@ -291,6 +327,8 @@ class WaterLogHandler(LogHandler):
                     log.amount_in_ml = new_amount
                 if new_timestamp is not None:
                     log.timestamp = new_timestamp
+                if new_source_type is not None:
+                    log.source_type = new_source_type
                 return log
         raise ValueError("Log with the given ID not found.")
 

@@ -20,8 +20,8 @@ def create_water_log_instances_for_user(main_db: Database, user_id):
     """Create an array of WaterLog instances for the user. Partly AI-generated."""
     return [
         WaterLog(
-            log[0], log[1], log[2], log[3]
-        )  # log[0] is id, log[1] is user_id, log[2] is amount_in_ml, log[3] is timestamp.
+            log[0], log[1], log[2], log[3], log[4]
+        )  # log[0] is id, log[1] is user_id, log[2] is amount_in_ml, log[3] is timestamp, log[4] is source_type.
         for log in main_db.get_all_water_logs()  # pylint: disable=no-value-for-parameter
         if log[1] == user_id
     ]
@@ -102,20 +102,31 @@ def create_food_instance_from_meal_item_row(meal_item_row):
 
 def create_meal_instance_from_db(main_db: Database, meal_row):
     """Create a Meal instance with its food items from DB data. AI-generated."""
+    meal_id = meal_row[0]
+    meal_name = meal_row[1]
     food_items = [
         create_food_instance_from_meal_item_row(item_row)
         for item_row in main_db.get_meal_food_items(
-            meal_row[0]
+            meal_id
         )  # pylint: disable=no-value-for-parameter
     ]
-    return Meal(meal_row[0], meal_row[1], food_items)
+    return Meal(meal_id, meal_name, food_items)
 
 
-def create_meal_instances(main_db: Database):
-    """Create Meal instances for all stored meal templates. AI-generated."""
+def create_meal_instances(
+    main_db: Database,
+    user_id=None,
+    include_shared=False,
+    templates_only=False,
+):
+    """Create Meal instances for the requested user or meal scope. AI-generated."""
     return [
         create_meal_instance_from_db(main_db, meal_row)
-        for meal_row in main_db.get_all_meals()  # pylint: disable=no-value-for-parameter
+        for meal_row in main_db.get_all_meals(
+            user_id,
+            include_shared=include_shared,
+            templates_only=templates_only,
+        )  # pylint: disable=no-value-for-parameter
     ]
 
 

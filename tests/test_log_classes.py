@@ -31,8 +31,16 @@ def test_water_log_stores_amount_and_timestamp():
     water_log = WaterLog(1, 1, 900, "2026-03-21T12:12")
 
     assert water_log.amount_in_ml == 900
+    assert water_log.source_type == "manual"
     assert water_log.unit_type == "ml"
     assert water_log.timestamp == "2026-03-21T12:12"
+
+
+def test_water_log_accepts_food_source_type():
+    """This test checks if food-derived water logs can be marked. AI-generated."""
+    water_log = WaterLog(1, 1, 250, "2026-03-21T12:12", "food")
+
+    assert water_log.source_type == "food"
 
 
 def test_weight_log_stores_weight_and_timestamp():
@@ -158,3 +166,28 @@ def test_meal_log_scales_big_seven_and_nutrient_summary():
     assert meal_log.big_seven.fat == 3.5
     assert meal_log.big_seven.protein == 6.5
     assert meal_log.nutrient_summary.sodium == 1.5
+
+
+def test_meal_log_scales_full_template_by_portion_multiplier():
+    """This test checks if template logs use portion amounts as direct multipliers. AI-generated."""
+    food_item = Food(
+        1,
+        "Oats",
+        100,
+        "g",
+        370,
+        BigSeven(7, 1, 58, 10, 1, 13, 0.01),
+        NutrientSummary(
+            **{
+                field.name: (3 if field.name == "sodium" else 0)
+                for field in fields(NutrientSummary)
+            }
+        ),
+    )
+    meal = Meal(1, "Porridge", [food_item])
+    meal_log = MealLog(1, 1, meal, 1.5, "portion", "2026-03-22T12:00")
+
+    assert meal_log.calories == 555
+    assert meal_log.big_seven.fat == 10.5
+    assert meal_log.big_seven.protein == 19.5
+    assert meal_log.nutrient_summary.sodium == 4.5

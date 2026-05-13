@@ -26,7 +26,9 @@ from application.builders import (
 from application.user_service import (
     refresh_user_logs_from_db,
 )
+from config import ASSETS_DIR
 from model.database import Database, FoodDatabase
+from ui.gui_components import PageShell
 from ui.gui_theme import (
     SEDA_MINT,
     SEDA_RED,
@@ -36,11 +38,20 @@ from ui.gui_theme import (
     SURFACE_BORDER,
     SURFACE_MUTED,
 )
+from ui.pages import (
+    build_about_view,
+    build_activity_view,
+    build_create_user_view,
+    build_dashboard_view,
+    build_nutrition_view,
+    build_profile_view,
+    build_water_view,
+)
 from ui.translations import get_translation
 
 
 class SedaGuiApp:
-    """Desktop-first Flet GUI for the SEDA learning project."""
+    """Desktop-first Flet GUI orchestrator for SEDA."""
 
     # ---------------------------
     # Setup and state
@@ -78,8 +89,13 @@ class SedaGuiApp:
         self.page.bgcolor = self.page_background_color()
         self.page.padding = 0
         self.page.scroll = ft.ScrollMode.AUTO
+        self.page.on_resize = self.handle_page_resize
         self.page.window.min_width = 1180
         self.page.window.min_height = 860
+
+    def handle_page_resize(self, _):
+        """Redraw the shell after page resizes so width limits stay accurate. AI-generated."""
+        self.render()
 
     def t(self, key, **kwargs):
         """Return a translated GUI string for the current language."""
@@ -120,13 +136,6 @@ class SedaGuiApp:
     def primary_text_color(self):
         """Return the main readable text color for the active theme mode."""
         return ft.Colors.WHITE if self.is_dark_mode() else "#18212B"
-
-    def primary_filled_button_style(self):
-        """Return the default style for primary filled buttons. Partly AI-generated."""
-        return ft.ButtonStyle(
-            bgcolor=SEDA_MINT,
-            color=ft.Colors.WHITE,
-        )
 
     def show_message(self, message, error=False):
         """Show short GUI feedback as a snack bar."""
@@ -243,6 +252,8 @@ class SedaGuiApp:
             text = f"{value:.2f}".rstrip("0").rstrip(".")
         else:
             text = str(value)
+        if suffix == "portion":
+            suffix = self.t("portion")
         return f"{text} {suffix}".strip()
 
     def sort_logs_desc(self, logs):
@@ -303,7 +314,14 @@ class SedaGuiApp:
 
     def get_meal_templates(self):
         """Build all meal templates from DB rows into Meal objects."""
-        return [self.enrich_meal(meal) for meal in create_meal_instances(self.main_db)]
+        return [
+            self.enrich_meal(meal)
+            for meal in create_meal_instances(
+                self.main_db,
+                self.current_user.user_id,
+                templates_only=True,
+            )
+        ]
 
     def get_food_name(self, food_row):
         """Choose the best available display name from one food DB row."""
@@ -390,12 +408,6 @@ class SedaGuiApp:
         return self.license_text_cache
 
     # ---------------------------
-    # Dialog helpers
-    # These methods were extracted into ui/gui_dialogs.py to keep this file
-    # smaller while preserving the existing SedaGuiApp call structure.
-    # ---------------------------
-
-    # ---------------------------
     # DB-backed action handlers
     # These functions connect button clicks to the existing model/database logic.
     # ---------------------------
@@ -464,19 +476,36 @@ class SedaGuiApp:
             self.show_message(self.t("msg_weight_deleted"))
             self.render()
 
-    def add_water_log(self, amount, timestamp=None):
+    def add_water_log(self, amount, timestamp=None, source_type="manual"):
         """Add one water entry and persist it immediately."""
         new_log = self.current_user.water_log_handler.create_log(
-            None, amount, timestamp
+            None, amount, timestamp, source_type
         )
         db_id = self.main_db.add_water_log(
             self.current_user.user_id,
             new_log.amount_in_ml,
             new_log.timestamp,
+            new_log.source_type,
         )
         new_log.set_database_id(db_id)
-        self.show_message(self.t("msg_water_saved"))
-        self.render()
+        if source_type == "manual":
+            self.show_message(self.t("msg_water_saved"))
+            self.render()
+        return new_log
+
+    def add_food_water_log_from_meal_log(self, meal_log):
+        """Persist one derived water log from a meal log when food contains water. AI-generated."""
+        water_amount = meal_log.nutrient_summary.water
+        if water_amount is None:
+            return None
+        water_amount_in_ml = int(round(water_amount))
+        if water_amount_in_ml <= 0:
+            return None
+        return self.add_water_log(
+            water_amount_in_ml,
+            meal_log.timestamp,
+            source_type="food",
+        )
 
     def delete_water_log(self, water_log_id):
         """Delete one water log entry."""
@@ -536,7 +565,10 @@ class SedaGuiApp:
             raise ValueError(self.t("msg_select_items_first"))
 
         if self.editing_meal_template_id is None:
-            meal_id = self.main_db.add_meal(self.meal_builder_name.strip())
+            meal_id = self.main_db.add_meal(
+                self.meal_builder_name.strip(),
+                self.current_user.user_id,
+            )
             for food_item in self.meal_builder_items:
                 self.main_db.add_meal_food_item(
                     meal_id,
@@ -549,6 +581,7 @@ class SedaGuiApp:
             self.main_db.update_meal(
                 self.editing_meal_template_id,
                 self.meal_builder_name.strip(),
+                self.current_user.user_id,
             )
             self.main_db.delete_meal_food_items(self.editing_meal_template_id)
             for food_item in self.meal_builder_items:
@@ -565,7 +598,10 @@ class SedaGuiApp:
 
     def delete_meal_template(self, meal_id):
         """Delete one saved meal template."""
-        deleted_rows = self.main_db.delete_meal(meal_id)
+        deleted_rows = self.main_db.delete_meal(
+            meal_id,
+            self.current_user.user_id,
+        )
         if deleted_rows:
             if self.editing_meal_template_id == meal_id:
                 self.reset_meal_builder()
@@ -593,31 +629,23 @@ class SedaGuiApp:
             self.render()
 
     # ---------------------------
-    # Reusable UI builders and page views
-    # These methods were extracted into ui/gui_components.py and ui/gui_views.py
-    # to keep this file smaller while preserving the existing SedaGuiApp
-    # call structure.
-    # ---------------------------
-
-    # ---------------------------
     # Render logic
     # This part chooses the active page body and redraws the full desktop shell.
     # ---------------------------
     def build_current_view(self):
         """Choose the currently active page body."""
         if self.current_user is None:
-            return self.build_create_user_view()
-        if self.current_view == "nutrition":
-            return self.build_page_shell(self.build_nutrition_view())
-        if self.current_view == "water":
-            return self.build_page_shell(self.build_water_view())
-        if self.current_view == "activity":
-            return self.build_page_shell(self.build_activity_view())
-        if self.current_view == "profile":
-            return self.build_page_shell(self.build_profile_view())
-        if self.current_view == "about":
-            return self.build_page_shell(self.build_about_view())
-        return self.build_page_shell(self.build_dashboard_view())
+            return PageShell(self, build_create_user_view(self))
+
+        page_builders = {
+            "nutrition": build_nutrition_view,
+            "water": build_water_view,
+            "activity": build_activity_view,
+            "profile": build_profile_view,
+            "about": build_about_view,
+        }
+        active_builder = page_builders.get(self.current_view, build_dashboard_view)
+        return PageShell(self, active_builder(self))
 
     def render(self):
         """Redraw the whole page from current state."""
@@ -631,72 +659,15 @@ class SedaGuiApp:
         self.render()
 
 
-# ---------------------------
-# Extracted GUI method bindings
-# Partly AI-generated: The binding block below was introduced during the GUI split so the
-# extracted implementations still appear on SedaGuiApp under their original names.
-# These imports keep the existing SedaGuiApp method names and call sites stable
-# while the implementations now live in smaller dedicated modules.
-# ---------------------------
-from ui.gui_components import (
-    build_header,
-    build_label_value_row,
-    build_metric_chip,
-    build_page_shell,
-    build_primary_nav,
-    build_surface_section,
-)
-from ui.gui_dialogs import (
-    close_dialog,
-    open_activity_edit_dialog,
-    open_confirm_dialog,
-    open_food_amount_dialog,
-    open_license_dialog,
-    open_meal_log_details_dialog,
-    open_meal_log_dialog,
-)
-from ui.gui_views import (
-    build_about_view,
-    build_activity_view,
-    build_create_user_view,
-    build_dashboard_view,
-    build_nutrition_view,
-    build_profile_view,
-    build_water_view,
-    handle_reset_builder,
-    handle_save_meal_template,
-)
-
-SedaGuiApp.build_surface_section = build_surface_section
-SedaGuiApp.build_label_value_row = build_label_value_row
-SedaGuiApp.build_metric_chip = build_metric_chip
-SedaGuiApp.build_primary_nav = build_primary_nav
-SedaGuiApp.build_header = build_header
-SedaGuiApp.build_page_shell = build_page_shell
-
-SedaGuiApp.close_dialog = close_dialog
-SedaGuiApp.open_confirm_dialog = open_confirm_dialog
-SedaGuiApp.open_license_dialog = open_license_dialog
-SedaGuiApp.open_activity_edit_dialog = open_activity_edit_dialog
-SedaGuiApp.open_meal_log_dialog = open_meal_log_dialog
-SedaGuiApp.open_meal_log_details_dialog = open_meal_log_details_dialog
-SedaGuiApp.open_food_amount_dialog = open_food_amount_dialog
-
-SedaGuiApp.build_create_user_view = build_create_user_view
-SedaGuiApp.build_dashboard_view = build_dashboard_view
-SedaGuiApp.build_water_view = build_water_view
-SedaGuiApp.build_activity_view = build_activity_view
-SedaGuiApp.build_nutrition_view = build_nutrition_view
-SedaGuiApp.handle_save_meal_template = handle_save_meal_template
-SedaGuiApp.handle_reset_builder = handle_reset_builder
-SedaGuiApp.build_profile_view = build_profile_view
-SedaGuiApp.build_about_view = build_about_view
-
-
 def main(page: ft.Page):
     """Start the SEDA desktop GUI."""
     SedaGuiApp(page).run()
 
 
+def run_gui_app(view=None):
+    """Start the SEDA GUI with the configured assets directory. AI-generated."""
+    ft.app(target=main, assets_dir=str(ASSETS_DIR), view=view)
+
+
 if __name__ == "__main__":
-    ft.app(target=main, view=ft.AppView.WEB_BROWSER)
+    run_gui_app(view=ft.AppView.WEB_BROWSER)

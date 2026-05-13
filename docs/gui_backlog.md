@@ -22,11 +22,11 @@ Do not use this file for:
 
 - [ ] Add language selection to the login screen
 - [ ] Persist language choice and dark mode
-- [ ] Define a maximum content width
+- [x] Define a maximum content width
   Reason: the current GUI looks too stretched on 2560 px screens
-- [ ] Move `Water Tracker` before `Nutrition` in the header
+- [x] Move `Water Tracker` before `Nutrition` in the header
 - [ ] Move `Weight Logs / BMI / Statistics` out of `Profile` into a dedicated tab
-- [ ] Add language selection as a graphical button next to the dark mode button
+- [x] Add language selection as a graphical button next to the dark mode button
 - [x] Replace accidental blue default buttons with `seda-mint`
 
 ### Forms and Inputs
@@ -36,7 +36,7 @@ Do not use this file for:
 - [ ] Add a time picker for time fields
 - [ ] Use dropdowns or scroll-wheel style controls where they improve input safety
 - [ ] Align `Weight in kg` and `Optional timestamp` more cleanly in `Body Statistics & Physics`
-- [ ] Remove the helper text `Leave empty to use the current time`
+- [x] Remove the helper text `Leave empty to use the current time`
 
 ### Profile and Weight Flow
 
@@ -45,6 +45,7 @@ Do not use this file for:
 
 ### Dashboard
 
+- [ ] Replace the current dashboard hero icon with a more meaningful graph or status visualization
 - [ ] Make the `Water Tracker` and `Weight & BMI` cards the same height
 - [ ] Improve the presentation of the `Calorie Balance`
 - [ ] Add status bars to the calorie balance area
@@ -57,26 +58,27 @@ Do not use this file for:
 
 - [ ] Consider replacing `Nutrition` with a more concise or memorable label
 - [ ] Show food stats on click in the search flow
-- [ ] Trigger search with `Enter`
+- [x] Trigger search with `Enter`
   Note: mobile should still keep the button as the safe fallback
-- [ ] Clear the search bar automatically after `Consume` or `Add to Template`
+- [x] Clear the search bar automatically after `Consume` or `Add to Template`
 - [ ] Add an `X` button inside the search field for quick clearing
 - [ ] Return focus to the search field automatically after actions
-- [ ] Do not store directly consumed single foods as meal templates
+- [x] Do not store directly consumed single foods as meal templates
   Source: moved from `BUG-016` in `bug_tracker.py`
 - [ ] Align the `Nutrition` icon and the `Log Meal` icon stylistically
 
 ### Branding and Copy
 
-- [ ] Replace the current logo in the header placeholder area
-- [ ] Replace the current logo on the create-account page
+- [x] Replace the current logo in the header placeholder area
+- [x] Replace the current logo on the create-account page
 - [ ] Replace the current logo on the login screen
-- [ ] Replace the current about-page text:
+- [x] Replace the current about-page text:
   `This desktop GUI is the first interactive workbench for the SEDA learning project`
-- [ ] Write a short, clearer about-page description
+- [x] Write a short, clearer about-page description
 - [ ] Explain what the app does
 - [ ] Explain what the app is for
-- [ ] Present the project with real ambition instead of framing it only as a learning exercise
+- [x] Present the project with real ambition instead of framing it only as a learning exercise
+- [ ] The about page has many good ideas now. but it's asymmetric and kinda confusing; we should make a clear concept and implement it
 
 ## Next
 
@@ -126,3 +128,4 @@ Do not use this file for:
 - [ ] Alternative to asking for weight during profile creation:
   use a guided first `WeightLog` tutorial
   Comment: elegant, but more complex
+  - [ ] we should add the sources of our data

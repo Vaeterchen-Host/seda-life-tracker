@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from config import FOOD_DB_PATH
+from application.meal_service import create_single_food_meal
 from model.database import Database, FoodDatabase
 from model.class_user import User
 
@@ -165,7 +166,27 @@ def test_get_all_water_logs(db, tobias):
     assert logs[0][1] == 1, "User ID could not be 1"
     assert logs[0][2] == 500, "Amount in ml could not be 500"
     assert logs[0][3] == "2026-03-20T10:00:00", "Timestamp could not match"
+    assert logs[0][4] == "manual", "Source type should default to manual"
     conn.close()
+
+
+def test_add_and_get_food_derived_water_log(db, tobias):
+    """This test checks if food-derived water logs can be stored. AI-generated."""
+    db.add_user(
+        tobias.name,
+        tobias.birthdate,
+        tobias.height_in_cm,
+        tobias.gender,
+        tobias.fitness_lvl,
+    )
+
+    db.add_water_log(1, 320, "2026-03-20T12:30:00", "food")
+
+    logs = db.get_all_water_logs()
+    assert len(logs) == 1, "There should be exactly one water log"
+    assert logs[0][2] == 320, "Amount in ml does not match"
+    assert logs[0][3] == "2026-03-20T12:30:00", "Timestamp does not match"
+    assert logs[0][4] == "food", "Source type should be stored as food"
 
 
 # weight log related tests
@@ -436,6 +457,26 @@ def test_update_meal(db):
     assert all_meals[0][1] == "Late Lunch", "Meal name should be updated"
 
 
+def test_get_all_meals_templates_only_excludes_single_food_meals(db, tobias, sample_food_row):
+    """This test checks that technical single-food meals are hidden from template queries. AI-generated."""
+    user_id = db.add_user(
+        tobias.name,
+        tobias.birthdate,
+        tobias.height_in_cm,
+        tobias.gender,
+        tobias.fitness_lvl,
+    )
+    db.add_meal("Stored Template", user_id=user_id, is_template=1)
+    create_single_food_meal(db, user_id, sample_food_row)
+
+    template_rows = db.get_all_meals(user_id=user_id, templates_only=True)
+    all_rows = db.get_all_meals(user_id=user_id)
+
+    assert len(all_rows) == 2, "One template and one technical single-food meal should exist"
+    assert len(template_rows) == 1, "Only real templates should be returned"
+    assert template_rows[0][1] == "Stored Template", "Only the saved template should remain visible"
+
+
 # meal food item related tests
 def test_meal_food_item_table_creation(db):
     """This test checks if the meal food items table is created successfully."""
@@ -529,6 +570,20 @@ def test_add_and_get_meal_log(db, tobias):
     assert logs[0][4] == 250, "Amount does not match"
     assert logs[0][5] == "g", "Unit type does not match"
     assert logs[0][6] == "2026-04-19T08:00:00", "Timestamp does not match"
+
+
+def test_add_and_get_meal_log_with_portion_unit(db, tobias):
+    """This test checks if template portions can be stored as meal logs. AI-generated."""
+    db.add_user(
+        tobias.name, tobias.birthdate, tobias.height_in_cm, tobias.gender, tobias.fitness_lvl
+    )
+    db.add_meal("Standard Shake")
+    db.add_meal_log(1, 1, 1.5, "portion", "2026-04-19T08:00:00")
+
+    logs = db.get_user_meal_logs(1)
+    assert len(logs) == 1, "There should be one meal log entry"
+    assert logs[0][4] == 1.5, "Portion amount does not match"
+    assert logs[0][5] == "portion", "Unit type should be stored as portion"
 
 
 def test_delete_meal_log(db, tobias):
