@@ -672,9 +672,7 @@ SedaGuiApp.open_confirm_dialog = open_confirm_dialog
 SedaGuiApp.open_license_dialog = open_license_dialog
 SedaGuiApp.open_activity_edit_dialog = open_activity_edit_dialog
 SedaGuiApp.open_meal_log_dialog = open_meal_log_dialog
-SedaGuiApp.open_meal_log_details_dialog = (
-    open_meal_log_details_dialog
-)
+SedaGuiApp.open_meal_log_details_dialog = open_meal_log_details_dialog
 SedaGuiApp.open_food_amount_dialog = open_food_amount_dialog
 
 SedaGuiApp.build_create_user_view = build_create_user_view
@@ -694,4 +692,4 @@ def main(page: ft.Page):
 
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    ft.app(target=main, view=ft.AppView.WEB_BROWSER)
