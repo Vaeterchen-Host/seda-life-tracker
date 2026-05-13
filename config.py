@@ -31,7 +31,7 @@ DB_TEST_PATH = BASE_DIR / "tests" / "test.db"
 
 # devs:
 DEVS = "Sabine Steverding & Tobias Mignat"
-VERSION = "0.5.0"
+VERSION = "1.0.0"
 
 if __name__ == "__main__":
     print(f"Database path is set to: {DB_PATH}")

@@ -14,6 +14,9 @@ env/
 .codex
 .obsidian
 docs/tobi_notes.md
+.agents/
+
+
 
 # Local example code
 Beispiele/
@@ -21,4 +24,3 @@ BLS_4_0_2025_DE/
 
 # Secrets
 keys.py
-
