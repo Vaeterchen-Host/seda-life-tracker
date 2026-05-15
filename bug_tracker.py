@@ -129,5 +129,12 @@ BUGS = [
         "area": "model/classes.py / model/database.py",
         "notes": "MealLog currently expects amount_in_gram, but the meal_logs table and add_meal_log() only store user_id, meal_id and timestamp. This needs to be aligned before meal log handling is extended further.",
     },
-    # Partly AI-refactored: GUI and UX planning items now live in docs/gui_backlog.md.
+    {
+        "id": "BUG-016",
+        "title": "metabolic rate is not being calculated by the most recent weight log",
+        "status": "open",
+        "priority": "high",
+        "area": "model/classes.py / model/database.py",
+        "notes": "when enterint a new weight log with a past date, the metabolic rate calculates its value from this last log, although it is not the most current weight",
+    },    # Partly AI-refactored: GUI and UX planning items now live in docs/gui_backlog.md.
 ]
