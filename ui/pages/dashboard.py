@@ -231,10 +231,10 @@ def build_dashboard_view(app: "SedaGuiApp"):
                 ft.Container(
                     col={"md": 3},
                     content=PrimaryButton(
-                        app.t("go_to_profile"),
-                        icon=ft.Icons.PERSON,
+                        app.t("go_to_biometrics"),
+                        icon=ft.Icons.ASSESSMENT_OUTLINED,
                         expand=True,
-                        on_click=lambda _: app.navigate("profile"),
+                        on_click=lambda _: app.navigate("biometrics"),
                     ),
                 ),
             ],

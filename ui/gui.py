@@ -41,6 +41,7 @@ from ui.gui_theme import (
 from ui.pages import (
     build_about_view,
     build_activity_view,
+    build_biometrics_view,
     build_create_user_view,
     build_dashboard_view,
     build_nutrition_view,
@@ -428,7 +429,7 @@ class SedaGuiApp:
     # DB-backed action handlers
     # These functions connect button clicks to the existing model/database logic.
     # ---------------------------
-    def create_user(self, name, birthdate, height, gender, fitness_lvl):
+    def create_user(self, name, birthdate, height, current_weight, gender, fitness_lvl):
         """Create the first user from the landing page form."""
         user_id = self.main_db.add_user(name, birthdate, height, gender, fitness_lvl)
         self.current_user = User(
@@ -443,6 +444,19 @@ class SedaGuiApp:
             [],
             [],
         )
+        new_log = self.current_user.weight_log_handler.create_log(
+            None,
+            current_weight,
+            self.current_user.height_in_cm,
+            None,
+        )
+        db_id = self.main_db.add_weight_log(
+            self.current_user.user_id,
+            new_log.weight_in_kg,
+            new_log.height_in_cm,
+            new_log.timestamp,
+        )
+        new_log.set_database_id(db_id)
         self.current_view = "dashboard"
         self.save_gui_settings(user_id=user_id)
         self.show_message(self.t("msg_user_created"))
@@ -660,6 +674,7 @@ class SedaGuiApp:
             "nutrition": build_nutrition_view,
             "water": build_water_view,
             "activity": build_activity_view,
+            "biometrics": build_biometrics_view,
             "profile": build_profile_view,
             "about": build_about_view,
         }

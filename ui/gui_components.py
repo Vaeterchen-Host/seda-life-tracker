@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 MAX_CONTENT_WIDTH = 1320
 PAGE_SHELL_PADDING = 24
+HEADER_ACTIONS_MIN_WIDTH = 900
 
 
 def _current_logo_asset_path(is_dark_mode: bool) -> str:
@@ -39,6 +40,16 @@ def _resolve_content_width(app: "SedaGuiApp") -> int | None:
 
     available_width = max(360, viewport_width - (PAGE_SHELL_PADDING * 2))
     return min(available_width, MAX_CONTENT_WIDTH)
+
+
+def _show_header_actions(app: "SedaGuiApp") -> bool:
+    """Return whether the desktop header should show language/theme buttons. AI-generated."""
+    if app.current_user is None:
+        return True
+    viewport_width = int(app.page.width or app.page.window.width or 0)
+    if viewport_width <= 0:
+        return True
+    return viewport_width >= HEADER_ACTIONS_MIN_WIDTH
 
 
 class SedaLogo(ft.Image):
@@ -202,32 +213,36 @@ class DesktopHeader(ft.Column):
 
     def __init__(self, app: "SedaGuiApp"):
         show_brand_logo = app.current_user is not None
-        shell_actions = ft.Row(
-            [
-                ft.PopupMenuButton(
-                    icon=ft.Icons.LANGUAGE,
-                    tooltip=app.t("language"),
-                    icon_color=SEDA_YELLOW if app.is_dark_mode() else SEDA_MINT,
-                    items=[
-                        ft.PopupMenuItem(
-                            content=app.t("language_en"),
-                            on_click=lambda _: app.change_language("en"),
-                        ),
-                        ft.PopupMenuItem(
-                            content=app.t("language_de"),
-                            on_click=lambda _: app.change_language("de"),
-                        ),
-                    ],
-                ),
-                ft.IconButton(
-                    icon=ft.Icons.SUNNY,
-                    icon_color=SEDA_YELLOW if app.is_dark_mode() else SEDA_MINT,
-                    bgcolor=app.surface_background_alt_color(),
-                    tooltip=app.t("toggle_theme"),
-                    on_click=app.toggle_theme,
-                ),
-            ],
-            spacing=8,
+        shell_actions = (
+            ft.Row(
+                [
+                    ft.PopupMenuButton(
+                        icon=ft.Icons.LANGUAGE,
+                        tooltip=app.t("language"),
+                        icon_color=SEDA_YELLOW if app.is_dark_mode() else SEDA_MINT,
+                        items=[
+                            ft.PopupMenuItem(
+                                content=app.t("language_en"),
+                                on_click=lambda _: app.change_language("en"),
+                            ),
+                            ft.PopupMenuItem(
+                                content=app.t("language_de"),
+                                on_click=lambda _: app.change_language("de"),
+                            ),
+                        ],
+                    ),
+                    ft.IconButton(
+                        icon=ft.Icons.SUNNY,
+                        icon_color=SEDA_YELLOW if app.is_dark_mode() else SEDA_MINT,
+                        bgcolor=app.surface_background_alt_color(),
+                        tooltip=app.t("toggle_theme"),
+                        on_click=app.toggle_theme,
+                    ),
+                ],
+                spacing=8,
+            )
+            if _show_header_actions(app)
+            else ft.Container()
         )
 
         header_row = ft.Row(

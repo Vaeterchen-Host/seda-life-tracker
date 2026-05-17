@@ -24,6 +24,7 @@ NAV_ITEMS = [
     ("water", "nav_water", ft.Icons.WATER_DROP_OUTLINED),
     ("nutrition", "nav_nutrition", ft.Icons.RESTAURANT_MENU),
     ("activity", "nav_activity", ft.Icons.DIRECTIONS_RUN),
+    ("biometrics", "nav_biometrics", ft.Icons.ASSESSMENT_OUTLINED),
     ("profile", "nav_profile", ft.Icons.PERSON_OUTLINE),
     ("about", "nav_about", ft.Icons.INFO_OUTLINE),
 ]

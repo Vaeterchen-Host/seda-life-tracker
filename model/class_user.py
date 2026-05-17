@@ -144,11 +144,10 @@ class User:
     @property
     def last_bmi(self):
         """Method for calculating the BMI. Partly AI-generated."""
-        if not self.weight_log_handler.logs:
+        latest_weight_log = self._latest_weight_log
+        if latest_weight_log is None:
             return None
-        if self.weight_log_handler.logs[-1] is not None:
-            return self.weight_log_handler.logs[-1].bmi
-        return None
+        return latest_weight_log.bmi
 
     @property
     def age(self):
@@ -163,9 +162,20 @@ class User:
     @property
     def latest_weight(self):
         """Return the latest logged weight. ai-generated."""
+        latest_weight_log = self._latest_weight_log
+        if latest_weight_log is None:
+            return None
+        return latest_weight_log.weight_in_kg
+
+    @property
+    def _latest_weight_log(self):
+        """Return the chronologically latest weight log, independent of insert order. AI-generated."""
         if not self.weight_log_handler.logs:
             return None
-        return self.weight_log_handler.logs[-1].weight_in_kg
+        return max(
+            self.weight_log_handler.logs,
+            key=lambda log: log.timestamp or "",
+        )
 
     @property
     def basal_metabolic_rate(self):

@@ -30,6 +30,10 @@ def build_create_user_view(app: "SedaGuiApp"):
         label=app.t("height_cm"),
         keyboard_type=ft.KeyboardType.NUMBER,
     )
+    weight_field = ft.TextField(
+        label=app.t("current_weight_input"),
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
     gender_dropdown = ft.Dropdown(
         label=app.t("gender"),
         value="m",
@@ -55,12 +59,14 @@ def build_create_user_view(app: "SedaGuiApp"):
             name = name_field.value.strip()
             birthdate = app.parse_birthdate(birthdate_field.value)
             height = app.parse_required_int(height_field.value)
+            current_weight = app.parse_required_float(weight_field.value)
             if not name:
                 raise ValueError(app.t("name"))
             app.create_user(
                 name,
                 birthdate,
                 height,
+                current_weight,
                 gender_dropdown.value,
                 fitness_dropdown.value,
             )
@@ -75,6 +81,7 @@ def build_create_user_view(app: "SedaGuiApp"):
                 name_field,
                 birthdate_field,
                 height_field,
+                weight_field,
                 gender_dropdown,
                 fitness_dropdown,
                 ft.FilledButton(

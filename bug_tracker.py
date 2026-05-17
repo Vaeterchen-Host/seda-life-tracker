@@ -132,9 +132,9 @@ BUGS = [
     {
         "id": "BUG-016",
         "title": "metabolic rate is not being calculated by the most recent weight log",
-        "status": "open",
+        "status": "closed",
         "priority": "high",
         "area": "model/classes.py / model/database.py",
-        "notes": "when enterint a new weight log with a past date, the metabolic rate calculates its value from this last log, although it is not the most current weight",
+        "notes": "Fixed in model/class_user.py by resolving the chronologically latest weight log via timestamp instead of relying on insertion order.",
     },    # Partly AI-refactored: GUI and UX planning items now live in docs/gui_backlog.md.
 ]

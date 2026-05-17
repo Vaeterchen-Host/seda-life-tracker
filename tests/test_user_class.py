@@ -111,6 +111,20 @@ def test_last_bmi_returns_bmi_of_latest_weight_log(test_user_class):
     assert test_user_class.last_bmi == 23.32
 
 
+def test_latest_weight_and_bmr_use_newest_weight_timestamp(test_user_class):
+    """This test checks if biometrics use the chronologically newest weight log. AI-generated."""
+    test_user_class.weight_log_handler.create_log(
+        None, 79.8, test_user_class.height_in_cm, "2026-03-22T08:00"
+    )
+    test_user_class.weight_log_handler.create_log(
+        None, 92.0, test_user_class.height_in_cm, "2026-03-01T08:00"
+    )
+
+    assert test_user_class.latest_weight == 79.8
+    assert test_user_class.last_bmi == 23.32
+    assert test_user_class.daily_water_target == 2793
+
+
 def test_last_bmi_returns_none_without_weight_logs():
     """This test checks if BMI is None without weight logs. ai-generated."""
     test_user = User(
