@@ -31,6 +31,7 @@ DEFAULT_GUI_SETTINGS = {
     "user_id": None,
     "language": "de",
     "dark_mode": False,
+    "energy_unit": "kcal",
 }
 
 _UNSET = object()
@@ -71,6 +72,12 @@ def _normalize_gui_settings(raw_settings):
     else:
         is_valid = False
 
+    energy_unit = raw_settings.get("energy_unit")
+    if energy_unit in {"kcal", "kj"}:
+        settings["energy_unit"] = energy_unit
+    else:
+        is_valid = False
+
     return settings, is_valid
 
 
@@ -93,6 +100,7 @@ def update_gui_settings(
     user_id=_UNSET,
     language=_UNSET,
     dark_mode=_UNSET,
+    energy_unit=_UNSET,
     settings_path=GUI_SETTINGS_PATH,
 ):
     """Update selected GUI settings and persist the merged result. AI-generated."""
@@ -103,6 +111,8 @@ def update_gui_settings(
         settings["language"] = language
     if dark_mode is not _UNSET:
         settings["dark_mode"] = dark_mode
+    if energy_unit is not _UNSET:
+        settings["energy_unit"] = energy_unit
 
     settings, _ = _normalize_gui_settings(settings)
     _write_gui_settings_file(settings, settings_path)

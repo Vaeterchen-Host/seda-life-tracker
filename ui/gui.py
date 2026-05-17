@@ -68,6 +68,7 @@ class SedaGuiApp:
         self.current_user = None
         self.current_view = "dashboard"
         self.current_language = self.gui_settings["language"]
+        self.energy_unit = self.gui_settings["energy_unit"]
 
         self.status_message = get_translation(self.current_language, "status_ready")
         self.status_is_error = False
@@ -199,6 +200,12 @@ class SedaGuiApp:
         self.show_message(self.t("msg_language_changed"))
         self.render()
 
+    def change_energy_unit(self, energy_unit):
+        """Switch the GUI calorie display between kcal and kJ. AI-generated."""
+        self.energy_unit = energy_unit
+        self.save_gui_settings(energy_unit=energy_unit)
+        self.render()
+
     def reset_meal_builder(self):
         """Clear the temporary meal-template builder state."""
         self.meal_builder_name = ""
@@ -295,8 +302,18 @@ class SedaGuiApp:
         """Render numeric values without unnecessary trailing zeros."""
         if value is None:
             return "-"
+        if suffix == "kcal":
+            display_value = float(value)
+            display_suffix = "kcal"
+            if self.energy_unit == "kj":
+                display_value *= 4.184
+                display_suffix = "kJ"
+            text = str(int(round(display_value)))
+            return f"{text} {display_suffix}".strip()
         if isinstance(value, float):
             text = f"{value:.2f}".rstrip("0").rstrip(".")
+            if self.current_language == "de":
+                text = text.replace(".", ",")
         else:
             text = str(value)
         if suffix == "portion":
@@ -334,9 +351,20 @@ class SedaGuiApp:
     def parse_required_float(self, raw_value):
         """Read one required float field from a text input."""
         try:
-            return float(raw_value)
+            cleaned = str(raw_value).strip().replace(" ", "")
+            if cleaned == "":
+                raise ValueError
+            if cleaned.count(",") + cleaned.count(".") > 1:
+                raise ValueError
+            normalized = cleaned.replace(",", ".")
+            decimal_part = normalized.partition(".")[2]
+            if len(decimal_part) > 2:
+                raise ValueError
+            return float(normalized)
         except (TypeError, ValueError) as exc:
-            raise ValueError(self.t("msg_invalid_number")) from exc
+            raise ValueError(
+                self.t("msg_invalid_decimal_number", max_places=2)
+            ) from exc
 
     def parse_optional_float(self, raw_value):
         """Read one optional float field and return None for empty input."""

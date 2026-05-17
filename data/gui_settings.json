@@ -1,5 +1,6 @@
 {
   "user_id": 1,
   "language": "de",
-  "dark_mode": false
+  "dark_mode": true,
+  "energy_unit": "kcal"
 }

@@ -31,11 +31,11 @@ Do not use this file for:
 
 ### Forms and Inputs
 
-- [ ] Replace free-text date and time inputs where appropriate
-- [ ] Add a date picker for date fields
-- [ ] Add a time picker for time fields
+- [x] Replace free-text date and time inputs where appropriate
+- [x] Add a date picker for date fields
+- [x] Add a time picker for time fields
 - [ ] Use dropdowns or scroll-wheel style controls where they improve input safety
-- [ ] Align `Weight in kg` and `Optional timestamp` more cleanly in `Body Statistics & Physics`
+- [x] Align `Weight in kg` and `Optional timestamp` more cleanly in `Body Statistics & Physics`
 - [x] Remove the helper text `Leave empty to use the current time`
 
 ### Profile and Weight Flow

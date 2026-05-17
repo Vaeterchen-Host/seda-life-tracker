@@ -29,7 +29,7 @@ def build_create_user_view(app: "SedaGuiApp"):
     )
     weight_field = ft.TextField(
         label=app.t("current_weight_input"),
-        keyboard_type=ft.KeyboardType.NUMBER,
+        keyboard_type=ft.KeyboardType.TEXT,
     )
     gender_dropdown = ft.Dropdown(
         label=app.t("gender"),

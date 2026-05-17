@@ -41,4 +41,5 @@ def test_update_gui_settings_merges_selected_values(tmp_path):
         "user_id": 5,
         "language": "en",
         "dark_mode": False,
+        "energy_unit": "kcal",
     }

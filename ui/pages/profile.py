@@ -106,11 +106,25 @@ def build_profile_view(app: "SedaGuiApp"):
         value=app.is_dark_mode(),
         on_change=lambda _: app.toggle_theme(),
     )
+    energy_unit_switch = ft.Switch(
+        value=app.energy_unit == "kj",
+        on_change=lambda e: app.change_energy_unit("kj" if e.control.value else "kcal"),
+    )
+    energy_unit_row = ft.Row(
+        [
+            ft.Text(app.t("energy_unit"), width=140),
+            ft.Text("kcal", color=app.surface_muted_color()),
+            energy_unit_switch,
+            ft.Text("kJ", color=app.surface_muted_color()),
+        ],
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=8,
+    )
 
     settings_section = SurfaceSection(
         app,
         app.t("application_settings"),
-        ft.Column([language_dropdown, dark_mode_switch], spacing=12),
+        ft.Column([language_dropdown, dark_mode_switch, energy_unit_row], spacing=12),
     )
 
     account_section = SurfaceSection(

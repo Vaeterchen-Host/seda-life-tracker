@@ -105,7 +105,7 @@ def open_activity_edit_dialog(app: "SedaGuiApp", activity_log):
     calories_field = ft.TextField(
         label=app.t("calories_burned"),
         value=str(activity_log.calories_burned),
-        keyboard_type=ft.KeyboardType.NUMBER,
+        keyboard_type=ft.KeyboardType.TEXT,
     )
     duration_field = ft.TextField(
         label=app.t("duration_minutes"),
@@ -114,7 +114,7 @@ def open_activity_edit_dialog(app: "SedaGuiApp", activity_log):
             if activity_log.activity_value is None
             else str(activity_log.activity_value)
         ),
-        keyboard_type=ft.KeyboardType.NUMBER,
+        keyboard_type=ft.KeyboardType.TEXT,
     )
     selected_date, selected_time = app.split_timestamp(activity_log.timestamp)
     date_field = DatePickerField(
@@ -199,11 +199,11 @@ def open_activity_create_dialog(app: "SedaGuiApp", _=None):
     )
     calories_field = ft.TextField(
         label=app.t("calories_burned"),
-        keyboard_type=ft.KeyboardType.NUMBER,
+        keyboard_type=ft.KeyboardType.TEXT,
     )
     duration_field = ft.TextField(
         label=app.t("duration_minutes"),
-        keyboard_type=ft.KeyboardType.NUMBER,
+        keyboard_type=ft.KeyboardType.TEXT,
     )
     date_field = DatePickerField(
         app,
@@ -325,7 +325,7 @@ def open_weight_log_dialog(app: "SedaGuiApp", _=None):
     """Create one weight entry through a dedicated dialog. AI-generated."""
     weight_field = ft.TextField(
         label=app.t("weight_kg"),
-        keyboard_type=ft.KeyboardType.NUMBER,
+        keyboard_type=ft.KeyboardType.TEXT,
         autofocus=True,
     )
     date_field = DatePickerField(
@@ -412,7 +412,7 @@ def open_meal_log_dialog(app: "SedaGuiApp", meal: Meal = None, existing_log=None
             if existing_log is None and is_portion_mode
             else ("" if existing_log is None else str(existing_log.amount))
         ),
-        keyboard_type=ft.KeyboardType.NUMBER,
+        keyboard_type=ft.KeyboardType.TEXT,
     )
     unit_control = (
         ft.TextField(
@@ -638,7 +638,7 @@ def open_food_amount_dialog(app: "SedaGuiApp", food_row, mode):
     """Ask for an amount before adding a food to the builder or directly logging it. Partly AI-generated."""
     amount_field = ft.TextField(
         label=app.t("amount_g_ml"),
-        keyboard_type=ft.KeyboardType.NUMBER,
+        keyboard_type=ft.KeyboardType.TEXT,
     )
     date_field = DatePickerField(app, app.t("date"), expand=True)
     time_field = TimePickerField(
