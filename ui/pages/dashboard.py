@@ -147,9 +147,13 @@ def build_dashboard_view(app: "SedaGuiApp"):
                                 bgcolor=app.surface_border_color(),
                             ),
                             ft.Text(
-                                app.t(
-                                    "water_to_go",
-                                    difference=water_status["difference"],
+                                (
+                                    app.t("water_goal_reached")
+                                    if water_status["difference"] <= 0
+                                    else app.t(
+                                        "water_to_go",
+                                        difference=water_status["difference"],
+                                    )
                                 ),
                                 color=app.surface_muted_color(),
                             ),

@@ -28,9 +28,12 @@ This file captures visual and interaction rules that should stay consistent acro
 - Use one shared color palette across the GUI
 - Avoid accidental blue buttons if the intended accent is turquoise
 - Use clear semantic colors:
-  - static values: seda-mint
-  - dynamic values: seda-yellow
-  - warnings or overshooting: seda-red
+  - brightmode: neutral dynamic values use seda-mint
+  - darkmode: neutral dynamic values use seda-yellow
+  - positive target or status values such as "remaining to goal" use seda-mint until exceeded
+  - warnings or exceeded states use seda-red
+  - calculated or neutral values such as BMI, daily balance, or weight use black in brightmode and white in darkmode
+- In metric cards, keep the background neutral, color the numeric value and the supporting icon, and keep the label muted
 
 Current project colors taken from the GUI code:
 

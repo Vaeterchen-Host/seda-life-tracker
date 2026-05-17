@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 import flet as ft
 
 from application.status_service import get_today_calorie_status
-from ui.gui_components import MetricChip, PrimaryButton, SurfaceItem, SurfaceSection
+from ui.gui_components import PrimaryButton, SurfaceItem, SurfaceSection
 from ui.gui_dialogs import (
     close_dialog,
     open_confirm_dialog,
@@ -31,6 +31,51 @@ def build_nutrition_view(app: "SedaGuiApp"):
     """Build the nutrition page with the full meal-management workflow. Partly AI-generated."""
     app.refresh_current_user_logs()
     calorie_status = get_today_calorie_status(app.current_user)
+
+    neutral_dynamic_accent = SEDA_YELLOW if app.is_dark_mode() else SEDA_MINT
+    positive_status_accent = SEDA_MINT
+    calculated_neutral_accent = app.primary_text_color()
+
+    def build_status_card(icon, label, value, accent, col):
+        """Render one nutrition status card with icon and accent value. AI-generated."""
+        return ft.Container(
+            col={"md": col},
+            content=ft.Container(
+                padding=16,
+                border_radius=8,
+                bgcolor=app.surface_background_alt_color(),
+                border=ft.border.all(1, app.surface_border_color()),
+                content=ft.Column(
+                    [
+                        ft.Text(
+                            value,
+                            size=18,
+                            weight=ft.FontWeight.BOLD,
+                            color=accent,
+                        ),
+                        ft.Row(
+                            [
+                                ft.Icon(
+                                    icon,
+                                    size=18,
+                                    color=accent,
+                                ),
+                                ft.Text(
+                                    label,
+                                    size=13,
+                                    color=app.surface_muted_color(),
+                                    expand=True,
+                                ),
+                            ],
+                            spacing=8,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        ),
+                    ],
+                    spacing=10,
+                    tight=True,
+                ),
+            ),
+        )
 
     def save_builder(_):
         """Persist the current meal template or show the error in the GUI footer."""
@@ -53,43 +98,71 @@ def build_nutrition_view(app: "SedaGuiApp"):
         on_submit=lambda _: app.search_foods(),
     )
 
+    goal_exceeded = (
+        calorie_status["difference"] is not None and calorie_status["difference"] < 0
+    )
+    burned_accent = SEDA_RED if (calorie_status["burned"] or 0) <= 0 else neutral_dynamic_accent
+    balance_accent = calculated_neutral_accent
+    remaining_accent = SEDA_RED if goal_exceeded else positive_status_accent
+    remaining_label = (
+        app.t("goal_exceeded_by") if goal_exceeded else app.t("remaining_to_goal")
+    )
+    remaining_value = (
+        app.format_amount(abs(calorie_status["difference"]), "kcal")
+        if calorie_status["difference"] is not None
+        else "-"
+    )
+
     calorie_section = SurfaceSection(
         app,
         app.t("calorie_status_today"),
-        ft.Row(
+        ft.Column(
             [
-                MetricChip(
-                    app,
-                    app.t("calories_eaten"),
-                    app.format_amount(calorie_status["intake"], "kcal"),
-                    accent=SEDA_MINT,
+                ft.ResponsiveRow(
+                    [
+                        build_status_card(
+                            ft.Icons.RESTAURANT,
+                            app.t("calories_eaten"),
+                            app.format_amount(calorie_status["intake"], "kcal"),
+                            neutral_dynamic_accent,
+                            6,
+                        ),
+                        build_status_card(
+                            ft.Icons.LOCAL_FIRE_DEPARTMENT_OUTLINED,
+                            app.t("calories_burned_label"),
+                            app.format_amount(calorie_status["burned"], "kcal"),
+                            burned_accent,
+                            6,
+                        ),
+                    ],
+                    spacing=12,
+                    run_spacing=12,
                 ),
-                MetricChip(
-                    app,
-                    app.t("calories_burned_label"),
-                    app.format_amount(calorie_status["burned"], "kcal"),
-                    accent=SEDA_YELLOW,
-                ),
-                MetricChip(
-                    app,
-                    app.t("calorie_balance_label"),
-                    app.format_amount(calorie_status["net"], "kcal"),
-                    accent=app.primary_text_color(),
-                ),
-                MetricChip(
-                    app,
-                    app.t("calorie_goal"),
-                    app.format_amount(calorie_status["target"], "kcal"),
-                    accent=SEDA_MINT,
-                ),
-                MetricChip(
-                    app,
-                    app.t("remaining_to_goal"),
-                    app.format_amount(calorie_status["difference"], "kcal"),
-                    accent=SEDA_YELLOW,
+                ft.ResponsiveRow(
+                    [
+                        build_status_card(
+                            ft.Icons.ASSESSMENT_OUTLINED,
+                            app.t("calorie_balance_label"),
+                            app.format_amount(calorie_status["net"], "kcal"),
+                            balance_accent,
+                            6,
+                        ),
+                        build_status_card(
+                            (
+                                ft.Icons.WARNING_AMBER_OUTLINED
+                                if goal_exceeded
+                                else ft.Icons.TRACK_CHANGES
+                            ),
+                            remaining_label,
+                            remaining_value,
+                            remaining_accent,
+                            6,
+                        ),
+                    ],
+                    spacing=12,
+                    run_spacing=12,
                 ),
             ],
-            wrap=True,
             spacing=12,
         ),
     )

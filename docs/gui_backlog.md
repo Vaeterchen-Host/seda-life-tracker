@@ -46,7 +46,7 @@ Do not use this file for:
 ### Dashboard
 
 - [ ] Replace the current dashboard hero icon with a more meaningful graph or status visualization
-- [ ] Make the `Water Tracker` and `Weight & BMI` cards the same height
+- [x] Make the `Water Tracker` and `Weight & BMI` cards the same height
 - [ ] Improve the presentation of the `Calorie Balance`
 - [ ] Add status bars to the calorie balance area
 - [ ] Make the calorie balance more visually consistent

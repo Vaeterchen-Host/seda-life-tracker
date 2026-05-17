@@ -43,6 +43,13 @@ def test_water_log_accepts_food_source_type():
     assert water_log.source_type == "food"
 
 
+def test_water_log_accepts_amounts_above_two_liters():
+    """This test checks if larger manual water entries remain valid. AI-generated."""
+    water_log = WaterLog(1, 1, 2500, "2026-03-21T12:12")
+
+    assert water_log.amount_in_ml == 2500
+
+
 def test_weight_log_stores_weight_and_timestamp():
     """This test checks if weight logs store values correctly. Partly AI-generated."""
     weight_log = WeightLog(1, 1, 80.5, 185, "2026-03-21T12:12")

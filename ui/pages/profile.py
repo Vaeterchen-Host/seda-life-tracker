@@ -14,7 +14,7 @@ import flet as ft
 
 from ui.gui_components import DatePickerField, PrimaryButton, SurfaceSection
 from ui.gui_dialogs import close_dialog, open_confirm_dialog
-from ui.gui_theme import SEDA_RED
+from ui.gui_theme import SEDA_MINT, SEDA_RED
 
 if TYPE_CHECKING:
     from ui.gui import SedaGuiApp
@@ -102,20 +102,65 @@ def build_profile_view(app: "SedaGuiApp"):
         width=220,
     )
     dark_mode_switch = ft.Switch(
-        label=app.t("dark_mode"),
         value=app.is_dark_mode(),
+        active_color=SEDA_MINT,
+        active_track_color=app.surface_background_alt_color(),
+        inactive_thumb_color=app.surface_muted_color(),
+        inactive_track_color=app.surface_border_color(),
         on_change=lambda _: app.toggle_theme(),
+    )
+    switch_prefix_width = 36
+    switch_suffix_width = 24
+    dark_mode_row = ft.Row(
+        [
+            ft.Text(app.t("dark_mode"), width=140),
+            ft.Container(
+                width=160,
+                content=ft.Row(
+                    [
+                        ft.Container(width=switch_prefix_width),
+                        dark_mode_switch,
+                        ft.Container(width=switch_suffix_width),
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=8,
+                ),
+            ),
+        ],
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=8,
     )
     energy_unit_switch = ft.Switch(
         value=app.energy_unit == "kj",
+        active_color=SEDA_MINT,
+        active_track_color=app.surface_background_alt_color(),
+        inactive_thumb_color=app.surface_muted_color(),
+        inactive_track_color=app.surface_border_color(),
         on_change=lambda e: app.change_energy_unit("kj" if e.control.value else "kcal"),
     )
     energy_unit_row = ft.Row(
         [
             ft.Text(app.t("energy_unit"), width=140),
-            ft.Text("kcal", color=app.surface_muted_color()),
-            energy_unit_switch,
-            ft.Text("kJ", color=app.surface_muted_color()),
+            ft.Container(
+                width=160,
+                content=ft.Row(
+                    [
+                        ft.Text(
+                            "kcal",
+                            width=switch_prefix_width,
+                            color=app.surface_muted_color(),
+                        ),
+                        energy_unit_switch,
+                        ft.Text(
+                            "kJ",
+                            width=switch_suffix_width,
+                            color=app.surface_muted_color(),
+                        ),
+                    ],
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    spacing=8,
+                ),
+            ),
         ],
         vertical_alignment=ft.CrossAxisAlignment.CENTER,
         spacing=8,
@@ -124,7 +169,7 @@ def build_profile_view(app: "SedaGuiApp"):
     settings_section = SurfaceSection(
         app,
         app.t("application_settings"),
-        ft.Column([language_dropdown, dark_mode_switch, energy_unit_row], spacing=12),
+        ft.Column([language_dropdown, dark_mode_row, energy_unit_row], spacing=12),
     )
 
     account_section = SurfaceSection(

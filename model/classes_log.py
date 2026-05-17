@@ -283,8 +283,8 @@ class WaterLog(LogItem):
     def amount_in_ml(self, new_amount):
         """This is the setter for amount_in_ml."""
         int(new_amount)
-        if new_amount <= 0 or new_amount >= 2000:
-            raise ValueError("Amount must be greater than 0 ml.")
+        if new_amount <= 0 or new_amount > 10000:
+            raise ValueError("Amount must be between 1 and 10000 ml.")
         self._amount_in_ml = new_amount
 
     @property

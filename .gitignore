@@ -24,3 +24,6 @@ BLS_4_0_2025_DE/
 
 # Secrets
 keys.py
+
+# build
+build/

@@ -14,13 +14,12 @@ import flet as ft
 
 from application.status_service import get_today_calorie_status
 from ui.gui_components import (
-    LabelValueRow,
     PrimaryButton,
     SurfaceItem,
     SurfaceSection,
 )
 from ui.gui_dialogs import close_dialog, open_confirm_dialog, open_weight_log_dialog
-from ui.gui_theme import SEDA_RED
+from ui.gui_theme import SEDA_MINT, SEDA_RED, SEDA_YELLOW
 
 if TYPE_CHECKING:
     from ui.gui import SedaGuiApp
@@ -32,22 +31,64 @@ def build_biometrics_view(app: "SedaGuiApp"):
     calorie_status = get_today_calorie_status(app.current_user)
     current_weight_log = app.get_current_weight_log()
 
+    neutral_calculated_accent = app.primary_text_color()
+    target_accent = SEDA_MINT
+
+    def build_biometric_card(icon, label, value, accent, col):
+        """Render one highlighted biometrics metric with icon. AI-generated."""
+        return ft.Container(
+            col={"md": col},
+            content=ft.Container(
+                padding=16,
+                border_radius=8,
+                bgcolor=app.surface_background_alt_color(),
+                border=ft.border.all(1, app.surface_border_color()),
+                content=ft.Column(
+                    [
+                        ft.Row(
+                            [
+                                ft.Icon(icon, size=18, color=accent),
+                                ft.Text(
+                                    label,
+                                    size=13,
+                                    color=app.surface_muted_color(),
+                                    expand=True,
+                                ),
+                            ],
+                            spacing=8,
+                            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                        ),
+                        ft.Text(
+                            value,
+                            size=18,
+                            weight=ft.FontWeight.BOLD,
+                            color=accent,
+                        ),
+                    ],
+                    spacing=10,
+                    tight=True,
+                ),
+            ),
+        )
+
     current_status_section = SurfaceSection(
         app,
         app.t("current_status"),
-        ft.Column(
+        ft.ResponsiveRow(
             [
-                LabelValueRow(
-                    app,
+                build_biometric_card(
+                    ft.Icons.MONITOR_WEIGHT_OUTLINED,
                     app.t("latest_weight"),
                     (
                         app.format_amount(current_weight_log.weight_in_kg, "kg")
                         if current_weight_log is not None
                         else app.t("no_weight_logged")
                     ),
+                    neutral_calculated_accent,
+                    6,
                 ),
-                LabelValueRow(
-                    app,
+                build_biometric_card(
+                    ft.Icons.ACCESSIBILITY_NEW,
                     app.t("bmi"),
                     (
                         app.format_amount(current_weight_log.bmi)
@@ -55,29 +96,37 @@ def build_biometrics_view(app: "SedaGuiApp"):
                         and current_weight_log.bmi is not None
                         else app.t("bmi_not_available")
                     ),
+                    neutral_calculated_accent,
+                    6,
                 ),
             ],
             spacing=12,
+            run_spacing=12,
         ),
     )
 
     calculated_section = SurfaceSection(
         app,
         app.t("calculated_values"),
-        ft.Column(
+        ft.ResponsiveRow(
             [
-                LabelValueRow(
-                    app,
+                build_biometric_card(
+                    ft.Icons.TRACK_CHANGES,
                     app.t("daily_calorie_target"),
                     app.format_amount(calorie_status["target"], "kcal"),
+                    target_accent,
+                    6,
                 ),
-                LabelValueRow(
-                    app,
+                build_biometric_card(
+                    ft.Icons.WATER_DROP_OUTLINED,
                     app.t("daily_water_target"),
                     app.format_amount(app.current_user.daily_water_target, "ml"),
+                    target_accent,
+                    6,
                 ),
             ],
-            spacing=10,
+            spacing=12,
+            run_spacing=12,
         ),
     )
 

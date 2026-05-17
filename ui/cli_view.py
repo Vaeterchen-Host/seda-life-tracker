@@ -265,19 +265,19 @@ def create_water_log_parameters_by_input():
         try:
             amount_in_ml = int(input("Enter the amount of water in ml: "))
         except ValueError:
-            print("Invalid input. Please enter a valid amount between 1 and 2000 ml.")
+            print("Invalid input. Please enter a valid amount between 1 and 10000 ml.")
         try:
             if (
                 amount_in_ml < 1
-                or amount_in_ml > 2000
+                or amount_in_ml > 10000
                 or not isinstance(amount_in_ml, int)
             ):
-                raise ValueError("Amount must be between 1 and 2000 ml.")
+                raise ValueError("Amount must be between 1 and 10000 ml.")
             break
         except ValueError as e:
             print(
                 f"Invalid input: {e}"
-                + "\nPlease enter a valid amount between 1 and 2000 ml."
+                + "\nPlease enter a valid amount between 1 and 10000 ml."
             )
     while True:
         try:
