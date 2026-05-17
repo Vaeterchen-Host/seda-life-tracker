@@ -8,7 +8,7 @@
 # Other wise we need to write the path in everyfile where we need it.
 # Example: DB_PATH = "data/database.db"
 
-# AI-Generated content.
+import json
 from pathlib import Path  # For handling file paths in a platform-independent way.
 
 # Get the directory of the current file (config.py) and resolve it to an absolute path.
@@ -25,6 +25,88 @@ DB_PATH = BASE_DIR / "data" / "database.db"
 FOOD_DB_PATH = BASE_DIR / "data" / "bls_foods.sqlite"
 LICENSE_PATH = BASE_DIR / "LICENSE.md"
 ASSETS_DIR = BASE_DIR / "assets"
+GUI_SETTINGS_PATH = BASE_DIR / "data" / "gui_settings.json"
+
+DEFAULT_GUI_SETTINGS = {
+    "user_id": None,
+    "language": "de",
+    "dark_mode": False,
+}
+
+_UNSET = object()
+
+
+def _write_gui_settings_file(settings, settings_path=GUI_SETTINGS_PATH):
+    """Persist normalized GUI settings to disk. AI-generated."""
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    settings_path.write_text(
+        json.dumps(settings, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _normalize_gui_settings(raw_settings):
+    """Return safe GUI settings with defaults for invalid values. AI-generated."""
+    if not isinstance(raw_settings, dict):
+        return DEFAULT_GUI_SETTINGS.copy(), False
+
+    settings = DEFAULT_GUI_SETTINGS.copy()
+    is_valid = True
+
+    user_id = raw_settings.get("user_id")
+    if user_id is None or isinstance(user_id, int):
+        settings["user_id"] = user_id
+    else:
+        is_valid = False
+
+    language = raw_settings.get("language")
+    if language in {"de", "en"}:
+        settings["language"] = language
+    else:
+        is_valid = False
+
+    dark_mode = raw_settings.get("dark_mode")
+    if isinstance(dark_mode, bool):
+        settings["dark_mode"] = dark_mode
+    else:
+        is_valid = False
+
+    return settings, is_valid
+
+
+def get_gui_settings(settings_path=GUI_SETTINGS_PATH):
+    """Load GUI settings from disk and fall back to defaults safely. AI-generated."""
+    try:
+        raw_settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        settings = DEFAULT_GUI_SETTINGS.copy()
+        _write_gui_settings_file(settings, settings_path)
+        return settings
+
+    settings, is_valid = _normalize_gui_settings(raw_settings)
+    if not is_valid:
+        _write_gui_settings_file(settings, settings_path)
+    return settings
+
+
+def update_gui_settings(
+    user_id=_UNSET,
+    language=_UNSET,
+    dark_mode=_UNSET,
+    settings_path=GUI_SETTINGS_PATH,
+):
+    """Update selected GUI settings and persist the merged result. AI-generated."""
+    settings = get_gui_settings(settings_path)
+    if user_id is not _UNSET:
+        settings["user_id"] = user_id
+    if language is not _UNSET:
+        settings["language"] = language
+    if dark_mode is not _UNSET:
+        settings["dark_mode"] = dark_mode
+
+    settings, _ = _normalize_gui_settings(settings)
+    _write_gui_settings_file(settings, settings_path)
+    return settings
 
 # -----------------------------
 # This content ist not AI-generated.
@@ -41,3 +123,4 @@ if __name__ == "__main__":
     print(f"License file is in: {LICENSE_PATH}")
     print(f"Food database is in: {FOOD_DB_PATH}")
     print(f"Assets directory is: {ASSETS_DIR}")
+    print(f"GUI settings are in: {GUI_SETTINGS_PATH}")

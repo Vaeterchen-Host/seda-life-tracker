@@ -26,7 +26,7 @@ from application.builders import (
 from application.user_service import (
     refresh_user_logs_from_db,
 )
-from config import ASSETS_DIR
+from config import ASSETS_DIR, get_gui_settings, update_gui_settings
 from model.database import Database, FoodDatabase
 from ui.gui_components import PageShell
 from ui.gui_theme import (
@@ -62,12 +62,13 @@ class SedaGuiApp:
         self.page = page
         self.main_db = Database()
         self.food_db = FoodDatabase()
+        self.gui_settings = get_gui_settings()
 
         self.current_user = None
         self.current_view = "dashboard"
-        self.current_language = "en"
+        self.current_language = self.gui_settings["language"]
 
-        self.status_message = get_translation("en", "status_ready")
+        self.status_message = get_translation(self.current_language, "status_ready")
         self.status_is_error = False
 
         self.food_search_term = ""
@@ -85,13 +86,19 @@ class SedaGuiApp:
     def configure_page(self):
         """Apply the fixed desktop page settings."""
         self.page.title = "seda - desktop gui"
-        self.page.theme_mode = ft.ThemeMode.DARK
+        self.page.theme_mode = (
+            ft.ThemeMode.DARK if self.gui_settings["dark_mode"] else ft.ThemeMode.LIGHT
+        )
         self.page.bgcolor = self.page_background_color()
         self.page.padding = 0
         self.page.scroll = ft.ScrollMode.AUTO
         self.page.on_resize = self.handle_page_resize
         self.page.window.min_width = 1180
         self.page.window.min_height = 860
+
+    def save_gui_settings(self, **changes):
+        """Persist selected GUI settings and keep the in-memory copy aligned. AI-generated."""
+        self.gui_settings = update_gui_settings(**changes)
 
     def handle_page_resize(self, _):
         """Redraw the shell after page resizes so width limits stay accurate. AI-generated."""
@@ -110,6 +117,7 @@ class SedaGuiApp:
         self.page.theme_mode = (
             ft.ThemeMode.LIGHT if self.is_dark_mode() else ft.ThemeMode.DARK
         )
+        self.save_gui_settings(dark_mode=self.is_dark_mode())
         self.page.bgcolor = self.page_background_color()
         self.render()
 
@@ -155,9 +163,17 @@ class SedaGuiApp:
         users = self.main_db.get_all_users()
         if not users:
             self.current_user = None
+            self.save_gui_settings(user_id=None)
             return
-        self.current_user = create_user_instance_from_db(self.main_db, users[0])
+
+        preferred_user_id = self.gui_settings["user_id"]
+        selected_user = next(
+            (user for user in users if user[0] == preferred_user_id),
+            users[0],
+        )
+        self.current_user = create_user_instance_from_db(self.main_db, selected_user)
         refresh_user_logs_from_db(self.main_db, self.current_user)
+        self.save_gui_settings(user_id=self.current_user.user_id)
 
     def refresh_current_user_logs(self):
         """Reload the current user's handlers from the database."""
@@ -172,6 +188,7 @@ class SedaGuiApp:
     def change_language(self, language):
         """Switch between English and German and redraw the page."""
         self.current_language = language
+        self.save_gui_settings(language=language)
         self.show_message(self.t("msg_language_changed"))
         self.render()
 
@@ -427,6 +444,7 @@ class SedaGuiApp:
             [],
         )
         self.current_view = "dashboard"
+        self.save_gui_settings(user_id=user_id)
         self.show_message(self.t("msg_user_created"))
         self.render()
 
@@ -621,6 +639,7 @@ class SedaGuiApp:
         deleted_rows = self.main_db.delete_user_by_id(self.current_user.user_id)
         if deleted_rows:
             self.current_user = None
+            self.save_gui_settings(user_id=None)
             self.reset_meal_builder()
             self.food_search_results = []
             self.food_search_term = ""

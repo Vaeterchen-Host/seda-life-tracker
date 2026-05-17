@@ -20,8 +20,8 @@ Do not use this file for:
 
 ### GUI Structure
 
-- [ ] Add language selection to the login screen
-- [ ] Persist language choice and dark mode
+- [x] Add language selection to the login screen
+- [x] Persist language choice and dark mode
 - [x] Define a maximum content width
   Reason: the current GUI looks too stretched on 2560 px screens
 - [x] Move `Water Tracker` before `Nutrition` in the header
