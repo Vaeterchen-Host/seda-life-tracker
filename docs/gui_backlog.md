@@ -47,7 +47,7 @@ Do not use this file for:
 
 - [ ] Replace the current dashboard hero icon with a more meaningful graph or status visualization
 - [x] Make the `Water Tracker` and `Weight & BMI` cards the same height
-- [ ] Improve the presentation of the `Calorie Balance`
+- [x] Improve the presentation of the `Calorie Balance`
 - [ ] Add status bars to the calorie balance area
 - [ ] Make the calorie balance more visually consistent
 - [ ] Make the calorie balance easier to understand at a glance
@@ -84,12 +84,12 @@ Do not use this file for:
 
 ### Nutrition Display
 
-- [ ] Make calorie presentation more intuitive
-- [ ] Add icons where they improve scanning
-- [ ] Group related values more clearly
-- [ ] Build a stronger visual hierarchy
-- [ ] Highlight the most important values more clearly
-- [ ] Show calories without decimal places
+- [x] Make calorie presentation more intuitive
+- [x] Add icons where they improve scanning
+- [x] Group related values more clearly
+- [x] Build a stronger visual hierarchy
+- [x] Highlight the most important values more clearly
+- [x] Show calories without decimal places
   Note: internal calculations should remain precise
 - [ ] Round gram values to sensible display precision where helpful
 

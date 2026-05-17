@@ -89,7 +89,6 @@ def build_about_view(app: "SedaGuiApp"):
         (app.t("license_spdx_label"), "GPL-3.0-or-later", ft.Icons.LABEL_OUTLINED),
         (app.t("license_file_label"), "LICENSE.md", ft.Icons.DESCRIPTION_OUTLINED),
     ]
-
     intro_block = ft.Column(
         [
             ft.Container(
@@ -178,4 +177,72 @@ def build_about_view(app: "SedaGuiApp"):
         ),
     )
 
-    return ft.Column([about_section, feature_section, license_section], spacing=20)
+    data_source_section = SurfaceSection(
+        app,
+        app.t("data_sources_title"),
+        ft.Column(
+            [
+                ft.Text(app.t("data_sources_copy"), color=app.surface_muted_color()),
+                ft.Container(
+                    padding=16,
+                    border_radius=8,
+                    bgcolor=app.surface_background_alt_color(),
+                    border=ft.border.all(1, app.surface_border_color()),
+                    content=ft.Column(
+                        [
+                            ft.Row(
+                                [
+                                    ft.Icon(
+                                        ft.Icons.DATASET_OUTLINED,
+                                        color=SEDA_MINT,
+                                        size=18,
+                                    ),
+                                    ft.Text(
+                                        app.t("data_source_bls_label"),
+                                        size=12,
+                                        color=app.surface_muted_color(),
+                                    ),
+                                ],
+                                spacing=8,
+                                tight=True,
+                            ),
+                            ft.Text(
+                                app.t("data_source_bls_value"),
+                                size=16,
+                                weight=ft.FontWeight.W_600,
+                            ),
+                            ft.Divider(height=1, color=app.surface_border_color()),
+                            ft.Row(
+                                [
+                                    ft.Icon(
+                                        ft.Icons.FORMAT_QUOTE_OUTLINED,
+                                        color=SEDA_MINT,
+                                        size=18,
+                                    ),
+                                    ft.Text(
+                                        app.t("data_source_bls_citation_label"),
+                                        size=12,
+                                        color=app.surface_muted_color(),
+                                    ),
+                                ],
+                                spacing=8,
+                                tight=True,
+                            ),
+                            ft.Text(
+                                app.t("data_source_bls_citation_value"),
+                                selectable=True,
+                            ),
+                        ],
+                        spacing=10,
+                        tight=True,
+                    ),
+                ),
+            ],
+            spacing=10,
+        ),
+    )
+
+    return ft.Column(
+        [about_section, feature_section, data_source_section, license_section],
+        spacing=20,
+    )
