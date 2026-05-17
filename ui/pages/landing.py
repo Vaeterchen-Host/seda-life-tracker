@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 import flet as ft
 
-from ui.gui_components import SedaLogo, SurfaceSection
+from ui.gui_components import DatePickerField, SedaLogo, SurfaceSection
 from ui.gui_theme import SEDA_YELLOW
 
 if TYPE_CHECKING:
@@ -22,10 +22,7 @@ if TYPE_CHECKING:
 def build_create_user_view(app: "SedaGuiApp"):
     """Build the account-creation landing page. Partly AI-generated."""
     name_field = ft.TextField(label=app.t("name"), autofocus=True)
-    birthdate_field = ft.TextField(
-        label=app.t("birthdate"),
-        hint_text=app.birthdate_input_hint(),
-    )
+    birthdate_field = DatePickerField(app, app.t("birthdate"), expand=True)
     height_field = ft.TextField(
         label=app.t("height_cm"),
         keyboard_type=ft.KeyboardType.NUMBER,
@@ -57,7 +54,7 @@ def build_create_user_view(app: "SedaGuiApp"):
         """Validate the landing-page form and create the first user."""
         try:
             name = name_field.value.strip()
-            birthdate = app.parse_birthdate(birthdate_field.value)
+            birthdate = birthdate_field.selected_date.isoformat()
             height = app.parse_required_int(height_field.value)
             current_weight = app.parse_required_float(weight_field.value)
             if not name:

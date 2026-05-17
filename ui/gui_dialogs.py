@@ -16,7 +16,13 @@ import flet as ft
 from application.builders import create_food_instance_from_food_row
 from application.meal_service import create_single_food_meal
 from model.classes_food import BigSeven, Meal, NutrientSummary
-from ui.gui_components import LabelValueRow, PrimaryButton, SurfaceSection
+from ui.gui_components import (
+    DatePickerField,
+    LabelValueRow,
+    PrimaryButton,
+    SurfaceSection,
+    TimePickerField,
+)
 from ui.gui_theme import (
     BIG_SEVEN_LABELS,
     BIG_SEVEN_LABELS_DE,
@@ -110,11 +116,17 @@ def open_activity_edit_dialog(app: "SedaGuiApp", activity_log):
         ),
         keyboard_type=ft.KeyboardType.NUMBER,
     )
-    timestamp_field = ft.TextField(
-        label=app.t("optional_timestamp"),
-        value=app.format_timestamp(activity_log.timestamp),
-        helper=app.t("use_now_when_empty"),
-        hint_text=app.timestamp_input_hint(),
+    selected_date, selected_time = app.split_timestamp(activity_log.timestamp)
+    date_field = DatePickerField(
+        app,
+        app.t("date"),
+        value=selected_date,
+        expand=True,
+    )
+    time_field = TimePickerField(
+        app,
+        app.t("time"),
+        value=selected_time,
     )
 
     def save_changes(_):
@@ -123,7 +135,10 @@ def open_activity_edit_dialog(app: "SedaGuiApp", activity_log):
             new_activity_name = name_field.value.strip()
             new_calories = app.parse_required_float(calories_field.value)
             new_duration = app.parse_optional_float(duration_field.value)
-            new_timestamp = app.parse_optional_timestamp(timestamp_field.value)
+            new_timestamp = app.combine_date_and_time(
+                date_field.selected_date,
+                time_field.selected_time,
+            )
 
             app.main_db.update_activity_log(
                 activity_log.id,
@@ -156,7 +171,8 @@ def open_activity_edit_dialog(app: "SedaGuiApp", activity_log):
                     name_field,
                     calories_field,
                     duration_field,
-                    timestamp_field,
+                    date_field,
+                    time_field,
                 ],
                 tight=True,
             ),
@@ -169,6 +185,195 @@ def open_activity_edit_dialog(app: "SedaGuiApp", activity_log):
             PrimaryButton(
                 app.t("save"),
                 on_click=save_changes,
+            ),
+        ],
+    )
+    app.page.show_dialog(dialog)
+
+
+def open_activity_create_dialog(app: "SedaGuiApp", _=None):
+    """Create one activity entry through a dedicated dialog. AI-generated."""
+    name_field = ft.TextField(
+        label=app.t("activity_name"),
+        autofocus=True,
+    )
+    calories_field = ft.TextField(
+        label=app.t("calories_burned"),
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+    duration_field = ft.TextField(
+        label=app.t("duration_minutes"),
+        keyboard_type=ft.KeyboardType.NUMBER,
+    )
+    date_field = DatePickerField(
+        app,
+        app.t("date"),
+        expand=True,
+    )
+    time_field = TimePickerField(
+        app,
+        app.t("time"),
+        expand=True,
+    )
+
+    def save_activity(_):
+        """Validate and persist one new activity entry. AI-generated."""
+        try:
+            activity_name = name_field.value.strip()
+            calories = app.parse_required_float(calories_field.value)
+            duration = app.parse_optional_float(duration_field.value)
+            timestamp = app.combine_date_and_time(
+                date_field.selected_date,
+                time_field.selected_time,
+            )
+            app.add_activity_log(activity_name, calories, duration, timestamp)
+            close_dialog(app, dialog)
+        except Exception as exc:
+            app.show_message(str(exc), error=True)
+
+    dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text(app.t("add_activity")),
+        content=ft.Container(
+            width=460,
+            content=ft.Column(
+                [
+                    ft.Text(app.t("activity_copy"), color=app.surface_muted_color()),
+                    name_field,
+                    calories_field,
+                    duration_field,
+                    date_field,
+                    time_field,
+                ],
+                tight=True,
+            ),
+        ),
+        actions=[
+            ft.TextButton(
+                app.t("cancel"),
+                on_click=lambda _: close_dialog(app, dialog),
+            ),
+            PrimaryButton(
+                app.t("save"),
+                on_click=save_activity,
+            ),
+        ],
+    )
+    app.page.show_dialog(dialog)
+
+
+def open_water_log_dialog(app: "SedaGuiApp", _=None):
+    """Create one water entry through a dedicated dialog. AI-generated."""
+    amount_field = ft.TextField(
+        label=app.t("amount_ml"),
+        keyboard_type=ft.KeyboardType.NUMBER,
+        autofocus=True,
+    )
+    date_field = DatePickerField(
+        app,
+        app.t("date"),
+        expand=True,
+    )
+    time_field = TimePickerField(
+        app,
+        app.t("time"),
+        expand=True,
+    )
+
+    def save_water(_):
+        """Validate and persist one new water entry. AI-generated."""
+        try:
+            amount = app.parse_required_int(amount_field.value)
+            timestamp = app.combine_date_and_time(
+                date_field.selected_date,
+                time_field.selected_time,
+            )
+            app.add_water_log(amount, timestamp)
+            close_dialog(app, dialog)
+        except Exception as exc:
+            app.show_message(str(exc), error=True)
+
+    dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text(app.t("add_water")),
+        content=ft.Container(
+            width=440,
+            content=ft.Column(
+                [
+                    amount_field,
+                    date_field,
+                    time_field,
+                ],
+                tight=True,
+            ),
+        ),
+        actions=[
+            ft.TextButton(
+                app.t("cancel"),
+                on_click=lambda _: close_dialog(app, dialog),
+            ),
+            PrimaryButton(
+                app.t("save"),
+                on_click=save_water,
+            ),
+        ],
+    )
+    app.page.show_dialog(dialog)
+
+
+def open_weight_log_dialog(app: "SedaGuiApp", _=None):
+    """Create one weight entry through a dedicated dialog. AI-generated."""
+    weight_field = ft.TextField(
+        label=app.t("weight_kg"),
+        keyboard_type=ft.KeyboardType.NUMBER,
+        autofocus=True,
+    )
+    date_field = DatePickerField(
+        app,
+        app.t("date"),
+        expand=True,
+    )
+    time_field = TimePickerField(
+        app,
+        app.t("time"),
+        expand=True,
+    )
+
+    def save_weight(_):
+        """Validate and persist one new weight entry. AI-generated."""
+        try:
+            weight = app.parse_required_float(weight_field.value)
+            timestamp = app.combine_date_and_time(
+                date_field.selected_date,
+                time_field.selected_time,
+            )
+            app.add_weight_log(weight, timestamp)
+            close_dialog(app, dialog)
+        except Exception as exc:
+            app.show_message(str(exc), error=True)
+
+    dialog = ft.AlertDialog(
+        modal=True,
+        title=ft.Text(app.t("add_weight_log")),
+        content=ft.Container(
+            width=440,
+            content=ft.Column(
+                [
+                    weight_field,
+                    date_field,
+                    time_field,
+                ],
+                tight=True,
+            ),
+        ),
+        actions=[
+            ft.TextButton(
+                app.t("cancel"),
+                on_click=lambda _: close_dialog(app, dialog),
+            ),
+            PrimaryButton(
+                app.t("save"),
+                on_click=save_weight,
             ),
         ],
     )
@@ -225,11 +430,19 @@ def open_meal_log_dialog(app: "SedaGuiApp", meal: Meal = None, existing_log=None
             ],
         )
     )
-    timestamp_field = ft.TextField(
-        label=app.t("optional_timestamp"),
-        value="" if existing_log is None else app.format_timestamp(existing_log.timestamp),
-        helper=app.t("use_now_when_empty"),
-        hint_text=app.timestamp_input_hint(),
+    selected_date, selected_time = app.split_timestamp(
+        None if existing_log is None else existing_log.timestamp
+    )
+    date_field = DatePickerField(
+        app,
+        app.t("date"),
+        value=selected_date,
+        expand=True,
+    )
+    time_field = TimePickerField(
+        app,
+        app.t("time"),
+        value=selected_time,
     )
 
     title = (
@@ -262,7 +475,10 @@ def open_meal_log_dialog(app: "SedaGuiApp", meal: Meal = None, existing_log=None
                 raise ValueError(app.t("msg_no_template_selected"))
 
             amount = app.parse_required_float(amount_field.value)
-            timestamp = app.parse_optional_timestamp(timestamp_field.value)
+            timestamp = app.combine_date_and_time(
+                date_field.selected_date,
+                time_field.selected_time,
+            )
             selected_unit_type = "portion" if is_portion_mode else unit_control.value
 
             if existing_log is None:
@@ -316,7 +532,8 @@ def open_meal_log_dialog(app: "SedaGuiApp", meal: Meal = None, existing_log=None
                     meal_dropdown,
                     amount_field,
                     unit_control,
-                    timestamp_field,
+                    date_field,
+                    time_field,
                 ],
                 tight=True,
             ),
@@ -423,10 +640,10 @@ def open_food_amount_dialog(app: "SedaGuiApp", food_row, mode):
         label=app.t("amount_g_ml"),
         keyboard_type=ft.KeyboardType.NUMBER,
     )
-    timestamp_field = ft.TextField(
-        label=app.t("optional_timestamp"),
-        helper=app.t("use_now_when_empty"),
-        hint_text=app.timestamp_input_hint(),
+    date_field = DatePickerField(app, app.t("date"), expand=True)
+    time_field = TimePickerField(
+        app,
+        app.t("time"),
     )
 
     title = (
@@ -443,7 +660,10 @@ def open_food_amount_dialog(app: "SedaGuiApp", food_row, mode):
         try:
             amount = app.parse_required_float(amount_field.value)
             if mode == "consume":
-                timestamp = app.parse_optional_timestamp(timestamp_field.value)
+                timestamp = app.combine_date_and_time(
+                    date_field.selected_date,
+                    time_field.selected_time,
+                )
                 single_food_meal = create_single_food_meal(
                     app.main_db,
                     app.current_user.user_id,
@@ -482,7 +702,7 @@ def open_food_amount_dialog(app: "SedaGuiApp", food_row, mode):
         amount_field,
     ]
     if mode == "consume":
-        dialog_controls.append(timestamp_field)
+        dialog_controls.extend([date_field, time_field])
 
     dialog = ft.AlertDialog(
         modal=True,

@@ -7,7 +7,7 @@
 # pylint: disable=all
 
 import sys
-from datetime import datetime
+from datetime import date, datetime, time
 from pathlib import Path
 
 import flet as ft
@@ -108,6 +108,12 @@ class SedaGuiApp:
     def t(self, key, **kwargs):
         """Return a translated GUI string for the current language."""
         return get_translation(self.current_language, key, **kwargs)
+
+    def current_locale(self):
+        """Return the current GUI locale for Flet picker controls. AI-generated."""
+        if self.current_language == "de":
+            return ft.Locale("de", "DE")
+        return ft.Locale("en", "US")
 
     def is_dark_mode(self):
         """Return whether the current page theme is dark."""
@@ -252,15 +258,38 @@ class SedaGuiApp:
         except ValueError:
             return str(birthdate)
 
+    def format_picker_date(self, date_value: date | None):
+        """Render one date value for read-only picker fields. AI-generated."""
+        if date_value is None:
+            return ""
+        if self.current_language == "de":
+            return date_value.strftime("%d.%m.%Y")
+        return date_value.strftime("%Y-%m-%d")
+
+    def format_picker_time(self, time_value: time | None):
+        """Render one time value for read-only picker fields. AI-generated."""
+        if time_value is None:
+            return ""
+        return time_value.strftime("%H:%M")
+
+    def split_timestamp(self, timestamp):
+        """Split one ISO timestamp into date and time values. AI-generated."""
+        if not timestamp:
+            return None, None
+        dt_value = datetime.fromisoformat(timestamp)
+        return dt_value.date(), dt_value.time().replace(second=0, microsecond=0)
+
+    def combine_date_and_time(self, selected_date, selected_time=None):
+        """Build one ISO timestamp from a date plus time. AI-generated."""
+        if selected_date is None:
+            return None
+        current_time = datetime.now().time().replace(second=0, microsecond=0)
+        time_value = selected_time or current_time
+        return datetime.combine(selected_date, time_value).isoformat()
+
     def birthdate_input_hint(self):
         """Return the locale-specific birthdate input hint for form fields."""
         return "TT.MM.JJJJ" if self.current_language == "de" else "YYYY-MM-DD"
-
-    def timestamp_input_hint(self):
-        """Return the locale-specific timestamp input hint for form fields."""
-        return (
-            "TT.MM.JJJJ HH:MM" if self.current_language == "de" else "YYYY-MM-DD HH:MM"
-        )
 
     def format_amount(self, value, suffix=""):
         """Render numeric values without unnecessary trailing zeros."""
@@ -314,21 +343,6 @@ class SedaGuiApp:
         if raw_value is None or str(raw_value).strip() == "":
             return None
         return self.parse_required_float(raw_value)
-
-    def parse_optional_timestamp(self, raw_value):
-        """Validate an optional localized timestamp input and return ISO text."""
-        if raw_value is None or raw_value.strip() == "":
-            return None
-        try:
-            cleaned = raw_value.strip()
-            if self.current_language == "de":
-                return datetime.strptime(cleaned, "%d.%m.%Y %H:%M").isoformat()
-            return datetime.strptime(cleaned, "%Y-%m-%d %H:%M").isoformat()
-        except ValueError as exc:
-            try:
-                return datetime.fromisoformat(raw_value.strip()).isoformat()
-            except ValueError:
-                raise ValueError(self.t("msg_invalid_timestamp")) from exc
 
     def get_meal_templates(self):
         """Build all meal templates from DB rows into Meal objects."""

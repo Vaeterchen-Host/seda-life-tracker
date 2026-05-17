@@ -25,7 +25,7 @@ Do not use this file for:
 - [x] Define a maximum content width
   Reason: the current GUI looks too stretched on 2560 px screens
 - [x] Move `Water Tracker` before `Nutrition` in the header
-- [ ] Move `Weight Logs / BMI / Statistics` out of `Profile` into a dedicated tab
+- [x] Move `Weight Logs / BMI / Statistics` out of `Profile` into a dedicated tab
 - [x] Add language selection as a graphical button next to the dark mode button
 - [x] Replace accidental blue default buttons with `seda-mint`
 
@@ -40,7 +40,7 @@ Do not use this file for:
 
 ### Profile and Weight Flow
 
-- [ ] Ask for the first weight during profile creation
+- [x] Ask for the first weight during profile creation
   Reason: this should automatically create the first `WeightLog`
 
 ### Dashboard
@@ -112,6 +112,9 @@ Do not use this file for:
   - [ ] reset `database.db` cleanly
   - [ ] or reliably cascade-delete all dependent table entries
 - [ ] Add target values for nutrients
+- [ ] Add a target-vs-actual comparison for nutrients
+  Minimum: `Big Seven`
+  Better: include the wider nutrient summary as well
 - [ ] Build an activity database for multiple activity types
 - [ ] Check the database structure for orphaned entries
 

@@ -13,8 +13,13 @@ from typing import TYPE_CHECKING
 import flet as ft
 
 from application.status_service import get_today_calorie_status
-from ui.gui_components import LabelValueRow, PrimaryButton, SurfaceItem, SurfaceSection
-from ui.gui_dialogs import close_dialog, open_confirm_dialog
+from ui.gui_components import (
+    LabelValueRow,
+    PrimaryButton,
+    SurfaceItem,
+    SurfaceSection,
+)
+from ui.gui_dialogs import close_dialog, open_confirm_dialog, open_weight_log_dialog
 from ui.gui_theme import SEDA_RED
 
 if TYPE_CHECKING:
@@ -26,26 +31,6 @@ def build_biometrics_view(app: "SedaGuiApp"):
     app.refresh_current_user_logs()
     calorie_status = get_today_calorie_status(app.current_user)
     current_weight_log = app.get_current_weight_log()
-
-    weight_field = ft.TextField(
-        label=app.t("weight_kg"),
-        keyboard_type=ft.KeyboardType.NUMBER,
-        width=220,
-    )
-    weight_timestamp_field = ft.TextField(
-        label=app.t("optional_timestamp"),
-        hint_text=app.timestamp_input_hint(),
-        expand=True,
-    )
-
-    def submit_weight(_):
-        """Create one new weight log from the biometrics page."""
-        try:
-            weight = app.parse_required_float(weight_field.value)
-            timestamp = app.parse_optional_timestamp(weight_timestamp_field.value)
-            app.add_weight_log(weight, timestamp)
-        except Exception as exc:
-            app.show_message(str(exc), error=True)
 
     current_status_section = SurfaceSection(
         app,
@@ -99,18 +84,10 @@ def build_biometrics_view(app: "SedaGuiApp"):
     add_measurement_section = SurfaceSection(
         app,
         app.t("add_weight_log"),
-        ft.Row(
-            [
-                weight_field,
-                weight_timestamp_field,
-                PrimaryButton(
-                    app.t("save"),
-                    icon=ft.Icons.MONITOR_WEIGHT_OUTLINED,
-                    on_click=submit_weight,
-                ),
-            ],
-            spacing=12,
-            vertical_alignment=ft.CrossAxisAlignment.END,
+        PrimaryButton(
+            app.t("add_weight_log"),
+            icon=ft.Icons.ASSESSMENT_OUTLINED,
+            on_click=lambda _: open_weight_log_dialog(app),
         ),
     )
 

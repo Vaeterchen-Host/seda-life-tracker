@@ -14,7 +14,7 @@ import flet as ft
 
 from application.status_service import get_today_water_status
 from ui.gui_components import PrimaryButton, SurfaceItem, SurfaceSection
-from ui.gui_dialogs import close_dialog, open_confirm_dialog
+from ui.gui_dialogs import close_dialog, open_confirm_dialog, open_water_log_dialog
 from ui.gui_theme import SEDA_MINT, SEDA_RED
 
 if TYPE_CHECKING:
@@ -25,27 +25,6 @@ def build_water_view(app: "SedaGuiApp"):
     """Build the water page with status, add-form and entry list. Partly AI-generated."""
     app.refresh_current_user_logs()
     water_status = get_today_water_status(app.current_user)
-
-    amount_field = ft.TextField(
-        label=app.t("amount_ml"),
-        keyboard_type=ft.KeyboardType.NUMBER,
-        expand=True,
-    )
-    timestamp_field = ft.TextField(
-        label=app.t("optional_timestamp"),
-        helper=app.t("use_now_when_empty"),
-        hint_text=app.timestamp_input_hint(),
-        expand=True,
-    )
-
-    def submit_water(_):
-        """Create one water log from the inline form."""
-        try:
-            amount = app.parse_required_int(amount_field.value)
-            timestamp = app.parse_optional_timestamp(timestamp_field.value)
-            app.add_water_log(amount, timestamp)
-        except Exception as exc:
-            app.show_message(str(exc), error=True)
 
     status_section = SurfaceSection(
         app,
@@ -77,18 +56,10 @@ def build_water_view(app: "SedaGuiApp"):
     add_section = SurfaceSection(
         app,
         app.t("add_water"),
-        ft.Row(
-            [
-                amount_field,
-                timestamp_field,
-                PrimaryButton(
-                    app.t("save"),
-                    icon=ft.Icons.SAVE,
-                    on_click=submit_water,
-                ),
-            ],
-            spacing=12,
-            vertical_alignment=ft.CrossAxisAlignment.END,
+        PrimaryButton(
+            app.t("add_water"),
+            icon=ft.Icons.WATER_DROP,
+            on_click=lambda _: open_water_log_dialog(app),
         ),
     )
 

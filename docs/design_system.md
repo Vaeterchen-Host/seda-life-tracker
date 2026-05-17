@@ -28,9 +28,9 @@ This file captures visual and interaction rules that should stay consistent acro
 - Use one shared color palette across the GUI
 - Avoid accidental blue buttons if the intended accent is turquoise
 - Use clear semantic colors:
-  - static values: mint
-  - dynamic values: yellow
-  - warnings or overshooting: red
+  - static values: seda-mint
+  - dynamic values: seda-yellow
+  - warnings or overshooting: seda-red
 
 Current project colors taken from the GUI code:
 
@@ -60,6 +60,11 @@ Signature colors:
 - Keep hover states visually consistent
 - Use consistent border radii for buttons, cards, and inputs
 - Prefer structured input controls over fragile free-text input where possible
+- Do not use free-text fields for date or time input in the GUI
+- Use `DatePicker` as the standard solution for date input
+- Use `TimePicker` as the standard solution for time input
+- Preselect today's date for new entries
+- Preselect the current time for new entries
 
 ## Typography
 

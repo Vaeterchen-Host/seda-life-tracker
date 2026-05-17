@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 import flet as ft
 
-from ui.gui_components import PrimaryButton, SurfaceSection
+from ui.gui_components import DatePickerField, PrimaryButton, SurfaceSection
 from ui.gui_dialogs import close_dialog, open_confirm_dialog
 from ui.gui_theme import SEDA_RED
 
@@ -25,10 +25,12 @@ def build_profile_view(app: "SedaGuiApp"):
     app.refresh_current_user_logs()
 
     name_field = ft.TextField(label=app.t("name"), value=app.current_user.name)
-    birthdate_field = ft.TextField(
-        label=app.t("birthdate"),
-        value=app.format_birthdate(app.current_user.birthdate),
-        hint_text=app.birthdate_input_hint(),
+    birthdate_value, _ = app.split_timestamp(f"{app.current_user.birthdate}T00:00:00")
+    birthdate_field = DatePickerField(
+        app,
+        app.t("birthdate"),
+        value=birthdate_value,
+        expand=True,
     )
     height_field = ft.TextField(
         label=app.t("height_cm"),
@@ -59,7 +61,7 @@ def build_profile_view(app: "SedaGuiApp"):
         try:
             app.save_profile(
                 name_field.value.strip(),
-                app.parse_birthdate(birthdate_field.value),
+                birthdate_field.selected_date.isoformat(),
                 app.parse_required_int(height_field.value),
                 gender_dropdown.value,
                 fitness_dropdown.value,

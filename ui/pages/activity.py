@@ -13,7 +13,12 @@ from typing import TYPE_CHECKING
 import flet as ft
 
 from ui.gui_components import PrimaryButton, SurfaceItem, SurfaceSection
-from ui.gui_dialogs import close_dialog, open_activity_edit_dialog, open_confirm_dialog
+from ui.gui_dialogs import (
+    close_dialog,
+    open_activity_create_dialog,
+    open_activity_edit_dialog,
+    open_confirm_dialog,
+)
 from ui.gui_theme import SEDA_MINT, SEDA_RED
 
 if TYPE_CHECKING:
@@ -24,55 +29,13 @@ def build_activity_view(app: "SedaGuiApp"):
     """Build the activity page with add form and editable entries. Partly AI-generated."""
     app.refresh_current_user_logs()
 
-    name_field = ft.TextField(label=app.t("activity_name"), expand=True)
-    calories_field = ft.TextField(
-        label=app.t("calories_burned"),
-        keyboard_type=ft.KeyboardType.NUMBER,
-        width=180,
-    )
-    duration_field = ft.TextField(
-        label=app.t("duration_minutes"),
-        keyboard_type=ft.KeyboardType.NUMBER,
-        width=180,
-    )
-    timestamp_field = ft.TextField(
-        label=app.t("optional_timestamp"),
-        helper=app.t("use_now_when_empty"),
-        hint_text=app.timestamp_input_hint(),
-        expand=True,
-    )
-
-    def submit_activity(_):
-        """Create one activity entry from the inline desktop form."""
-        try:
-            activity_name = name_field.value.strip()
-            calories = app.parse_required_float(calories_field.value)
-            duration = app.parse_optional_float(duration_field.value)
-            timestamp = app.parse_optional_timestamp(timestamp_field.value)
-            app.add_activity_log(activity_name, calories, duration, timestamp)
-        except Exception as exc:
-            app.show_message(str(exc), error=True)
-
     add_section = SurfaceSection(
         app,
         app.t("add_activity"),
-        ft.Column(
-            [
-                ft.Row([name_field, calories_field, duration_field], spacing=12),
-                ft.Row(
-                    [
-                        timestamp_field,
-                        PrimaryButton(
-                            app.t("save"),
-                            icon=ft.Icons.SAVE,
-                            on_click=submit_activity,
-                        ),
-                    ],
-                    spacing=12,
-                    vertical_alignment=ft.CrossAxisAlignment.END,
-                ),
-            ],
-            spacing=12,
+        PrimaryButton(
+            app.t("add_activity"),
+            icon=ft.Icons.DIRECTIONS_RUN,
+            on_click=lambda _: open_activity_create_dialog(app),
         ),
         subtitle=app.t("activity_copy"),
     )

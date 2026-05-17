@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime, time
 from typing import TYPE_CHECKING
 
 import flet as ft
@@ -171,6 +172,95 @@ class MetricChip(ft.Container):
                 tight=True,
             ),
         )
+
+
+class DatePickerField(ft.Row):
+    """Render one read-only date field backed by a Flet DatePicker. AI-generated."""
+
+    def __init__(
+        self,
+        app: "SedaGuiApp",
+        label: str,
+        value: date | None = None,
+        width: int | None = None,
+        expand: bool = False,
+    ):
+        self.app = app
+        self.selected_date = value or datetime.now().date()
+        self._field = ft.TextField(
+            label=label,
+            value=app.format_picker_date(self.selected_date),
+            read_only=True,
+            can_request_focus=False,
+            always_call_on_tap=True,
+            on_click=self._open_picker,
+            suffix_icon=ft.Icons.CALENDAR_MONTH,
+            width=width,
+            expand=expand,
+        )
+        self._picker = ft.DatePicker(
+            value=datetime.combine(self.selected_date, time.min),
+            first_date=datetime(year=1900, month=1, day=1),
+            last_date=datetime(year=2100, month=12, day=31),
+            locale=app.current_locale(),
+            on_change=self._handle_change,
+        )
+        super().__init__([self._field], vertical_alignment=ft.CrossAxisAlignment.END)
+
+    def _open_picker(self, _):
+        """Open the date picker with the currently selected date. AI-generated."""
+        self._picker.value = datetime.combine(self.selected_date, time.min)
+        self.app.page.show_dialog(self._picker)
+
+    def _handle_change(self, e):
+        """Persist the selected date in the read-only field. AI-generated."""
+        self.selected_date = e.control.value.date()
+        self._field.value = self.app.format_picker_date(self.selected_date)
+        self.app.page.update()
+
+
+class TimePickerField(ft.Row):
+    """Render one read-only time field backed by a Flet TimePicker. AI-generated."""
+
+    def __init__(
+        self,
+        app: "SedaGuiApp",
+        label: str,
+        value: time | None = None,
+        width: int | None = None,
+        expand: bool = False,
+    ):
+        self.app = app
+        self.selected_time = value or datetime.now().replace(second=0, microsecond=0).time()
+        self._field = ft.TextField(
+            label=label,
+            value=app.format_picker_time(self.selected_time),
+            read_only=True,
+            can_request_focus=False,
+            always_call_on_tap=True,
+            on_click=self._open_picker,
+            suffix_icon=ft.Icons.ACCESS_TIME,
+            width=width,
+            expand=expand,
+        )
+        self._picker = ft.TimePicker(
+            value=self.selected_time,
+            entry_mode=ft.TimePickerEntryMode.DIAL,
+            locale=app.current_locale(),
+            on_change=self._handle_change,
+        )
+        super().__init__([self._field], vertical_alignment=ft.CrossAxisAlignment.END)
+
+    def _open_picker(self, _):
+        """Open the time picker with the current selection. AI-generated."""
+        self._picker.value = self.selected_time
+        self.app.page.show_dialog(self._picker)
+
+    def _handle_change(self, e):
+        """Store the selected time and update the read-only display. AI-generated."""
+        self.selected_time = e.control.value
+        self._field.value = self.app.format_picker_time(self.selected_time)
+        self.app.page.update()
 
 
 class PrimaryNav(ft.Row):
